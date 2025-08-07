@@ -49,5 +49,5 @@ public class Organization {
 
     @DBRef
     @Builder.Default
-    private List<Product> products = List.of();
+    private List<Item> items = List.of();
 }

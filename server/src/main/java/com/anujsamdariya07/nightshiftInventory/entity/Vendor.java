@@ -22,7 +22,7 @@ public class Vendor {
 
     private String orgId;
 
-    private String vendorId; // corresponds to "id" in Mongoose
+    private String vendorId;
 
     private String name;
 

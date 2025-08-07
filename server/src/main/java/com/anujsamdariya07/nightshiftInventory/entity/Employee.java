@@ -25,7 +25,7 @@ public class Employee {
 
     private String orgId;
 
-    private String employeeId; // corresponds to `id` in the mongoose model
+    private String employeeId;
 
     private String name;
 
