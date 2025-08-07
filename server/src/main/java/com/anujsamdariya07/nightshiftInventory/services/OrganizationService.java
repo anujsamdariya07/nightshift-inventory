@@ -17,6 +17,10 @@ public class OrganizationService {
         return organizationRepository.findById(orgId);
     }
 
+    public Optional<Organization> findOrgByEmail(String email) {
+        return organizationRepository.findByEmail(email);
+    }
+
     public void saveOrganization(Organization organization) {
         organizationRepository.save(organization);
     }

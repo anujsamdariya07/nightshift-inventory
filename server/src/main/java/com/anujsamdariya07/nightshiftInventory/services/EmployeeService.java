@@ -22,8 +22,8 @@ public class EmployeeService {
         return employeeRepository.findByOrgId(orgId);
     }
 
-    public Optional<Employee> getEmployeeById(ObjectId orgId, ObjectId employeeId) {
-        return employeeRepository.findByOrgIdAndId(orgId, employeeId);
+    public Optional<Employee> getEmployeeById(ObjectId employeeId) {
+        return employeeRepository.findById(employeeId);
     }
 
     public void saveNewAdminEmployee(Employee employee) {
