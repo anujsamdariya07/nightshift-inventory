@@ -38,7 +38,7 @@ public class Employee {
     private boolean mustChangePassword = true;
 
     @Builder.Default
-    private String role = "admin"; // Should be validated manually or through service logic
+    private String role = "worker"; // Should be validated manually or through service logic
 
     private String mobileNo;
 
