@@ -17,8 +17,8 @@ public class SpringSecurity {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll() // ✅ Allow signup/login without auth
-                        .anyRequest().authenticated()           // 🔐 Secure others
+                        .requestMatchers("/api/**").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

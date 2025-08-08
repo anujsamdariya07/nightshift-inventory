@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
     @Autowired
     private OrganizationService organizationService;
@@ -30,19 +30,13 @@ public class AuthController {
 
     @GetMapping("/current")
     public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
-        String userId = CookieUtil.getCookieValue(request, "loggedInUser");
-
-        if (userId == null || userId.isEmpty()) {
-            return ResponseEntity.status(401).body("User not logged in.");
-        }
-
-        return ResponseEntity.ok(employeeService.getEmployeeById(new ObjectId(userId)));
+        return ResponseEntity.ok(employeeService.getCurrentUser(request));
     }
 
     @PostMapping("/sign-up")
     public ResponseEntity<?> signUp(@RequestBody SignupRequest request, HttpServletResponse response) {
         try {
-            System.out.println("HERE");
+            // System.out.println("HERE");
 
             if (organizationService.findOrgByEmail(request.getOrgEmail()).isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)

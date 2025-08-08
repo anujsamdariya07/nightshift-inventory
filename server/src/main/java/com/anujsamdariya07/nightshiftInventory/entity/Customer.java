@@ -22,9 +22,7 @@ public class Customer {
     @Id
     private ObjectId id;
 
-    private String orgId;
-
-    private String customerId; // corresponds to "id" in Mongoose
+    private ObjectId orgId;
 
     private String name;
 

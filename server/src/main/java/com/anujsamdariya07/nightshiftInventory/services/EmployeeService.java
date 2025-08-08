@@ -1,9 +1,12 @@
 package com.anujsamdariya07.nightshiftInventory.services;
 
+import com.anujsamdariya07.nightshiftInventory.controllers.CookieUtil;
 import com.anujsamdariya07.nightshiftInventory.entity.Employee;
 import com.anujsamdariya07.nightshiftInventory.repository.EmployeeRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,6 +20,16 @@ public class EmployeeService {
     private EmployeeRepository employeeRepository;
 
     private static final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    public Employee getCurrentUser(HttpServletRequest request) {
+        String userId = CookieUtil.getCookieValue(request, "loggedInUser");
+
+        if (userId == null || userId.isEmpty()) {
+            throw new RuntimeException("User not logged in.");
+        }
+
+        return getEmployeeById(new ObjectId(userId)).orElseThrow(() -> new RuntimeException("Error while getting current user!"));
+    }
 
     public List<Employee> getEmployeesByOrgId(ObjectId orgId) {
         return employeeRepository.findByOrgId(orgId);
