@@ -20,9 +20,7 @@ public class Vendor {
     @Id
     private ObjectId id;
 
-    private String orgId;
-
-    private String vendorId;
+    private ObjectId orgId;
 
     private String name;
 
