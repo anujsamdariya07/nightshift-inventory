@@ -26,7 +26,7 @@ public class CustomerController {
     public ResponseEntity<List<Customer>> getAllCustomersForCurrentOrg(HttpServletRequest request) {
         try {
             Employee currentUser = employeeService.getCurrentUser(request);
-            ObjectId orgId = new ObjectId(currentUser.getOrgId());
+            ObjectId orgId = currentUser.getOrgId();
             return ResponseEntity.ok(customerService.getAllCustomersByOrgId(orgId));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -37,7 +37,7 @@ public class CustomerController {
     public ResponseEntity<Customer> getCustomerById(HttpServletRequest request, @PathVariable String id) {
         try {
             Employee currentUser = employeeService.getCurrentUser(request);
-            ObjectId orgId = new ObjectId(currentUser.getOrgId());
+            ObjectId orgId = currentUser.getOrgId();
             ObjectId customerId = new ObjectId(id);
 
             Customer customer = customerService.getCustomerByOrgAndId(orgId, customerId);
@@ -51,7 +51,7 @@ public class CustomerController {
     public ResponseEntity<?> createCustomer(HttpServletRequest request, @RequestBody Customer customer) {
         try {
             Employee currentUser = employeeService.getCurrentUser(request);
-            ObjectId orgId = new ObjectId(currentUser.getOrgId());
+            ObjectId orgId = currentUser.getOrgId();
 
             System.out.println(currentUser);
 
@@ -70,7 +70,7 @@ public class CustomerController {
     public ResponseEntity<Customer> updateCustomer(HttpServletRequest request, @PathVariable String id, @RequestBody Customer customer) {
         try {
             Employee currentUser = employeeService.getCurrentUser(request);
-            ObjectId orgId = new ObjectId(currentUser.getOrgId());
+            ObjectId orgId = currentUser.getOrgId();
 
             customer.setOrgId(orgId);
 
@@ -87,7 +87,7 @@ public class CustomerController {
     public ResponseEntity<Void> deleteCustomer(HttpServletRequest request, @PathVariable String id) {
         try {
             Employee currentUser = employeeService.getCurrentUser(request);
-            ObjectId orgId = new ObjectId(currentUser.getOrgId());
+            ObjectId orgId = currentUser.getOrgId();
             ObjectId customerId = new ObjectId(id);
 
             customerService.deleteCustomerForOrg(orgId, customerId);

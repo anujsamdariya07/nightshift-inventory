@@ -17,4 +17,7 @@ public interface EmployeeRepository
             (ObjectId orgId, ObjectId id);
 
     Optional<Employee> findByUsername(String username);
+
+    public boolean existsByMobileNo(String gstNo);
+    public boolean existsByUsernameAndOrgId(String username, ObjectId orgId);
 }

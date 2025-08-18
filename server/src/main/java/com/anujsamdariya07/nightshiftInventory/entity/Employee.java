@@ -23,9 +23,7 @@ public class Employee {
     @Id
     private ObjectId id;
 
-    private String orgId;
-
-    private String employeeId;
+    private ObjectId orgId;
 
     private String name;
 

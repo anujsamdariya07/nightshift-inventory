@@ -59,8 +59,7 @@ public class AuthController {
 
             // 3. Create and save Admin Employee
             Employee admin = Employee.builder()
-                    .orgId(organization.getId().toString())
-                    .employeeId("ADMIN-" + username.toUpperCase())
+                    .orgId(organization.getId())
                     .name(request.getAdminName())
                     .username(username)
                     .password(request.getAdminPassword())

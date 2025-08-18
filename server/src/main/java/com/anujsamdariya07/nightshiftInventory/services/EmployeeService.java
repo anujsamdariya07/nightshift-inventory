@@ -49,14 +49,24 @@ public class EmployeeService {
         }
     }
 
-    public void saveNewEmployee(Employee employee) {
+    public Employee saveNewEmployee(Employee employee) {
         try {
+            if (employee.getPassword() == null) {
+                employee.setPassword(passwordEncoder.encode("pwd"));
+            }
             employee.setPassword(passwordEncoder.encode(employee.getPassword()));
             employee.setRole("worker");
-            employeeRepository.save(employee);
+            return employeeRepository.save(employee);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public boolean employeeExistsByUsernameAndOrgId(String username, ObjectId orgId) {
+        if (employeeRepository.existsByUsernameAndOrgId(username, orgId)) {
+            return true;
+        }
+        return false;
     }
 
     public Optional<Employee> loginEmployee(String username, String password) {
@@ -77,8 +87,8 @@ public class EmployeeService {
         return Optional.empty();
     }
 
-    public Employee updateEmployee(ObjectId orgId, ObjectId employeeId, Employee updatedEmployeeData) {
-        Optional<Employee> existingEmployeeOpt = employeeRepository.findByOrgIdAndId(orgId, employeeId);
+    public Employee updateEmployee(ObjectId employeeId, Employee updatedEmployeeData) {
+        Optional<Employee> existingEmployeeOpt = employeeRepository.findById(employeeId);
 
         if (existingEmployeeOpt.isEmpty()) {
             throw new RuntimeException("Employee not found");
@@ -89,7 +99,7 @@ public class EmployeeService {
         // Update only the fields you want to allow editing
         if (updatedEmployeeData.getName() != null) existingEmployee.setName(updatedEmployeeData.getName());
         if (updatedEmployeeData.getRole() != null) existingEmployee.setRole(updatedEmployeeData.getRole());
-        if (updatedEmployeeData.getMobileNo() != null) existingEmployee.setMobileNo(updatedEmployeeData.getMobileNo());
+        if (updatedEmployeeData.getMobileNo() != null && !employeeRepository.existsByMobileNo(updatedEmployeeData.getMobileNo())) existingEmployee.setMobileNo(updatedEmployeeData.getMobileNo());
         if (updatedEmployeeData.getAddress() != null) existingEmployee.setAddress(updatedEmployeeData.getAddress());
 
         if (updatedEmployeeData.getPassword() != null &&
@@ -100,8 +110,8 @@ public class EmployeeService {
         return employeeRepository.save(existingEmployee);
     }
 
-    public void deleteEmployeeById(ObjectId orgId, ObjectId employeeId) {
-        Optional<Employee> employeeOpt = employeeRepository.findByOrgIdAndId(orgId, employeeId);
+    public void deleteEmployeeById(ObjectId employeeId) {
+        Optional<Employee> employeeOpt = employeeRepository.findById(employeeId);
 
         if (employeeOpt.isEmpty()) {
             throw new RuntimeException("Employee not found for deletion");

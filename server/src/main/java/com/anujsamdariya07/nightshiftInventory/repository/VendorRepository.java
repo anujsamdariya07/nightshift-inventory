@@ -12,6 +12,6 @@ public interface VendorRepository
         extends MongoRepository<Vendor, ObjectId> {
     public List<Vendor> findAllByOrgId(ObjectId orgId);
     public boolean existsByEmail(String email);
-    public boolean existsByPhone(String gstNo);
-    public boolean existsByGstNo(String phone);
+    public boolean existsByPhone(String phone);
+    public boolean existsByGstNo(String gstNo);
 }

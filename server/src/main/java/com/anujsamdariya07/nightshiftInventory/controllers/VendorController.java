@@ -25,7 +25,7 @@
         @GetMapping
         public ResponseEntity<?> getAllVendorsByOrgId(HttpServletRequest request) {
             Employee currentUser = employeeService.getCurrentUser(request);
-            ObjectId orgId = new ObjectId(currentUser.getOrgId());
+            ObjectId orgId = currentUser.getOrgId();
             return ResponseEntity.status(HttpStatus.OK).body(vendorService.getAllVendorsByOrgId(orgId));
         }
 
@@ -37,7 +37,7 @@
         @PostMapping
         public ResponseEntity<?> createVendor(@RequestBody Vendor vendor, HttpServletRequest request) {
             Employee currentUser = employeeService.getCurrentUser(request);
-            ObjectId orgId = new ObjectId(currentUser.getOrgId());
+            ObjectId orgId = currentUser.getOrgId();
 
             vendor.setId(null);
             vendor.setOrgId(orgId);
