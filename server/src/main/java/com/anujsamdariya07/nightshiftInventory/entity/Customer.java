@@ -9,6 +9,7 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "customers")
@@ -36,7 +37,7 @@ public class Customer {
     private String status = "active"; // Enum: active, inactive
 
     @Builder.Default
-    private List<CustomerOrder> orders = List.of();
+    private ArrayList<CustomerOrder> orders = new ArrayList<>();
 
     private String gstNo;
 }

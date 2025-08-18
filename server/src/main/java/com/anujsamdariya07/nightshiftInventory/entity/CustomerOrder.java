@@ -17,7 +17,7 @@ public class CustomerOrder {
     private String orderId;
 
     @Builder.Default
-    private String status = "pending"; // Enum: pending, processing, completed, cancelled
+    private String status = "pending";
 
     @Builder.Default
     private Date orderDate = new Date();

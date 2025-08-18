@@ -6,7 +6,6 @@ import com.anujsamdariya07.nightshiftInventory.repository.EmployeeRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,11 +38,11 @@ public class EmployeeService {
         return employeeRepository.findById(employeeId);
     }
 
-    public void saveNewAdminEmployee(Employee employee) {
+    public Employee saveNewAdminEmployee(Employee employee) {
         try {
             employee.setPassword(passwordEncoder.encode(employee.getPassword()));
             employee.setRole("admin");
-            employeeRepository.save(employee);
+            return employeeRepository.save(employee);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

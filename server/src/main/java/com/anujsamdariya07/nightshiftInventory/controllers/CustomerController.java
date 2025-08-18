@@ -2,8 +2,10 @@ package com.anujsamdariya07.nightshiftInventory.controllers;
 
 import com.anujsamdariya07.nightshiftInventory.entity.Customer;
 import com.anujsamdariya07.nightshiftInventory.entity.Employee;
+import com.anujsamdariya07.nightshiftInventory.entity.Organization;
 import com.anujsamdariya07.nightshiftInventory.services.CustomerService;
 import com.anujsamdariya07.nightshiftInventory.services.EmployeeService;
+import com.anujsamdariya07.nightshiftInventory.services.OrganizationService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/customers")
@@ -21,6 +24,8 @@ public class CustomerController {
     private CustomerService customerService;
     @Autowired
     private EmployeeService employeeService;
+    @Autowired
+    private OrganizationService organizationService;
 
     @GetMapping
     public ResponseEntity<List<Customer>> getAllCustomersForCurrentOrg(HttpServletRequest request) {
@@ -59,6 +64,9 @@ public class CustomerController {
             customer.setOrgId(orgId);
 
             Customer savedCustomer = customerService.createCustomer(customer);
+            Optional<Organization> organization = organizationService.findOrgById(orgId);
+            organization.ifPresent(value -> value.getCustomers().add(savedCustomer));
+            organizationService.saveOrganization(organization.get());
             return ResponseEntity.status(HttpStatus.CREATED).body(savedCustomer);
 
         } catch (RuntimeException e) {

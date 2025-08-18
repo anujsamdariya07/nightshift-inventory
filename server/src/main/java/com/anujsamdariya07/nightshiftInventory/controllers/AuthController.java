@@ -42,6 +42,14 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body("Organization already exists with this email.");
             }
+            if (organizationService.findOrgByMobileNo(request.getOrgMobileNo()).isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("Organization already exists with this mobile number.");
+            }
+            if (organizationService.findOrgByGstNo(request.getOrgGstNo()).isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("Organization already exists with this GST number.");
+            }
 
             // 1. Create and save Organization
             Organization organization = Organization.builder()
@@ -51,14 +59,14 @@ public class AuthController {
                     .gstNo(request.getOrgGstNo())
                     .address(request.getOrgAddress())
                     .build();
-
             organizationService.saveOrganization(organization);
 
             // 2. Extract username from email
             String username = request.getOrgEmail().split("@")[0];
 
             // 3. Create and save Admin Employee
-            Employee admin = Employee.builder()
+            Employee admin = employeeService.saveNewAdminEmployee(
+                    Employee.builder()
                     .orgId(organization.getId())
                     .name(request.getAdminName())
                     .username(username)
@@ -67,9 +75,12 @@ public class AuthController {
                     .address(request.getAdminAddress())
                     .role("admin")
                     .mustChangePassword(true)
-                    .build();
+                    .build()
+            );
 
-            employeeService.saveNewAdminEmployee(admin);
+            organization.getEmployeeDetails().add(admin);
+
+            organizationService.saveOrganization(organization);
 
             Cookie userCookie = new Cookie("loggedInUser", admin.getId().toHexString());
             userCookie.setHttpOnly(false);
@@ -79,7 +90,7 @@ public class AuthController {
 
             response.addCookie(userCookie);
 
-            return ResponseEntity.ok("Organization and Admin created successfully.");
+            return ResponseEntity.ok(organization);
         } catch (Exception e) {
             throw new RuntimeException("Error in signing up!", e);
         }

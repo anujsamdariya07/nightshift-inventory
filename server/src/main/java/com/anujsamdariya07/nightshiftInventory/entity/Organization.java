@@ -10,6 +10,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "organizations")
@@ -37,17 +38,21 @@ public class Organization {
 
     @DBRef
     @Builder.Default
-    private List<Employee> employeeDetails = List.of();
+    private ArrayList<Employee> employeeDetails = new ArrayList<>();
 
     @DBRef
     @Builder.Default
-    private List<Order> orders = List.of();
+    private ArrayList<Order> orders = new ArrayList<>();
 
     @DBRef
     @Builder.Default
-    private List<Customer> customers = List.of();
+    private ArrayList<Customer> customers = new ArrayList<>();
 
     @DBRef
     @Builder.Default
-    private List<Item> items = List.of();
+    private ArrayList<Item> items = new ArrayList<>();
+
+    @DBRef
+    @Builder.Default
+    private ArrayList<Vendor> vendors = new ArrayList<>();
 }

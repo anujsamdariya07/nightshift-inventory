@@ -21,6 +21,14 @@ public class OrganizationService {
         return organizationRepository.findByEmail(email);
     }
 
+    public Optional<Organization> findOrgByMobileNo(String mobileNo) {
+        return organizationRepository.findByMobileNo(mobileNo);
+    }
+
+    public Optional<Organization> findOrgByGstNo(String gstNo) {
+        return organizationRepository.findByGstNo(gstNo);
+    }
+
     public void saveOrganization(Organization organization) {
         organizationRepository.save(organization);
     }

@@ -1,7 +1,9 @@
 package com.anujsamdariya07.nightshiftInventory.controllers;
 
 import com.anujsamdariya07.nightshiftInventory.entity.Employee;
+import com.anujsamdariya07.nightshiftInventory.entity.Organization;
 import com.anujsamdariya07.nightshiftInventory.services.EmployeeService;
+import com.anujsamdariya07.nightshiftInventory.services.OrganizationService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,12 +12,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/employees")
 public class EmployeeController {
     @Autowired
     private EmployeeService employeeService;
+    @Autowired
+    private OrganizationService organizationService;
 
     @GetMapping
     public ResponseEntity<?> getEmployeesByOrgId(HttpServletRequest request) {
@@ -40,6 +45,9 @@ public class EmployeeController {
         employee.setId(null);
         employee.setOrgId(orgId);
         Employee savedNewEmployee = employeeService.saveNewEmployee(employee);
+        Optional<Organization> organization = organizationService.findOrgById(orgId);
+        organization.ifPresent(value -> value.getEmployeeDetails().add(savedNewEmployee));
+        organizationService.saveOrganization(organization.get());
         return ResponseEntity.status(HttpStatus.CREATED).body(savedNewEmployee);
     }
 

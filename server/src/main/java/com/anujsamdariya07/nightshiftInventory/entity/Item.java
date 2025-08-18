@@ -9,6 +9,7 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -23,9 +24,7 @@ public class Item {
     @Id
     private ObjectId id;
 
-    private String orgId;
-
-    private String itemId; // corresponds to "id" in Mongoose
+    private ObjectId orgId;
 
     private String name;
 
@@ -41,5 +40,5 @@ public class Item {
     private String image = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRo6ZeL1Ntu-zwEcgRli39ynixVj9yeQtfjAw&s";
 
     @Builder.Default
-    private List<UpdateHistory> updateHistory = List.of();
+    private ArrayList<UpdateHistory> updateHistory = new ArrayList<>();
 }
