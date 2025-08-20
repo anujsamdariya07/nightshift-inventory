@@ -11,7 +11,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 @Document(collection = "orders")
 @Getter
@@ -24,20 +23,18 @@ public class Order {
     @Id
     private ObjectId id;
 
-    private String orderId; // corresponds to "id" in Mongoose
+    private ObjectId orgId;
 
-    private String orgId;
+    private ObjectId customerId;
 
-    private String customerId;
-
-    private String employeeId;
+    private ObjectId employeeId;
 
     private ArrayList<OrderItem> items;
 
     private double totalAmount;
 
     @Builder.Default
-    private String status = "pending"; // Enum: pending, processing, completed, cancelled
+    private String status = "pending";
 
     @Builder.Default
     private Date orderDate = new Date();

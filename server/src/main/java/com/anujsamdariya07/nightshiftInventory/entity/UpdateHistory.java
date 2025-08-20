@@ -21,6 +21,8 @@ public class UpdateHistory {
 
     private double cost;
 
+    private String updateType;// = "replenishment" or "order"
+
     @Builder.Default
     private Date date = new Date();
 }

@@ -11,5 +11,6 @@ import java.util.List;
 public interface ItemRepository
         extends MongoRepository<Item, ObjectId> {
     List<Item> findAllByOrgId(ObjectId orgId);
+    Item findByOrgIdAndName(ObjectId orgId, String name);
     boolean existsByName(String name);
 }

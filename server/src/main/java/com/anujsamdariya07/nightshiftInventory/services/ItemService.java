@@ -2,6 +2,7 @@ package com.anujsamdariya07.nightshiftInventory.services;
 
 import com.anujsamdariya07.nightshiftInventory.dto.ItemRequest;
 import com.anujsamdariya07.nightshiftInventory.entity.Item;
+import com.anujsamdariya07.nightshiftInventory.entity.OrderItem;
 import com.anujsamdariya07.nightshiftInventory.entity.UpdateHistory;
 import com.anujsamdariya07.nightshiftInventory.repository.ItemRepository;
 import org.bson.types.ObjectId;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class ItemService {
@@ -46,6 +46,7 @@ public class ItemService {
                 .quantityUpdated(itemRequest.getQuantity())
                 .cost(itemRequest.getCost())
                 .date(new Date())
+                .updateType("replenishment")
                 .build();
         if (item.getUpdateHistory() == null) {
             item.setUpdateHistory(new ArrayList<>());
@@ -74,6 +75,7 @@ public class ItemService {
                 .quantityUpdated(itemRequest.getQuantity())
                 .cost(itemRequest.getCost())
                 .date(new Date())
+                .updateType("replenishment")
                 .build();
 
         if (existingItem.getUpdateHistory() == null) {
@@ -86,5 +88,54 @@ public class ItemService {
 
     public void deleteItem(ObjectId id) {
         itemRepository.deleteById(id);
+    }
+
+    public void deductByOrder(ArrayList<OrderItem> items, ObjectId orgId) {
+        for (OrderItem item : items) {
+            Item extractedItem = itemRepository.findByOrgIdAndName(orgId, item.getItemName());
+
+            int deducted = Math.min(item.getQuantity(), extractedItem.getQuantity());
+            int remainingQuantity = extractedItem.getQuantity() - deducted;
+
+            UpdateHistory updateHistory = UpdateHistory.builder()
+                    .vendorName("Order")
+                    .quantityUpdated(deducted)
+                    .updateType("order")
+                    .date(new Date())
+                    .build();
+
+            if (extractedItem.getUpdateHistory() == null) {
+                extractedItem.setUpdateHistory(new ArrayList<>());
+            }
+            extractedItem.getUpdateHistory().add(updateHistory);
+
+            extractedItem.setQuantity(Math.max(remainingQuantity, 0));
+
+            itemRepository.save(extractedItem);
+        }
+    }
+
+    public void revertByOrder(List<OrderItem> items, ObjectId orgId) {
+        for (OrderItem item : items) {
+            Item extractedItem = itemRepository.findByOrgIdAndName(orgId, item.getItemName());
+
+            int reverted = item.getQuantity();
+            extractedItem.setQuantity(extractedItem.getQuantity() + reverted);
+
+            UpdateHistory updateHistory = UpdateHistory.builder()
+                    .vendorName("Order Revert")
+                    .quantityUpdated(reverted)
+                    .updateType("revert")
+                    .date(new Date())
+                    .build();
+
+            if (extractedItem.getUpdateHistory() == null) {
+                extractedItem.setUpdateHistory(new ArrayList<>());
+            }
+            extractedItem.getUpdateHistory().add(updateHistory);
+
+
+            itemRepository.save(extractedItem);
+        }
     }
 }
