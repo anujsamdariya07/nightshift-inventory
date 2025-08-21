@@ -94,19 +94,19 @@ export default function WorkflowPage() {
                 <WorkflowStep key={step.id} step={step} index={index} />
               ))}
 
-              <div className="hidden md:block">
+              {/* <div className="hidden md:block">
                 {connections.map((connection, index) => (
                   <AnimatedArrow key={`${connection.from}-${connection.to}`} connection={connection} index={index} />
                 ))}
-              </div>
+              </div> */}
             </div>
 
             {/* Mobile Arrows */}
-            <div className="md:hidden flex flex-col items-center space-y-4 mt-8">
+            {/* <div className="md:hidden flex flex-col items-center space-y-4 mt-8">
               {connections.map((connection, index) => (
                 <MobileArrow key={`mobile-${connection.from}-${connection.to}`} connection={connection} index={index} />
               ))}
-            </div>
+            </div> */}
           </div>
         </section>
 

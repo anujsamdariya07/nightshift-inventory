@@ -25,9 +25,8 @@ export function Footer() {
           <div className="col-span-1 md:col-span-2">
             <motion.div
               className="text-2xl font-bold font-mono text-primary neon-text mb-4"
-              whileHover={{ scale: 1.05 }}
             >
-              NightShift
+              NightShift Inventory
             </motion.div>
             <p className="text-muted-foreground mb-4 max-w-md">
               Smart Inventory Management System with Vendor Traceability and Customer Insights. Streamline your

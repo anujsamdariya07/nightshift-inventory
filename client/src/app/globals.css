@@ -156,3 +156,19 @@
     box-shadow: 0 0 8px rgba(0, 188, 212, 0.15);
   }
 }
+
+.prevent-select {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+button {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+::selection {
+  background: #6b6b6b;
+}

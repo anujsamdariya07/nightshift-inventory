@@ -1,6 +1,13 @@
 "use client"
 
 import { motion, easeOut } from "framer-motion"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Navbar } from "@/components/navbar"
 
 const features = [
@@ -231,29 +238,48 @@ function FeatureCard({ feature, index }: { feature: (typeof features)[0]; index:
           ))}
         </ul>
 
-        {/* Explore More button */}
-        <motion.a
-          href={`/features/${feature.title
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/-+/g, "-")
-            .replace(/^-|-$/g, "")}`}
-          className="inline-flex items-center px-4 py-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 rounded-lg text-primary text-sm font-medium transition-all duration-300 group-hover:neon-glow"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Explore More
-          <motion.svg
-            className="ml-2 w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            whileHover={{ x: 3 }}
-            transition={{ duration: 0.2 }}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </motion.svg>
-        </motion.a>
+        {/* Explore More button with dialog */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <motion.button
+              className="inline-flex items-center px-4 py-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 rounded-lg text-primary text-sm font-medium transition-all duration-300 group-hover:neon-glow"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Explore More
+              <motion.svg
+                className="ml-2 w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                whileHover={{ x: 3 }}
+                transition={{ duration: 0.2 }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </motion.svg>
+            </motion.button>
+          </DialogTrigger>
+
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold neon-text text-primary">{feature.title}</DialogTitle>
+            </DialogHeader>
+            <p className="text-lg text-muted-foreground leading-relaxed">{feature.description}</p>
+            {feature.details.map((detail, detailIndex) => (
+            <motion.li
+              key={detail}
+              className="flex items-center text-lg text-muted-foreground"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 + detailIndex * 0.05 }}
+            >
+              <div className="w-1.5 h-1.5 bg-primary rounded-full mr-2 group-hover:neon-glow" />
+              {detail}
+            </motion.li>
+          ))}
+          </DialogContent>
+        </Dialog>
+
 
         {/* Hover indicator */}
         <motion.div
