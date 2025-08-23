@@ -3,6 +3,7 @@ package com.anujsamdariya07.nightshiftInventory.controllers;
 import com.anujsamdariya07.nightshiftInventory.dto.LoginRequest;
 import com.anujsamdariya07.nightshiftInventory.dto.LoginResponse;
 import com.anujsamdariya07.nightshiftInventory.dto.SignupRequest;
+import com.anujsamdariya07.nightshiftInventory.dto.SignupResponse;
 import com.anujsamdariya07.nightshiftInventory.entity.Employee;
 import com.anujsamdariya07.nightshiftInventory.entity.Organization;
 import com.anujsamdariya07.nightshiftInventory.services.EmployeeService;
@@ -10,7 +11,6 @@ import com.anujsamdariya07.nightshiftInventory.services.OrganizationService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.Optional;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -30,7 +31,12 @@ public class AuthController {
 
     @GetMapping("/current")
     public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
-        return ResponseEntity.ok(employeeService.getCurrentUser(request));
+        Employee currentUser = employeeService.getCurrentUser(request);
+        if (currentUser != null) {
+            Optional<Organization> org = organizationService.findOrgById(currentUser.getOrgId());
+            return ResponseEntity.ok(currentUser);
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not logged in");
     }
 
     @PostMapping("/sign-up")
@@ -67,15 +73,15 @@ public class AuthController {
             // 3. Create and save Admin Employee
             Employee admin = employeeService.saveNewAdminEmployee(
                     Employee.builder()
-                    .orgId(organization.getId())
-                    .name(request.getAdminName())
-                    .username(username)
-                    .password(request.getAdminPassword())
-                    .mobileNo(request.getAdminMobileNo())
-                    .address(request.getAdminAddress())
-                    .role("admin")
-                    .mustChangePassword(true)
-                    .build()
+                            .orgId(organization.getId())
+                            .name(request.getOrgName())
+                            .username(username)
+                            .password(request.getAdminPassword())
+                            .mobileNo(request.getOrgMobileNo())
+                            .address(request.getOrgAddress())
+                            .role("admin")
+                            .mustChangePassword(true)
+                            .build()
             );
 
             organization.getEmployeeDetails().add(admin);
@@ -90,14 +96,16 @@ public class AuthController {
 
             response.addCookie(userCookie);
 
-            return ResponseEntity.ok(organization);
+            SignupResponse signupResponse = new SignupResponse(organization, admin, "Organization signed up successfully!");
+
+            return ResponseEntity.status(HttpStatus.OK).body(signupResponse);
         } catch (Exception e) {
             throw new RuntimeException("Error in signing up!", e);
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request) {
         String username = loginRequest.getUsername();
         String password = loginRequest.getPassword();
 
@@ -122,15 +130,24 @@ public class AuthController {
             response.addCookie(userCookie);
 
             // Sanitize the response (don't return password)
-            return ResponseEntity.ok(new LoginResponse(
-                    e.getId().toHexString(),
-                    e.getOrgId(),
-                    e.getUsername(),
-                    e.getName(),
-                    e.getRole()
-            ));
+//            return ResponseEntity.ok(new LoginResponse(
+//                    e.getId().toHexString(),
+//                    e.getOrgId(),
+//                    e.getUsername(),
+//                    e.getName(),
+//                    e.getRole()
+//            ));
+            Employee currentUser = employeeService.getCurrentUser(request);
+            Optional<Organization> organization = organizationService.findOrgById(currentUser.getOrgId());
+            if (organization.isPresent()) {
+                LoginResponse loginResponse = new LoginResponse(organization.get(), currentUser, "Logged in successfully!");
+                return ResponseEntity.status(HttpStatus.OK).body(loginResponse);
+            }
+            LoginResponse loginResponse = new LoginResponse(null, null, "Organization not found!");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(loginResponse);
         } else {
-            return ResponseEntity.status(401).body("Invalid username or password.");
+            LoginResponse loginResponse = new LoginResponse(null, null, "Invalid username or password!");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(loginResponse);
         }
     }
 

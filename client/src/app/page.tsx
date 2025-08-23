@@ -10,8 +10,10 @@ import {
   BarChart3,
   CheckCircle,
   Star,
+  Loader,
 } from 'lucide-react';
 import Link from 'next/link';
+import useAuthStore from '@/store/useAuthStore';
 
 function useTypingAnimation(text: string, speed = 100) {
   const [displayText, setDisplayText] = useState('');
@@ -70,15 +72,31 @@ export default function HomePage() {
   const [showTagline, setShowTagline] = useState(false);
   const [showStats, setShowStats] = useState(false);
 
+  const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+
   useEffect(() => {
     const taglineTimer = setTimeout(() => setShowTagline(true), 3000);
     const statsTimer = setTimeout(() => setShowStats(true), 4000);
+
+    checkAuth();
 
     return () => {
       clearTimeout(taglineTimer);
       clearTimeout(statsTimer);
     };
-  }, []);
+  }, [checkAuth]);
+
+  useEffect(() => {
+    checkAuth()
+  }, [])
+
+  if (isCheckingAuth) {
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        <Loader className='size-10 animate-spin' />
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-background gradient-bg'>

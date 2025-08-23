@@ -1,12 +1,19 @@
 'use client';
 
-import { ReactEventHandler, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Navbar } from '@/components/navbar';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { axiosInstance } from '@/lib/axios';
+import useAuthStore from '@/store/useAuthStore';
+import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
+
+  const { signUp, loading, authUser } = useAuthStore.getState();
+
+  const router = useRouter();
 
   const [formData, setFormData] = useState({
     orgName: '',
@@ -14,49 +21,46 @@ export default function SignupPage() {
     orgEmail: '',
     orgGstNo: '',
     orgAddress: '',
-    adminName: '',
     adminPassword: '',
-    adminMobileNo: '',
-    adminAddress: '',
   });
   const [showToast, setShowToast] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    try {
-      const res = await fetch('/api/auth/sign-up', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+
+    const result = await signUp(formData);
+
+    if (result.success) {
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+
+      // reset form
+      setFormData({
+        orgName: '',
+        orgMobileNo: '',
+        orgEmail: '',
+        orgGstNo: '',
+        orgAddress: '',
+        adminPassword: '',
       });
-      if (res.ok) {
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-        setFormData({
-          orgName: '',
-          orgMobileNo: '',
-          orgEmail: '',
-          orgGstNo: '',
-          orgAddress: '',
-          adminName: '',
-          adminPassword: '',
-          adminMobileNo: '',
-          adminAddress: '',
-        });
-      } else {
-        const msg = await res.text();
-        setError(msg);
-      }
-    } catch (err) {
-      setError('Something went wrong!');
+
+      router.push('/');
+    } else {
+      setError(result.error || 'Something went wrong!');
     }
   };
 
   const handleChange = (e: any) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  useEffect(() => {
+      if (authUser) {
+        router.push('/');
+      }
+    }, [authUser]);
 
   return (
     <div className='min-h-screen bg-background'>
@@ -175,86 +179,59 @@ export default function SignupPage() {
               </div>
 
               {/* Admin Fields */}
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-border'>
-                <div>
-                  <label className='block text-sm font-medium mb-2'>
-                    Admin Name
-                  </label>
+              <div className='pt-6 border-t border-border'>
+                <label className='block text-sm font-medium mb-2'>
+                  Password
+                </label>
+                <div className='relative'>
                   <input
-                    type='text'
-                    name='adminName'
-                    value={formData.adminName}
+                    type={showPassword ? 'text' : 'password'}
+                    name='adminPassword'
+                    value={formData.adminPassword}
                     onChange={handleChange}
                     required
-                    className='w-full px-4 py-3 bg-input border border-border rounded-lg'
-                    placeholder='Admin full name'
+                    className='w-full px-4 py-3 pr-10 bg-input border border-border rounded-lg'
+                    placeholder='********'
                   />
-                </div>
-                <div>
-                  <label className='block text-sm font-medium mb-2'>
-                    Password
-                  </label>
-                  <div className='relative'>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name='adminPassword'
-                      value={formData.adminPassword}
-                      onChange={handleChange}
-                      required
-                      className='w-full px-4 py-3 pr-10 bg-input border border-border rounded-lg'
-                      placeholder='********'
-                    />
-                    <button
-                      type='button'
-                      className='absolute inset-y-0 right-3 flex items-center'
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className='size-5 text-base-content/40' />
-                      ) : (
-                        <Eye className='size-5 text-base-content/40' />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className='block text-sm font-medium mb-2'>
-                    Mobile No
-                  </label>
-                  <input
-                    type='text'
-                    name='adminMobileNo'
-                    value={formData.adminMobileNo}
-                    onChange={handleChange}
-                    required
-                    className='w-full px-4 py-3 bg-input border border-border rounded-lg'
-                    placeholder='+91 98765 43210'
-                  />
-                </div>
-                <div className='md:col-span-2'>
-                  <label className='block text-sm font-medium mb-2'>
-                    Address
-                  </label>
-                  <textarea
-                    name='adminAddress'
-                    value={formData.adminAddress}
-                    onChange={handleChange}
-                    rows={3}
-                    required
-                    className='w-full px-4 py-3 bg-input border border-border rounded-lg'
-                    placeholder='Admin address'
-                  />
+                  <button
+                    type='button'
+                    className='absolute inset-y-0 right-3 flex items-center'
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className='size-5 text-base-content/40' />
+                    ) : (
+                      <Eye className='size-5 text-base-content/40' />
+                    )}
+                  </button>
                 </div>
               </div>
 
               <motion.button
                 type='submit'
-                className='w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:neon-glow transition-all duration-300'
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                disabled={loading}
+                className={`w-full py-3 rounded-lg font-semibold transition-all duration-300
+                  ${
+                    loading
+                      ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                      : 'bg-primary text-primary-foreground hover:neon-glow'
+                  }
+                `}
+                whileHover={{ scale: loading ? 1 : 1.02 }}
+                whileTap={{ scale: loading ? 1 : 0.98 }}
               >
-                Sign Up
+                {loading ? (
+                  <motion.div
+                    className='flex items-center justify-center gap-2'
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <Loader2 className='h-5 w-5 animate-spin' />
+                    <span>Signing Up...</span>
+                  </motion.div>
+                ) : (
+                  'Sign Up'
+                )}
               </motion.button>
             </form>
           </motion.div>

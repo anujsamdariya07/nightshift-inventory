@@ -12,8 +12,5 @@ public class SignupRequest {
     private String orgGstNo;
     private String orgAddress;
 
-    private String adminName;
     private String adminPassword;
-    private String adminMobileNo;
-    private String adminAddress;
 }

@@ -1,44 +1,56 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Navbar } from '@/components/navbar';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import useAuthStore from '@/store/useAuthStore';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    orgEmail: '',
-    adminPassword: '',
+    username: '',
+    password: '',
   });
   const [showToast, setShowToast] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: any) => {
+  const { login, loading, authUser } = useAuthStore();
+
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (res.ok) {
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-        setFormData({ orgEmail: '', adminPassword: '' });
-      } else {
-        const msg = await res.text();
-        setError(msg);
-      }
-    } catch (err) {
-      setError('Something went wrong!');
+
+    const loginData = {
+      username: formData.username,
+      password: formData.password,
+    };
+
+    const res = await login(loginData);
+
+    if (res.success) {
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      setFormData({ username: '', password: '' });
+
+      router.push('/');
+    } else {
+      setError(res.error || 'Login failed. Please try again.');
     }
   };
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  useEffect(() => {
+    if (authUser) {
+      router.push('/');
+    }
+  }, [authUser]);
 
   return (
     <div className='min-h-screen bg-background'>
@@ -54,10 +66,10 @@ export default function LoginPage() {
             transition={{ duration: 0.8 }}
           >
             <h1 className='text-4xl md:text-6xl font-bold font-mono text-primary neon-text mb-6'>
-              Organization Login
+              Employee Login
             </h1>
             <p className='text-xl text-muted-foreground mb-8'>
-              Sign in with your registered email and admin password.
+              Sign in with your registered username and password.
             </p>
             <div className='w-24 h-1 bg-gradient-to-r from-primary via-secondary to-accent mx-auto rounded-full' />
           </motion.div>
@@ -81,15 +93,17 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className='space-y-6'>
               <div>
-                <label className='block text-sm font-medium mb-2'>Email</label>
+                <label className='block text-sm font-medium mb-2'>
+                  Username
+                </label>
                 <input
-                  type='email'
-                  name='orgEmail'
-                  value={formData.orgEmail}
+                  type='text'
+                  name='username'
+                  value={formData.username}
                   onChange={handleChange}
                   required
                   className='w-full px-4 py-3 bg-input border border-border rounded-lg'
-                  placeholder='org@example.com'
+                  placeholder='Your username'
                 />
               </div>
 
@@ -100,8 +114,8 @@ export default function LoginPage() {
                 <div className='relative'>
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    name='adminPassword'
-                    value={formData.adminPassword}
+                    name='password'
+                    value={formData.password}
                     onChange={handleChange}
                     required
                     className='w-full px-4 py-3 pr-10 bg-input border border-border rounded-lg'
@@ -123,11 +137,29 @@ export default function LoginPage() {
 
               <motion.button
                 type='submit'
-                className='w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:neon-glow transition-all duration-300'
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                disabled={loading}
+                className={`w-full py-3 rounded-lg font-semibold transition-all duration-300
+                  ${
+                    loading
+                      ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                      : 'bg-primary text-primary-foreground hover:neon-glow'
+                  }
+                `}
+                whileHover={{ scale: loading ? 1 : 1.02 }}
+                whileTap={{ scale: loading ? 1 : 0.98 }}
               >
-                Login
+                {loading ? (
+                  <motion.div
+                    className='flex items-center justify-center gap-2'
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <Loader2 className='h-5 w-5 animate-spin' />
+                    <span>Signing Up...</span>
+                  </motion.div>
+                ) : (
+                  'Sign Up'
+                )}
               </motion.button>
             </form>
           </motion.div>

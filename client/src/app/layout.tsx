@@ -4,6 +4,7 @@ import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import AuthProvider from "@/lib/AuthProvider"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,7 +33,11 @@ export default function RootLayout({
     <html lang="en" className={`dark ${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans antialiased">
         <Navbar />
-        <main className="min-h-screen">{children}</main>
+        <main className="min-h-screen">
+          <AuthProvider>
+          {children}
+          </AuthProvider>
+        </main>
         <footer className="relative z-20 bg-card/80 backdrop-blur-md py-8">
         <Footer />
         </footer>

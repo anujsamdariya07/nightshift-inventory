@@ -1,47 +1,49 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils"
-import { Menu, X } from "lucide-react"
-import useAuthStore from "@/store/authStore"
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import { Loader, Menu, X } from 'lucide-react';
+import useAuthStore from '@/store/useAuthStore';
 
 const navItems = [
-  { name: "Home", href: "/" },
-  { name: "Features", href: "/features" },
-  { name: "Workflow", href: "/workflow" },
-  { name: "Orders", href: "/orders" },
-  { name: "Vendors", href: "/vendors" },
-  { name: "Customers", href: "/customers" },
-  { name: "Contact", href: "/contact" },
-]
+  { name: 'Orders', href: '/orders' },
+  { name: 'Vendors', href: '/vendors' },
+  { name: 'Items', href: '/items' },
+  { name: 'Customers', href: '/customers' },
+  { name: 'Employees', href: '/employees' },
+];
 
 const authItems = [
-  { name: "Home", href: "/" },
-  { name: "Workflow", href: "/workflow" },
-  { name: "Contact", href: "/contact" },
-]
+  { name: 'Home', href: '/' },
+  { name: 'Workflow', href: '/workflow' },
+  { name: 'Contact', href: '/contact' },
+];
 
 export function Navbar() {
-  const [scrolled, setScrolled] = useState(false)
-  const pathname = usePathname()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const {authUser} = useAuthStore()
+  const { authUser } = useAuthStore.getState();
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50)
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
-    setMobileMenuOpen(false)
-  }, [pathname])
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    console.log('authuser', authUser);
+  }, [authUser]);
 
   return (
     <>
@@ -98,8 +100,8 @@ export function Navbar() {
               </div>
             )}
 
-            {/* {!authUser && (
-              <div className='hidden md:flex items-center space-x-8'>
+            {!authUser && (
+              <div className='hidden md:flex items-center space-x-6'>
                 {authItems.map((item) => (
                   <Link
                     key={item.name}
@@ -124,56 +126,27 @@ export function Navbar() {
                     )}
                   </Link>
                 ))}
-              </div>
-            )} */}
-            {!authUser && (
-  <div className='hidden md:flex items-center space-x-6'>
-    {authItems.map((item) => (
-      <Link
-        key={item.name}
-        href={item.href}
-        className={cn(
-          'relative px-3 py-2 text-sm font-medium transition-all duration-300',
-          'hover:text-primary',
-          pathname === item.href
-            ? 'text-primary'
-            : 'text-muted-foreground'
-        )}
-      >
-        {item.name}
-        {pathname === item.href && (
-          <motion.div
-            className='absolute bottom-0 left-0 right-0 h-0.5 bg-primary'
-            layoutId='activeLink'
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          />
-        )}
-      </Link>
-    ))}
 
-    {/* Login Button */}
-    <Link
-      href="/login"
-      className="px-4 py-2 text-sm font-semibold rounded-xl border border-primary 
+                {/* Login Button */}
+                <Link
+                  href='/login'
+                  className='px-4 py-2 text-sm font-semibold rounded-xl border border-primary 
                  text-primary hover:bg-primary hover:text-background 
-                 transition-colors duration-300 shadow-sm"
-    >
-      Login
-    </Link>
+                 transition-colors duration-300 shadow-sm'
+                >
+                  Login
+                </Link>
 
-    {/* Signup Button */}
-    <Link
-      href="/signup"
-      className="px-4 py-2 text-sm font-semibold rounded-xl bg-primary text-background 
-                 hover:bg-primary/90 transition-colors duration-300 shadow-md"
-    >
-      Signup
-    </Link>
-  </div>
-)}
-
+                {/* Signup Button */}
+                <Link
+                  href='/signup'
+                  className='px-4 py-2 text-sm font-semibold rounded-xl bg-primary text-background 
+                 hover:bg-primary/90 transition-colors duration-300 shadow-md'
+                >
+                  Signup
+                </Link>
+              </div>
+            )}
 
             <motion.button
               className='md:hidden p-2 text-primary hover:text-primary/80 rounded-lg transition-colors'
