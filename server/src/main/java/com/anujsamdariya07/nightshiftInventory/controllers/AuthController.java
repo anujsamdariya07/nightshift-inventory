@@ -1,25 +1,24 @@
 package com.anujsamdariya07.nightshiftInventory.controllers;
 
-import com.anujsamdariya07.nightshiftInventory.dto.LoginRequest;
-import com.anujsamdariya07.nightshiftInventory.dto.LoginResponse;
-import com.anujsamdariya07.nightshiftInventory.dto.SignupRequest;
-import com.anujsamdariya07.nightshiftInventory.dto.SignupResponse;
+import com.anujsamdariya07.nightshiftInventory.dto.*;
 import com.anujsamdariya07.nightshiftInventory.entity.Employee;
 import com.anujsamdariya07.nightshiftInventory.entity.Organization;
 import com.anujsamdariya07.nightshiftInventory.services.EmployeeService;
 import com.anujsamdariya07.nightshiftInventory.services.OrganizationService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 import java.util.Optional;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -31,12 +30,12 @@ public class AuthController {
 
     @GetMapping("/current")
     public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
-        Employee currentUser = employeeService.getCurrentUser(request);
-        if (currentUser != null) {
-            Optional<Organization> org = organizationService.findOrgById(currentUser.getOrgId());
-            return ResponseEntity.ok(currentUser);
+        String userId = CookieUtil.getCookieValue(request, "loggedInUser");
+        if (userId != null) {
+            Employee currentUser = employeeService.getEmployeeById(new ObjectId(userId)).orElseThrow(() -> new RuntimeException("Error while getting current user!"));
+            return ResponseEntity.ok(new GetCurrentUserResponse(currentUser, "User found!"));
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not logged in");
+        return ResponseEntity.status(HttpStatus.OK).body(new GetCurrentUserResponse(null, "Not logged in"));
     }
 
     @PostMapping("/sign-up")
@@ -88,13 +87,15 @@ public class AuthController {
 
             organizationService.saveOrganization(organization);
 
-            Cookie userCookie = new Cookie("loggedInUser", admin.getId().toHexString());
-            userCookie.setHttpOnly(false);
-            userCookie.setSecure(false);
-            userCookie.setPath("/");
-            userCookie.setMaxAge(24 * 60 * 60);
+            ResponseCookie userCookie = ResponseCookie.from("loggedInUser", admin.getId().toHexString())
+                    .httpOnly(true)
+                    .secure(true) // true in production with https
+                    .sameSite("None") // VERY IMPORTANT for cross-origin
+                    .path("/")
+                    .maxAge(24 * 60 * 60)
+                    .build();
 
-            response.addCookie(userCookie);
+            response.addHeader(HttpHeaders.SET_COOKIE, userCookie.toString());
 
             SignupResponse signupResponse = new SignupResponse(organization, admin, "Organization signed up successfully!");
 
@@ -121,13 +122,15 @@ public class AuthController {
         if (employee.isPresent()) {
             Employee e = employee.get();
 
-            Cookie userCookie = new Cookie("loggedInUser", e.getId().toHexString());
-            userCookie.setHttpOnly(false);
-            userCookie.setSecure(false);
-            userCookie.setPath("/");
-            userCookie.setMaxAge(24 * 60 * 60);
+            ResponseCookie userCookie = ResponseCookie.from("loggedInUser", e.getId().toHexString())
+                    .httpOnly(true)
+                    .secure(true) // true in production with https
+                    .sameSite("None") // VERY IMPORTANT for cross-origin
+                    .path("/")
+                    .maxAge(24 * 60 * 60)
+                    .build();
 
-            response.addCookie(userCookie);
+            response.addHeader(HttpHeaders.SET_COOKIE, userCookie.toString());
 
             // Sanitize the response (don't return password)
 //            return ResponseEntity.ok(new LoginResponse(
@@ -137,15 +140,12 @@ public class AuthController {
 //                    e.getName(),
 //                    e.getRole()
 //            ));
-            Employee currentUser = employeeService.getCurrentUser(request);
-            Optional<Organization> organization = organizationService.findOrgById(currentUser.getOrgId());
-            if (organization.isPresent()) {
-                LoginResponse loginResponse = new LoginResponse(organization.get(), currentUser, "Logged in successfully!");
-                return ResponseEntity.status(HttpStatus.OK).body(loginResponse);
-            }
-            LoginResponse loginResponse = new LoginResponse(null, null, "Organization not found!");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(loginResponse);
+//            Employee currentUser = employeeService.getCurrentUser(request);
+            Optional<Organization> organization = organizationService.findOrgById(employee.get().getOrgId());
+            LoginResponse loginResponse = new LoginResponse(organization.get(), employee.get(), "Logged in successfully!");
+            return ResponseEntity.status(HttpStatus.OK).body(loginResponse);
         } else {
+            System.out.println("User not found!");
             LoginResponse loginResponse = new LoginResponse(null, null, "Invalid username or password!");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(loginResponse);
         }
@@ -153,10 +153,15 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
-        Cookie userCookie = new Cookie("loggedInUser", null);
-        userCookie.setPath("/");
-        userCookie.setMaxAge(0); // Expire immediately
-        response.addCookie(userCookie);
+        ResponseCookie deleteCookie = ResponseCookie.from("loggedInUser", "")
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("LAX")
+                .path("/")
+                .maxAge(0) // expire immediately
+                .build();
+
+        response.addHeader("Set-Cookie", deleteCookie.toString());
         return ResponseEntity.ok(Map.of("message", "Logged out successfully."));
     }
 }

@@ -34,9 +34,9 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <Navbar />
         <main className="min-h-screen">
-          <AuthProvider>
+          {/* <AuthProvider> */}
           {children}
-          </AuthProvider>
+          {/* </AuthProvider> */}
         </main>
         <footer className="relative z-20 bg-card/80 backdrop-blur-md py-8">
         <Footer />

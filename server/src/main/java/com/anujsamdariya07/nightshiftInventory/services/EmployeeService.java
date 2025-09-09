@@ -22,8 +22,10 @@ public class EmployeeService {
 
     public Employee getCurrentUser(HttpServletRequest request) {
         String userId = CookieUtil.getCookieValue(request, "loggedInUser");
+        System.out.println(userId);
 
         if (userId == null || userId.isEmpty()) {
+            System.out.println("ERROR");
             throw new RuntimeException("User not logged in.");
         }
 
@@ -98,7 +100,8 @@ public class EmployeeService {
         // Update only the fields you want to allow editing
         if (updatedEmployeeData.getName() != null) existingEmployee.setName(updatedEmployeeData.getName());
         if (updatedEmployeeData.getRole() != null) existingEmployee.setRole(updatedEmployeeData.getRole());
-        if (updatedEmployeeData.getMobileNo() != null && !employeeRepository.existsByMobileNo(updatedEmployeeData.getMobileNo())) existingEmployee.setMobileNo(updatedEmployeeData.getMobileNo());
+        if (updatedEmployeeData.getMobileNo() != null && !employeeRepository.existsByMobileNo(updatedEmployeeData.getMobileNo()))
+            existingEmployee.setMobileNo(updatedEmployeeData.getMobileNo());
         if (updatedEmployeeData.getAddress() != null) existingEmployee.setAddress(updatedEmployeeData.getAddress());
 
         if (updatedEmployeeData.getPassword() != null &&

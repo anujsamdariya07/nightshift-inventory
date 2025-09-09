@@ -14,9 +14,10 @@ export default function LoginPage() {
     password: '',
   });
   const [showToast, setShowToast] = useState(false);
+  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const { login, loading, authUser } = useAuthStore();
+  const { login, loading, authUser, checkAuth } = useAuthStore();
 
   const router = useRouter();
 
@@ -33,6 +34,7 @@ export default function LoginPage() {
 
     if (res.success) {
       setShowToast(true);
+      setMessage(res.message!);
       setTimeout(() => setShowToast(false), 3000);
       setFormData({ username: '', password: '' });
 
@@ -46,6 +48,13 @@ export default function LoginPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // useEffect(() => {
+  //   const checkAuth = async () => {
+  //     await checkAuth()
+  //   }
+  //   checkAuth()
+  // }, [])
+  
   useEffect(() => {
     if (authUser) {
       router.push('/');
@@ -155,10 +164,10 @@ export default function LoginPage() {
                     animate={{ opacity: 1 }}
                   >
                     <Loader2 className='h-5 w-5 animate-spin' />
-                    <span>Signing Up...</span>
+                    <span>Logging In...</span>
                   </motion.div>
                 ) : (
-                  'Sign Up'
+                  'Login'
                 )}
               </motion.button>
             </form>
@@ -175,7 +184,7 @@ export default function LoginPage() {
           exit={{ opacity: 0, x: 100 }}
           transition={{ duration: 0.3 }}
         >
-          Login successful!
+          {message}
         </motion.div>
       )}
     </div>

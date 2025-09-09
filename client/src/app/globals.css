@@ -5,30 +5,44 @@
 
 :root {
   /* Updated to dark theme with neon accents for NightShift */
-  --background: oklch(0.145 0 0); /* Dark background */
-  --foreground: oklch(0.985 0 0); /* White text */
-  --card: oklch(0.18 0 0); /* Slightly lighter dark for cards */
+  --background: oklch(0.145 0 0);
+  /* Dark background */
+  --foreground: oklch(0.985 0 0);
+  /* White text */
+  --card: oklch(0.18 0 0);
+  /* Slightly lighter dark for cards */
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.18 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.7 0.15 195); /* Cyan neon */
+  --primary: oklch(0.7 0.15 195);
+  /* Cyan neon */
   --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.6 0.2 300); /* Purple neon */
+  --secondary: oklch(0.6 0.2 300);
+  /* Purple neon */
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.4 0 0); /* Muted gray */
+  --muted: oklch(0.4 0 0);
+  /* Muted gray */
   --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.8 0.25 120); /* Neon green */
+  --accent: oklch(0.8 0.25 120);
+  /* Neon green */
   --accent-foreground: oklch(0.145 0 0);
-  --destructive: oklch(0.6 0.25 15); /* Neon red */
+  --destructive: oklch(0.6 0.25 15);
+  /* Neon red */
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(0.3 0 0);
   --input: oklch(0.18 0 0);
-  --ring: oklch(0.7 0.15 195); /* Cyan ring */
-  --chart-1: oklch(0.7 0.15 195); /* Cyan */
-  --chart-2: oklch(0.6 0.2 300); /* Purple */
-  --chart-3: oklch(0.8 0.25 120); /* Neon green */
-  --chart-4: oklch(0.6 0.25 15); /* Neon red */
-  --chart-5: oklch(0.8 0.15 60); /* Electric blue */
+  --ring: oklch(0.7 0.15 195);
+  /* Cyan ring */
+  --chart-1: oklch(0.7 0.15 195);
+  /* Cyan */
+  --chart-2: oklch(0.6 0.2 300);
+  /* Purple */
+  --chart-3: oklch(0.8 0.25 120);
+  /* Neon green */
+  --chart-4: oklch(0.6 0.25 15);
+  /* Neon red */
+  --chart-5: oklch(0.8 0.15 60);
+  /* Electric blue */
   --radius: 0.5rem;
   --sidebar: oklch(0.18 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
@@ -123,6 +137,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -170,5 +185,5 @@ button {
 }
 
 ::selection {
-  background: #6b6b6b;
+  background: #4b4b4b;
 }

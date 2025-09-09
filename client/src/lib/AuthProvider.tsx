@@ -8,7 +8,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     checkAuth(); 
-  }, [checkAuth]);
+  }, []);
 
   return <>{children}</>;
 }

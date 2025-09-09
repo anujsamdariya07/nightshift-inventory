@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Loader, Menu, X } from 'lucide-react';
+import { Loader, Menu, X, LogOut, Loader2 } from 'lucide-react';
 import useAuthStore from '@/store/useAuthStore';
 
 const navItems = [
@@ -26,27 +26,32 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const { authUser } = useAuthStore.getState();
+  const { authUser, logout, loading } = useAuthStore();
+
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
+  useEffect(() => setMobileMenuOpen(false), [pathname]);
 
-  useEffect(() => {
-    console.log('authuser', authUser);
-  }, [authUser]);
+  if (!hydrated) {
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        <Loader className='size-10 animate-spin' />
+      </div>
+    );
+  }
 
   return (
     <>
+      {/* Navbar */}
       <motion.nav
         className={cn(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-300 prevent-select',
@@ -70,9 +75,8 @@ export function Navbar() {
               </motion.div>
             </Link>
 
-            {/* Desktop Navigation Links */}
             {authUser && (
-              <div className='hidden md:flex items-center space-x-8'>
+              <div className='hidden md:flex items-center space-x-6'>
                 {navItems.map((item) => (
                   <Link
                     key={item.name}
@@ -97,6 +101,23 @@ export function Navbar() {
                     )}
                   </Link>
                 ))}
+
+                {/* Greeting + Logout */}
+                <div className='flex items-center space-x-3'>
+                  <span className='text-sm font-medium text-muted-foreground'>
+                    Hi,{' '}
+                    <span className='text-primary font-semibold'>
+                      {authUser.username}
+                    </span>
+                  </span>
+                  <button
+                    onClick={() => setShowLogoutModal(true)}
+                    className='px-4 py-2 text-sm font-semibold rounded-xl bg-primary text-background 
+                               hover:bg-primary/90 transition-colors duration-300 shadow-md'
+                  >
+                    Logout
+                  </button>
+                </div>
               </div>
             )}
 
@@ -127,27 +148,25 @@ export function Navbar() {
                   </Link>
                 ))}
 
-                {/* Login Button */}
                 <Link
                   href='/login'
                   className='px-4 py-2 text-sm font-semibold rounded-xl border border-primary 
-                 text-primary hover:bg-primary hover:text-background 
-                 transition-colors duration-300 shadow-sm'
+                             text-primary hover:bg-primary hover:text-background 
+                             transition-colors duration-300 shadow-sm'
                 >
                   Login
                 </Link>
-
-                {/* Signup Button */}
                 <Link
                   href='/signup'
                   className='px-4 py-2 text-sm font-semibold rounded-xl bg-primary text-background 
-                 hover:bg-primary/90 transition-colors duration-300 shadow-md'
+                             hover:bg-primary/90 transition-colors duration-300 shadow-md'
                 >
                   Signup
                 </Link>
               </div>
             )}
 
+            {/* Mobile Menu Button */}
             <motion.button
               className='md:hidden p-2 text-primary hover:text-primary/80 rounded-lg transition-colors'
               whileTap={{ scale: 0.95 }}
@@ -163,6 +182,7 @@ export function Navbar() {
         </div>
       </motion.nav>
 
+      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -172,13 +192,11 @@ export function Navbar() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {/* Backdrop */}
             <div
               className='absolute inset-0 bg-background/80 backdrop-blur-sm'
               onClick={() => setMobileMenuOpen(false)}
             />
 
-            {/* Mobile Menu */}
             <motion.div
               className='absolute top-20 left-4 right-4 bg-card border border-border rounded-lg shadow-lg p-4'
               initial={{ opacity: 0, y: -20 }}
@@ -187,7 +205,7 @@ export function Navbar() {
               transition={{ duration: 0.2 }}
             >
               <div className='flex flex-col space-y-2'>
-                {navItems.map((item, index) => (
+                {(authUser ? navItems : authItems).map((item, index) => (
                   <motion.div
                     key={item.name}
                     initial={{ opacity: 0, x: -20 }}
@@ -209,6 +227,98 @@ export function Navbar() {
                     </Link>
                   </motion.div>
                 ))}
+
+                {!authUser ? (
+                  <div className='flex flex-col space-y-2 mt-4'>
+                    <Link
+                      href='/login'
+                      className='block px-4 py-3 text-sm font-semibold rounded-lg border border-primary text-primary hover:bg-primary hover:text-background transition-colors duration-200'
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href='/signup'
+                      className='block px-4 py-3 text-sm font-semibold rounded-lg bg-primary text-background hover:bg-primary/90 transition-colors duration-200'
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Signup
+                    </Link>
+                  </div>
+                ) : (
+                  <div className='flex flex-col space-y-2 mt-4'>
+                    <span className='px-4 text-sm font-medium text-muted-foreground'>
+                      Hi,{' '}
+                      <span className='text-primary'>{authUser.username}</span>
+                    </span>
+                    <button
+                      onClick={() => setShowLogoutModal(true)}
+                      className='px-4 py-2 text-sm font-semibold rounded-xl bg-primary text-background 
+                                 hover:bg-primary/90 transition-colors duration-300 shadow-md'
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Logout Confirmation Modal */}
+      <AnimatePresence>
+        {showLogoutModal && (
+          <motion.div
+            className='fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm'
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className='bg-card rounded-2xl shadow-lg p-6 w-[90%] max-w-sm border border-border'
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+            >
+              <h2 className='text-lg font-semibold text-foreground mb-2'>
+                Confirm Logout
+              </h2>
+              <p className='text-sm text-muted-foreground mb-6'>
+                Are you sure you want to logout? You’ll need to login again.
+              </p>
+
+              <div className='flex justify-end space-x-3'>
+                <button
+                  onClick={() => setShowLogoutModal(false)}
+                  className='px-4 py-2 text-sm rounded-lg border border-border text-muted-foreground 
+                             hover:bg-muted transition-colors duration-200'
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    await logout();
+                    setShowLogoutModal(false);
+                  }}
+                  disabled={loading}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg 
+                             bg-destructive text-destructive-foreground 
+                             hover:bg-destructive/90 transition-colors duration-200 ${
+                               loading ? 'opacity-70 cursor-not-allowed' : ''
+                             }`}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className='w-4 h-4 animate-spin' />
+                      Logging out...
+                    </>
+                  ) : (
+                    <>
+                      <LogOut className='w-4 h-4' /> Confirm
+                    </>
+                  )}
+                </button>
               </div>
             </motion.div>
           </motion.div>

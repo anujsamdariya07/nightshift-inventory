@@ -87,8 +87,12 @@ export default function HomePage() {
   }, [checkAuth]);
 
   useEffect(() => {
-    checkAuth()
-  }, [])
+    console.log('authuser', authUser);
+  }, [authUser]);
+
+  // useEffect(() => {
+  //   checkAuth()
+  // }, [])
 
   if (isCheckingAuth) {
     return (
