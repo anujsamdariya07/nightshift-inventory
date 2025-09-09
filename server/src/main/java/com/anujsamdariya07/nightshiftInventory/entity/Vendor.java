@@ -1,5 +1,7 @@
 package com.anujsamdariya07.nightshiftInventory.entity;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,8 +20,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Vendor {
 
     @Id
+    @JsonSerialize(using = ToStringSerializer.class)
     private ObjectId id;
 
+    @JsonSerialize(using = ToStringSerializer.class)
     private ObjectId orgId;
 
     private String name;

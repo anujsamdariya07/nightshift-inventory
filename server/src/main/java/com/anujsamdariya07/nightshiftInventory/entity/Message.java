@@ -1,5 +1,7 @@
 package com.anujsamdariya07.nightshiftInventory.entity;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,14 +23,12 @@ import java.time.LocalDateTime;
 public class Message {
 
     @Id
+    @JsonSerialize(using = ToStringSerializer.class)
     private ObjectId id;
 
     private String senderId;
 
     private String receiverId;
-
-    @DBRef
-    private Organization org;
 
     private String content;
 

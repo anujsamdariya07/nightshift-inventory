@@ -24,11 +24,97 @@ interface CheckAuthResponse {
   employee: AuthUser | null;
 }
 
-interface Employee {}
-interface Order {}
-interface Customer {}
-interface Item {}
-interface Vendor {}
+interface Message {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  isRead: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Employee {
+  id: string;
+  orgId: string;
+  name: string;
+  username: string;
+  password: string;
+  mustChangePassword: boolean;
+  role: 'worker' | 'admin';
+  mobileNo: string;
+  address: string;
+  attendance: number;
+  messages: Array<Message>;
+}
+
+interface OrderItem {
+  itemName: string;
+  quantity: number;
+  priceAtOrder: number;
+}
+
+interface Order {
+  id: string;
+  orgId: string;
+  customerId: string;
+  employeeId: string;
+  items: Array<OrderItem>;
+  totalAmount: number;
+  status: 'pending' | 'completed';
+
+  orderDate: Date;
+  notes?: string;
+}
+
+interface CustomerOrder {
+  orderId: string;
+  status: 'pending' | 'completed' | 'shipped';
+  orderDate: Date;
+  totalAmount: number;
+}
+
+interface Customer {
+  id: string;
+  orgId: string;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  status: 'active' | 'inactive';
+  orders: Array<CustomerOrder>;
+  gstNo: string;
+}
+
+interface UpdateHistory {
+  vendorName: string;
+  quantityUpdated: number;
+  cost: number;
+  updateType: 'replenishment' | 'order';
+  date: Date;
+}
+
+interface Item {
+  id: string;
+  orgId: string;
+  name: string;
+  quantity: number;
+  threshold: number;
+  lastDateOfUpdate: Date;
+  image: string;
+  updateHistory: Array<UpdateHistory>;
+}
+
+interface Vendor {
+  id: string;
+  orgId: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: 'active' | 'inactive';
+  gstNo: string;
+  address: string;
+}
 
 interface Organization {
   id: string;
