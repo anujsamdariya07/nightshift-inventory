@@ -35,8 +35,7 @@ public class VendorService {
             throw new RuntimeException("Vendor with this GST number already exists!");
         }
 
-        Vendor savedVendor = vendorRepository.save(vendor);
-        return savedVendor;
+        return vendorRepository.save(vendor);
     }
 
     public Vendor updateVendor(ObjectId vendorId, Vendor vendor) {
@@ -52,9 +51,10 @@ public class VendorService {
         if (vendor.getStatus() != null) exisitingVendor.setStatus(vendor.getStatus());
         if (vendor.getGstNo() != null && !vendorRepository.existsByGstNo(vendor.getGstNo())) exisitingVendor.setGstNo(vendor.getGstNo());
         if (vendor.getAddress() != null) exisitingVendor.setAddress(vendor.getAddress());
+        if (vendor.getSpecialities() != null) exisitingVendor.setSpecialities(vendor.getSpecialities());
+        if (vendor.getReplenishmentHistory() != null) exisitingVendor.setReplenishmentHistory(vendor.getReplenishmentHistory());
 
-        Vendor savedVendor = vendorRepository.save(exisitingVendor);
-        return savedVendor;
+        return vendorRepository.save(exisitingVendor);
     }
 
     public void deleteVendor(ObjectId vendorId) {

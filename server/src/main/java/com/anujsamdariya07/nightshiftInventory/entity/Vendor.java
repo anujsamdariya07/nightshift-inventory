@@ -11,6 +11,8 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
+
 @Document(collection = "vendors")
 @Getter
 @Setter
@@ -28,6 +30,8 @@ public class Vendor {
 
     private String name;
 
+    private String vendorId;
+
     private String email;
 
     private String phone;
@@ -37,5 +41,15 @@ public class Vendor {
 
     private String gstNo;
 
+    private ArrayList<String> specialities;
+
     private String address;
+
+    private int totalRestocks;
+
+    private int totalValue;
+
+    private ArrayList<RestockItem> replenishmentHistory;
+
+    private ArrayList<Integer> rating;
 }

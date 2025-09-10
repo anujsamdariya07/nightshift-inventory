@@ -38,6 +38,30 @@ interface VendorState {
   vendor: Vendor | null;
   loading: boolean;
   error: string | null;
+
+  fetchVendors: () => Promise<{
+    success: boolean;
+    vendors?: Vendor[];
+    error?: string;
+  }>;
+  fetchVendorById: (
+    id: string
+  ) => Promise<{ success: boolean; vendor?: Vendor; error?: string }>;
+  createVendor: (
+    vendorData: VendorCreateData
+  ) => Promise<{ success: boolean; message?: string; error?: string }>;
+  updateVendor: (
+    vendorData: VendorUpdateData,
+    id: string
+  ) => Promise<{
+    success: boolean;
+    message?: string;
+    vendor?: Vendor;
+    error?: string;
+  }>;
+  deleteVendor: (
+    id: string
+  ) => Promise<{ success: boolean; message?: string; error?: string }>;
 }
 
 const useVendorStore = create<VendorState>()(
@@ -149,7 +173,11 @@ const useVendorStore = create<VendorState>()(
             id: response.data.id?.date || response.data.id,
             orgId: response.data.orgId?.date || response.data.orgId,
           };
-          set({ vendor: vendor, error: null });
+          set((state) => ({
+            vendor: vendor,
+            vendors: state.vendors.map((v) => (v.id == id ? vendor : v)),
+            error: null,
+          }));
           toast.success('Vendor updated successfully!');
           return {
             success: true,
@@ -200,7 +228,7 @@ const useVendorStore = create<VendorState>()(
     }),
     {
       name: 'vendor-storage',
-      partialize: (state) => ({ vendor: state.vendor }),
+      partialize: (state) => ({ vendor: state.vendor, vendors: state.vendor }),
     }
   )
 );
