@@ -4,135 +4,52 @@ import type React from 'react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navbar } from '@/components/navbar';
-
-// Mock data for demonstration
-const mockVendors = [
-  {
-    id: 'VEN-001',
-    name: 'Industrial Supply Co.',
-    email: 'contact@industrialsupply.com',
-    phone: '+1-555-0123',
-    gst: 'GST123456789',
-    status: 'active',
-    rating: 4.8,
-    totalOrders: 156,
-    totalValue: 245000,
-    lastOrder: '2025-01-20',
-    specialties: ['Bearings', 'Bolts', 'Industrial Tools'],
-    replenishmentHistory: [
-      { month: 'Jan', value: 45000 },
-      { month: 'Feb', value: 52000 },
-      { month: 'Mar', value: 38000 },
-      { month: 'Apr', value: 61000 },
-      { month: 'May', value: 49000 },
-      { month: 'Jun', value: 55000 },
-    ],
-    performance: {
-      onTimeDelivery: 95,
-      responseTime: 88,
-    },
-  },
-  {
-    id: 'VEN-002',
-    name: 'TechFlow Components',
-    email: 'sales@techflow.com',
-    phone: '+1-555-0456',
-    gst: 'GST987654321',
-    status: 'active',
-    rating: 4.6,
-    totalOrders: 89,
-    totalValue: 189000,
-    lastOrder: '2025-01-19',
-    specialties: ['Hydraulics', 'Pumps', 'Gauges'],
-    replenishmentHistory: [
-      { month: 'Jan', value: 32000 },
-      { month: 'Feb', value: 28000 },
-      { month: 'Mar', value: 35000 },
-      { month: 'Apr', value: 41000 },
-      { month: 'May', value: 29000 },
-      { month: 'Jun', value: 24000 },
-    ],
-    performance: {
-      onTimeDelivery: 89,
-      responseTime: 91,
-    },
-  },
-  {
-    id: 'VEN-003',
-    name: 'Safety First Equipment',
-    email: 'orders@safetyfirst.com',
-    phone: '+1-555-0789',
-    gst: 'GST456789123',
-    status: 'pending',
-    rating: 4.2,
-    totalOrders: 67,
-    totalValue: 98000,
-    lastOrder: '2025-01-15',
-    specialties: ['Safety Gear', 'PPE', 'Helmets'],
-    replenishmentHistory: [
-      { month: 'Jan', value: 18000 },
-      { month: 'Feb', value: 22000 },
-      { month: 'Mar', value: 15000 },
-      { month: 'Apr', value: 19000 },
-      { month: 'May', value: 12000 },
-      { month: 'Jun', value: 12000 },
-    ],
-    performance: {
-      onTimeDelivery: 82,
-      responseTime: 79,
-    },
-  },
-  {
-    id: 'VEN-004',
-    name: 'AutoParts Direct',
-    email: 'supply@autopartsdirect.com',
-    phone: '+1-555-0321',
-    gst: 'GST789123456',
-    status: 'inactive',
-    rating: 3.9,
-    totalOrders: 34,
-    totalValue: 67000,
-    lastOrder: '2025-01-10',
-    specialties: ['Filters', 'Brake Parts', 'Engine Components'],
-    replenishmentHistory: [
-      { month: 'Jan', value: 12000 },
-      { month: 'Feb', value: 8000 },
-      { month: 'Mar', value: 15000 },
-      { month: 'Apr', value: 11000 },
-      { month: 'May', value: 9000 },
-      { month: 'Jun', value: 12000 },
-    ],
-    performance: {
-      onTimeDelivery: 76,
-      responseTime: 73,
-    },
-  },
-];
+import useVendorStore, { type Vendor } from '@/store/useVendorStore';
+import { toast } from 'sonner';
+import { Loader } from 'lucide-react';
 
 const statusColors = {
   active: 'accent',
-  pending: 'chart-2',
   inactive: 'muted',
 };
 
 const filterOptions = [
   { label: 'All Vendors', value: 'all' },
   { label: 'Active', value: 'active' },
-  { label: 'Pending', value: 'pending' },
   { label: 'Inactive', value: 'inactive' },
 ];
 
 export default function VendorsPage() {
-  const [vendors, setVendors] = useState(mockVendors);
-  const [filteredVendors, setFilteredVendors] = useState(mockVendors);
+  const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<string | null>(null);
   const [showNewVendorModal, setShowNewVendorModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
 
+  const {
+    fetchVendors,
+    vendors,
+    loading,
+    error,
+    createVendor,
+    updateVendor,
+    deleteVendor,
+  } = useVendorStore();
+
+  // Load vendors on component mount
   useEffect(() => {
-    let filtered = vendors;
+    const loadVendors = async () => {
+      await fetchVendors();
+    };
+    loadVendors();
+  }, [fetchVendors]);
+
+  // Filter vendors based on search and filter criteria
+  useEffect(() => {
+    let filtered = vendors || [];
 
     if (activeFilter !== 'all') {
       filtered = filtered.filter((vendor) => vendor.status === activeFilter);
@@ -141,10 +58,10 @@ export default function VendorsPage() {
     if (searchTerm) {
       filtered = filtered.filter(
         (vendor) =>
-          vendor.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          vendor.vendorId.toLowerCase().includes(searchTerm.toLowerCase()) ||
           vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           vendor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          vendor.specialties.some((specialty) =>
+          vendor.specialities.some((specialty) =>
             specialty.toLowerCase().includes(searchTerm.toLowerCase())
           )
       );
@@ -152,6 +69,26 @@ export default function VendorsPage() {
 
     setFilteredVendors(filtered);
   }, [activeFilter, searchTerm, vendors]);
+
+  // Helper functions to calculate averages
+  const calculateAverage = (arr: number[]): number => {
+    if (!arr || arr.length === 0) return 0;
+    return arr.reduce((sum, val) => sum + val, 0) / arr.length;
+  };
+
+  const handleDeleteVendor = async (vendorId: string) => {
+    if (window.confirm('Are you sure you want to delete this vendor?')) {
+      const result = await deleteVendor(vendorId);
+      if (result.success) {
+        toast.success('Vendor deleted successfully!');
+      }
+    }
+  };
+
+  const handleEditVendor = (vendor: Vendor) => {
+    setEditingVendor(vendor);
+    setShowEditModal(true);
+  };
 
   return (
     <div className='min-h-screen bg-background'>
@@ -246,66 +183,115 @@ export default function VendorsPage() {
           </div>
         </section>
 
-        {/* Vendors Grid */}
-        <section className='container mx-auto px-4'>
-          <motion.div
-            className='grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6'
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <AnimatePresence mode='popLayout'>
-              {filteredVendors.map((vendor, index) => (
-                <VendorCard
-                  key={vendor.id}
-                  vendor={vendor}
-                  index={index}
-                  isSelected={selectedVendor === vendor.id}
-                  onSelect={() =>
-                    setSelectedVendor(
-                      selectedVendor === vendor.id ? null : vendor.id
-                    )
-                  }
-                />
-              ))}
-            </AnimatePresence>
-          </motion.div>
+        {/* Loading State */}
+        {loading && (
+          <div className='container mx-auto px-4 text-center py-16 flex flex-col items-center gap-4'>
+            <Loader className='w-10 h-10 text-primary animate-spin' />
+            <div className='text-2xl text-primary'>Loading vendors...</div>
+          </div>
+        )}
 
-          {filteredVendors.length === 0 && (
-            <motion.div
-              className='text-center py-16'
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+        {/* Error State */}
+        {error && (
+          <div className='container mx-auto px-4 text-center py-16'>
+            <div className='text-xl text-destructive mb-4'>Error: {error}</div>
+            <button
+              onClick={() => fetchVendors()}
+              className='px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90'
             >
-              <div className='text-6xl mb-4'>🏭</div>
-              <h3 className='text-xl font-semibold text-foreground mb-2'>
-                No vendors found
-              </h3>
-              <p className='text-muted-foreground'>
-                Try adjusting your search or filter criteria
-              </p>
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Vendors Grid */}
+        {!loading && !error && (
+          <section className='container mx-auto px-4'>
+            <motion.div
+              className='grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <AnimatePresence mode='popLayout'>
+                {filteredVendors.map((vendor, index) => (
+                  <VendorCard
+                    key={vendor.id}
+                    vendor={vendor}
+                    index={index}
+                    isSelected={selectedVendor === vendor.id}
+                    onSelect={() =>
+                      setSelectedVendor(
+                        selectedVendor === vendor.id ? null : vendor.id
+                      )
+                    }
+                    onEdit={() => handleEditVendor(vendor)}
+                    onDelete={() => handleDeleteVendor(vendor.id)}
+                    calculateAverage={calculateAverage}
+                  />
+                ))}
+              </AnimatePresence>
             </motion.div>
-          )}
-        </section>
+
+            {filteredVendors.length === 0 && !loading && (
+              <motion.div
+                className='text-center py-16'
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                <div className='text-6xl mb-4'>🏭</div>
+                <h3 className='text-xl font-semibold text-foreground mb-2'>
+                  No vendors found
+                </h3>
+                <p className='text-muted-foreground'>
+                  Try adjusting your search or filter criteria
+                </p>
+              </motion.div>
+            )}
+          </section>
+        )}
 
         {/* Vendor Stats */}
-        <section className='container mx-auto px-4 mt-16'>
-          <VendorStats vendors={filteredVendors} />
-        </section>
+        {!loading && !error && filteredVendors.length > 0 && (
+          <section className='container mx-auto px-4 mt-16'>
+            <VendorStats
+              vendors={filteredVendors}
+              calculateAverage={calculateAverage}
+            />
+          </section>
+        )}
       </main>
 
       {/* New Vendor Modal */}
       <NewVendorModal
         isOpen={showNewVendorModal}
         onClose={() => setShowNewVendorModal(false)}
-        onSubmit={(newVendor) => {
-          setVendors([newVendor, ...vendors]);
-          setShowNewVendorModal(false);
+        onSubmit={createVendor}
+      />
+
+      {/* Edit Vendor Modal */}
+      <EditVendorModal
+        isOpen={showEditModal}
+        vendor={editingVendor}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingVendor(null);
         }}
+        onSubmit={updateVendor}
       />
     </div>
   );
+}
+
+interface VendorCardProps {
+  vendor: Vendor;
+  index: number;
+  isSelected: boolean;
+  onSelect: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  calculateAverage: (arr: number[]) => number;
 }
 
 function VendorCard({
@@ -313,12 +299,14 @@ function VendorCard({
   index,
   isSelected,
   onSelect,
-}: {
-  vendor: (typeof mockVendors)[0];
-  index: number;
-  isSelected: boolean;
-  onSelect: () => void;
-}) {
+  onEdit,
+  onDelete,
+  calculateAverage,
+}: VendorCardProps) {
+  const avgRating = calculateAverage(vendor.rating);
+  const avgOnTimeDelivery = calculateAverage(vendor.onTimeDelivery);
+  const avgResponseTime = calculateAverage(vendor.responseTime);
+
   return (
     <motion.div
       className='bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 hover:border-primary/50 transition-all duration-300 group cursor-pointer'
@@ -340,11 +328,11 @@ function VendorCard({
             <h3 className='text-lg font-bold text-foreground group-hover:text-primary transition-colors duration-300'>
               {vendor.name}
             </h3>
-            <p className='text-sm text-muted-foreground'>{vendor.id}</p>
+            <p className='text-sm text-muted-foreground'>{vendor.vendorId}</p>
           </div>
           <div className='flex items-center gap-2'>
             <StatusBadge status={vendor.status} />
-            <RatingBadge rating={vendor.rating} />
+            {avgRating > 0 && <RatingBadge rating={avgRating} />}
           </div>
         </div>
 
@@ -356,58 +344,72 @@ function VendorCard({
           </div>
           <div className='flex items-center gap-2 text-sm text-muted-foreground'>
             <span className='text-primary'>📞</span>
-            +91-{vendor.phone}
+            {vendor.phone}
           </div>
           <div className='flex items-center gap-2 text-sm text-muted-foreground'>
             <span className='text-primary'>🏢</span>
-            {vendor.gst}
+            {vendor.gstNo}
           </div>
+          {vendor.address && (
+            <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+              <span className='text-primary'>📍</span>
+              {vendor.address}
+            </div>
+          )}
         </div>
 
         {/* Specialties */}
-        <div className='mb-4'>
-          <p className='text-xs text-muted-foreground mb-2'>Specialties</p>
-          <div className='flex flex-wrap gap-1'>
-            {vendor.specialties.map((specialty) => (
-              <span
-                key={specialty}
-                className='px-2 py-1 text-xs bg-primary/20 text-primary rounded-full border border-primary/30'
-              >
-                {specialty}
-              </span>
-            ))}
+        {vendor.specialities.length > 0 && (
+          <div className='mb-4'>
+            <p className='text-xs text-muted-foreground mb-2'>Specialities</p>
+            <div className='flex flex-wrap gap-1'>
+              {vendor.specialities.map((specialty) => (
+                <span
+                  key={specialty}
+                  className='px-2 py-1 text-xs bg-primary/20 text-primary rounded-full border border-primary/30'
+                >
+                  {specialty}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Key Metrics */}
         <div className='grid grid-cols-2 gap-4 mb-4'>
           <div>
-            <p className='text-xs text-muted-foreground'>Total Orders</p>
+            <p className='text-xs text-muted-foreground'>Total Restocks</p>
             <p className='text-sm font-bold text-foreground'>
-              {vendor.totalOrders}
+              {vendor.totalRestocks || 0}
             </p>
           </div>
           <div>
             <p className='text-xs text-muted-foreground'>Total Value</p>
             <p className='text-sm font-bold text-primary'>
-              ${vendor.totalValue.toLocaleString()}
+              ₹{vendor.totalValue?.toLocaleString() || '0'}
             </p>
           </div>
         </div>
 
         {/* Performance Indicators */}
-        <div className='space-y-2 mb-4'>
-          <PerformanceBar
-            label='On-time Delivery'
-            value={vendor.performance.onTimeDelivery}
-            color='accent'
-          />
-          <PerformanceBar
-            label='Response Time'
-            value={vendor.performance.responseTime}
-            color='secondary'
-          />
-        </div>
+        {(avgOnTimeDelivery > 0 || avgResponseTime > 0) && (
+          <div className='space-y-2 mb-4'>
+            {avgOnTimeDelivery > 0 && (
+              <PerformanceBar
+                label='On-time Delivery'
+                value={Math.round(avgOnTimeDelivery)}
+                color='accent'
+              />
+            )}
+            {avgResponseTime > 0 && (
+              <PerformanceBar
+                label='Response Time'
+                value={Math.round(avgResponseTime)}
+                color='secondary'
+              />
+            )}
+          </div>
+        )}
 
         {/* Expanded Content */}
         <AnimatePresence>
@@ -422,7 +424,24 @@ function VendorCard({
                 <h4 className='text-sm font-semibold text-foreground mb-3'>
                   Replenishment History
                 </h4>
-                <ReplenishmentChart data={vendor.replenishmentHistory} />
+                {vendor.replenishmentHistory.length > 0 ? (
+                  <div className='space-y-2 max-h-32 overflow-y-auto'>
+                    {vendor.replenishmentHistory.map((item, idx) => (
+                      <div key={idx} className='flex justify-between text-sm'>
+                        <span className='text-muted-foreground'>
+                          {item.itemName}
+                        </span>
+                        <span className='text-foreground'>
+                          {item.quantity} × ₹{item.cost}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className='text-sm text-muted-foreground'>
+                    No replenishment history available
+                  </p>
+                )}
               </div>
             </motion.div>
           )}
@@ -434,17 +453,23 @@ function VendorCard({
             className='flex-1 py-2 px-4 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-primary-foreground transition-all duration-300'
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
           >
-            View Orders
+            Edit
           </motion.button>
           <motion.button
-            className='flex-1 py-2 px-4 bg-secondary/10 text-secondary rounded-lg text-sm font-medium hover:bg-secondary hover:text-secondary-foreground transition-all duration-300'
+            className='flex-1 py-2 px-4 bg-destructive/10 text-destructive rounded-lg text-sm font-medium hover:bg-destructive hover:text-destructive-foreground transition-all duration-300'
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
           >
-            Contact
+            Delete
           </motion.button>
         </div>
       </div>
@@ -473,7 +498,7 @@ function RatingBadge({ rating }: { rating: number }) {
       whileHover={{ scale: 1.05 }}
     >
       <span className='text-xs'>⭐</span>
-      <span className='text-xs font-medium'>{rating}</span>
+      <span className='text-xs font-medium'>{rating.toFixed(1)}</span>
     </motion.div>
   );
 }
@@ -497,7 +522,7 @@ function PerformanceBar({
         <motion.div
           className={`h-full bg-${color} rounded-full`}
           initial={{ width: 0 }}
-          animate={{ width: `${value}%` }}
+          animate={{ width: `${Math.min(value, 100)}%` }}
           transition={{ duration: 1, delay: 0.5 }}
         />
       </div>
@@ -505,50 +530,27 @@ function PerformanceBar({
   );
 }
 
-function ReplenishmentChart({
-  data,
+function VendorStats({
+  vendors,
+  calculateAverage,
 }: {
-  data: { month: string; value: number }[];
+  vendors: Vendor[];
+  calculateAverage: (arr: number[]) => number;
 }) {
-  const maxValue = Math.max(...data.map((d) => d.value));
-
-  return (
-    <div className='h-32 flex items-end justify-between gap-2'>
-      {data.map((item, index) => (
-        <div key={item.month} className='flex-1 flex flex-col items-center'>
-          <motion.div
-            className='w-full bg-primary/30 rounded-t-sm relative overflow-hidden'
-            style={{ height: `${(item.value / maxValue) * 100}%` }}
-            initial={{ height: 0 }}
-            animate={{ height: `${(item.value / maxValue) * 100}%` }}
-            transition={{ duration: 0.8, delay: index * 0.1 }}
-          >
-            <motion.div
-              className='absolute inset-0 bg-primary'
-              initial={{ scaleY: 0 }}
-              animate={{ scaleY: 1 }}
-              transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
-              style={{ transformOrigin: 'bottom' }}
-            />
-          </motion.div>
-          <span className='text-xs text-muted-foreground mt-1'>
-            {item.month}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function VendorStats({ vendors }: { vendors: typeof mockVendors }) {
   const stats = {
     total: vendors.length,
     active: vendors.filter((v) => v.status === 'active').length,
-    pending: vendors.filter((v) => v.status === 'pending').length,
     inactive: vendors.filter((v) => v.status === 'inactive').length,
-    totalValue: vendors.reduce((sum, vendor) => sum + vendor.totalValue, 0),
+    totalValue: vendors.reduce(
+      (sum, vendor) => sum + (vendor.totalValue || 0),
+      0
+    ),
     avgRating:
-      vendors.reduce((sum, vendor) => sum + vendor.rating, 0) / vendors.length,
+      vendors.length > 0
+        ? calculateAverage(
+            vendors.flatMap((v) => v.rating).filter((r) => r > 0)
+          )
+        : 0,
   };
 
   return (
@@ -561,19 +563,18 @@ function VendorStats({ vendors }: { vendors: typeof mockVendors }) {
       <h3 className='text-2xl font-bold text-foreground mb-6 text-center'>
         Vendor Statistics
       </h3>
-      <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6'>
+      <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6'>
         <StatCard label='Total Vendors' value={stats.total} color='primary' />
         <StatCard label='Active' value={stats.active} color='accent' />
-        <StatCard label='Pending' value={stats.pending} color='chart-2' />
         <StatCard label='Inactive' value={stats.inactive} color='muted' />
         <StatCard
           label='Total Value'
-          value={`$${(stats.totalValue / 1000).toFixed(0)}K`}
+          value={`${(stats.totalValue / 1000).toFixed(0)}K`}
           color='primary'
         />
         <StatCard
           label='Avg Rating'
-          value={stats.avgRating.toFixed(1)}
+          value={stats.avgRating > 0 ? stats.avgRating.toFixed(1) : 'N/A'}
           color='chart-2'
         />
       </div>
@@ -615,72 +616,41 @@ function NewVendorModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (vendor: any) => void;
+  onSubmit: (vendorData: any) => Promise<any>;
 }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    gst: '',
-    specialties: [''],
-    status: 'pending',
+    gstNo: '',
+    address: '',
+    status: 'active' as 'active' | 'inactive',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    const newVendor = {
-      id: `VEN-${String(Date.now()).slice(-3)}`,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      gst: formData.gst,
-      status: formData.status,
-      totalOrders: 0,
-      totalValue: 0,
-      rating: 0,
-      lastOrder: new Date().toISOString().split('T')[0],
-      specialties: formData.specialties.filter((s) => s.trim() !== ''),
-      replenishmentHistory: [],
-      performance: {
-        onTimeDelivery: 0,
-        responseTime: 0,
-      },
-    };
-
-    onSubmit(newVendor);
-
-    // Reset form
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      gst: '',
-      specialties: [''],
-      status: 'pending',
-    });
-  };
-
-  const addSpecialty = () => {
-    setFormData({
-      ...formData,
-      specialties: [...formData.specialties, ''],
-    });
-  };
-
-  const updateSpecialty = (index: number, value: string) => {
-    const updatedSpecialties = formData.specialties.map((specialty, i) =>
-      i === index ? value : specialty
-    );
-    setFormData({ ...formData, specialties: updatedSpecialties });
-  };
-
-  const removeSpecialty = (index: number) => {
-    if (formData.specialties.length > 1) {
-      setFormData({
-        ...formData,
-        specialties: formData.specialties.filter((_, i) => i !== index),
-      });
+    try {
+      const result = await onSubmit(formData);
+      if (result.success) {
+        toast.success('Vendor created successfully!');
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          gstNo: '',
+          address: '',
+          status: 'active',
+        });
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error creating vendor:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -755,51 +725,24 @@ function NewVendorModal({
                   <input
                     type='text'
                     placeholder='GST Number'
-                    value={formData.gst}
+                    value={formData.gstNo}
                     onChange={(e) =>
-                      setFormData({ ...formData, gst: e.target.value })
+                      setFormData({ ...formData, gstNo: e.target.value })
                     }
                     className='px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
                     required
                   />
                 </div>
-              </div>
-
-              {/* Specialties */}
-              <div className='space-y-4'>
-                <div className='flex justify-between items-center'>
-                  <h3 className='text-lg font-semibold text-foreground'>
-                    Specialties
-                  </h3>
-                  <button
-                    type='button'
-                    onClick={addSpecialty}
-                    className='px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm hover:bg-secondary/80 transition-colors'
-                  >
-                    Add Specialty
-                  </button>
-                </div>
-
-                {formData.specialties.map((specialty, index) => (
-                  <div key={index} className='flex gap-4'>
-                    <input
-                      type='text'
-                      placeholder='Specialty (e.g., Industrial Tools)'
-                      value={specialty}
-                      onChange={(e) => updateSpecialty(index, e.target.value)}
-                      className='flex-1 px-3 py-2 bg-input border border-border rounded text-foreground placeholder-muted-foreground focus:border-primary'
-                      required
-                    />
-                    <button
-                      type='button'
-                      onClick={() => removeSpecialty(index)}
-                      className='px-3 py-2 bg-destructive/20 text-destructive rounded hover:bg-destructive hover:text-destructive-foreground transition-colors'
-                      disabled={formData.specialties.length === 1}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
+                <textarea
+                  placeholder='Address'
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
+                  className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
+                  rows={3}
+                  required
+                />
               </div>
 
               {/* Status */}
@@ -810,11 +753,13 @@ function NewVendorModal({
                 <select
                   value={formData.status}
                   onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
+                    setFormData({
+                      ...formData,
+                      status: e.target.value as 'active' | 'inactive',
+                    })
                   }
                   className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
                 >
-                  <option value='pending'>Pending</option>
                   <option value='active'>Active</option>
                   <option value='inactive'>Inactive</option>
                 </select>
@@ -826,14 +771,16 @@ function NewVendorModal({
                   type='button'
                   onClick={onClose}
                   className='flex-1 py-3 px-6 border border-border text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground transition-all duration-300'
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </button>
                 <button
                   type='submit'
-                  className='flex-1 py-3 px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-300'
+                  className='flex-1 py-3 px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-300 disabled:opacity-50'
+                  disabled={isSubmitting}
                 >
-                  Add Vendor
+                  {isSubmitting ? 'Creating...' : 'Add Vendor'}
                 </button>
               </div>
             </form>
@@ -843,3 +790,239 @@ function NewVendorModal({
     </AnimatePresence>
   );
 }
+
+function EditVendorModal({
+  isOpen,
+  vendor,
+  onClose,
+  onSubmit,
+}: {
+  isOpen: boolean;
+  vendor: Vendor | null;
+  onClose: () => void;
+  onSubmit: (vendorData: any, id: string) => Promise<any>;
+}) {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    gstNo: '',
+    address: '',
+    status: 'active' as 'active' | 'inactive',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Update form data when vendor changes
+  useEffect(() => {
+    if (vendor) {
+      setFormData({
+        name: vendor.name,
+        email: vendor.email,
+        phone: vendor.phone,
+        gstNo: vendor.gstNo,
+        address: vendor.address || '',
+        status: vendor.status,
+      });
+    }
+  }, [vendor]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!vendor) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await onSubmit(formData, vendor.id);
+      if (result.success) {
+        toast.success('Vendor updated successfully!');
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error updating vendor:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!vendor) return null;
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className='fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4'
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
+          <motion.div
+            className='bg-card border border-border rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto'
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className='flex justify-between items-center mb-6'>
+              <h2 className='text-2xl font-bold text-primary'>Edit Vendor</h2>
+              <button
+                onClick={onClose}
+                className='text-muted-foreground hover:text-foreground transition-colors'
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className='space-y-6'>
+              {/* Basic Information */}
+              <div className='space-y-4'>
+                <h3 className='text-lg font-semibold text-foreground'>
+                  Basic Information
+                </h3>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <input
+                    type='text'
+                    placeholder='Vendor Name'
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className='px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
+                    required
+                  />
+                  <input
+                    type='email'
+                    placeholder='Email Address'
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    className='px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
+                    required
+                  />
+                </div>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <input
+                    type='tel'
+                    placeholder='Phone Number'
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                    className='px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
+                    required
+                  />
+                  <input
+                    type='text'
+                    placeholder='GST Number'
+                    value={formData.gstNo}
+                    onChange={(e) =>
+                      setFormData({ ...formData, gstNo: e.target.value })
+                    }
+                    className='px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
+                    required
+                  />
+                </div>
+                <textarea
+                  placeholder='Address'
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
+                  className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
+                  rows={3}
+                  required
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className='block text-sm font-medium text-foreground mb-2'>
+                  Status
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      status: e.target.value as 'active' | 'inactive',
+                    })
+                  }
+                  className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
+                >
+                  <option value='active'>Active</option>
+                  <option value='inactive'>Inactive</option>
+                </select>
+              </div>
+
+              {/* Additional Info Display */}
+              <div className='bg-muted/20 p-4 rounded-lg'>
+                <h4 className='text-sm font-semibold text-foreground mb-2'>
+                  Current Stats
+                </h4>
+                <div className='grid grid-cols-2 gap-4 text-sm'>
+                  <div>
+                    <span className='text-muted-foreground'>Vendor ID:</span>
+                    <span className='ml-2 text-foreground'>
+                      {vendor.vendorId}
+                    </span>
+                  </div>
+                  <div>
+                    <span className='text-muted-foreground'>
+                      Total Restocks:
+                    </span>
+                    <span className='ml-2 text-foreground'>
+                      {vendor.totalRestocks || 0}
+                    </span>
+                  </div>
+                  <div>
+                    <span className='text-muted-foreground'>Total Value:</span>
+                    <span className='ml-2 text-foreground'>
+                      ₹{vendor.totalValue?.toLocaleString() || '0'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className='text-muted-foreground'>Specialities:</span>
+                    <span className='ml-2 text-foreground'>
+                      {vendor.specialities.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className='flex gap-4 pt-4'>
+                <button
+                  type='button'
+                  onClick={onClose}
+                  className='flex-1 py-3 px-6 border border-border text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground transition-all duration-300'
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type='submit'
+                  className='flex-1 py-3 px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2'
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader className='w-5 h-5 animate-spin' />
+                      Updating...
+                    </>
+                  ) : (
+                    'Update Vendor'
+                  )}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+// TODO: 1. Observe and handle intializing vendors
+// TODO: 2. Handle updating vendors
+// TODO: 3. Handle deleting vendors

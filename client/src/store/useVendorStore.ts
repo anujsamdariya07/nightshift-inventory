@@ -4,15 +4,34 @@ import { toast } from 'sonner';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface Vendor {
-  id: string;
+export interface RestockItem {
+  itemId: string;
+  itemName: string;
+  quantity: number;
+  cost: number;
+}
+
+export interface Vendor {
+  id: string;   
   orgId: string;
   name: string;
+  vendorId: string;
   email: string;
   phone: string;
   status: 'active' | 'inactive';
   gstNo: string;
+  specialities: string[];
   address: string;
+  totalRestocks: number;
+  totalValue: number;
+  replenishmentHistory: RestockItem[];
+  rating: number[];
+  onTimeDelivery: number[];
+  responseTime: number[];
+}
+
+export interface Vendors {
+  vendors: Vendor[];
 }
 
 interface VendorCreateData {

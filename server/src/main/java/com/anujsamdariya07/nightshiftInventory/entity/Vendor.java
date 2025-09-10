@@ -52,4 +52,8 @@ public class Vendor {
     private ArrayList<RestockItem> replenishmentHistory;
 
     private ArrayList<Integer> rating;
+
+    private ArrayList<Integer> onTimeDelivery;
+
+    private ArrayList<Integer> responseTime;
 }
