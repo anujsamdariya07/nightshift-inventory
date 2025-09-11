@@ -247,7 +247,7 @@ const useVendorStore = create<VendorState>()(
     }),
     {
       name: 'vendor-storage',
-      partialize: (state) => ({ vendor: state.vendor, vendors: state.vendor }),
+      partialize: (state) => ({ vendor: state.vendor, vendors: state.vendors }),
     }
   )
 );

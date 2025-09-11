@@ -29,6 +29,8 @@ export default function VendorsPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
 
+  const [deleteTarget, setDeleteTarget] = useState<Vendor | null>(null);
+
   const {
     fetchVendors,
     vendors,
@@ -76,12 +78,16 @@ export default function VendorsPage() {
     return arr.reduce((sum, val) => sum + val, 0) / arr.length;
   };
 
-  const handleDeleteVendor = async (vendorId: string) => {
-    if (window.confirm('Are you sure you want to delete this vendor?')) {
-      const result = await deleteVendor(vendorId);
-      if (result.success) {
-        toast.success('Vendor deleted successfully!');
-      }
+  const handleDeleteVendor = (vendor: Vendor) => {
+    setDeleteTarget(vendor);
+  };
+
+  const confirmDeleteVendor = async () => {
+    if (!deleteTarget) return;
+    const result = await deleteVendor(deleteTarget.id);
+    if (result.success) {
+      toast.success('Vendor deleted successfully!');
+      setDeleteTarget(null);
     }
   };
 
@@ -226,7 +232,7 @@ export default function VendorsPage() {
                       )
                     }
                     onEdit={() => handleEditVendor(vendor)}
-                    onDelete={() => handleDeleteVendor(vendor.id)}
+                    onDelete={() => handleDeleteVendor(vendor)}
                     calculateAverage={calculateAverage}
                   />
                 ))}
@@ -359,7 +365,7 @@ function VendorCard({
         </div>
 
         {/* Specialties */}
-        {vendor.specialities.length > 0 && (
+        {vendor.specialities && vendor.specialities.length > 0 && (
           <div className='mb-4'>
             <p className='text-xs text-muted-foreground mb-2'>Specialities</p>
             <div className='flex flex-wrap gap-1'>
@@ -424,7 +430,8 @@ function VendorCard({
                 <h4 className='text-sm font-semibold text-foreground mb-3'>
                   Replenishment History
                 </h4>
-                {vendor.replenishmentHistory.length > 0 ? (
+                {vendor.replenishmentHistory &&
+                vendor.replenishmentHistory.length > 0 ? (
                   <div className='space-y-2 max-h-32 overflow-y-auto'>
                     {vendor.replenishmentHistory.map((item, idx) => (
                       <div key={idx} className='flex justify-between text-sm'>
@@ -1023,6 +1030,65 @@ function EditVendorModal({
     </AnimatePresence>
   );
 }
+
+function DeleteVendorModal({
+  vendor,
+  onClose,
+  onConfirm,
+}: {
+  vendor: Vendor | null;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <AnimatePresence>
+      {vendor && (
+        <motion.div
+          className='fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4'
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
+          <motion.div
+            className='bg-card border border-border rounded-2xl p-6 w-full max-w-md shadow-xl'
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className='text-xl font-bold text-destructive mb-4'>
+              Confirm Deletion
+            </h2>
+            <p className='text-muted-foreground mb-6'>
+              Are you sure you want to delete{' '}
+              <span className='text-foreground font-semibold'>
+                {vendor.name}
+              </span>
+              ? This action cannot be undone.
+            </p>
+
+            <div className='flex gap-4'>
+              <button
+                onClick={onClose}
+                className='flex-1 py-3 px-6 border border-border text-muted-foreground rounded-lg hover:bg-muted transition-all duration-300'
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                className='flex-1 py-3 px-6 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition-all duration-300'
+              >
+                Delete
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 // TODO: 1. Observe and handle intializing vendors
 // TODO: 2. Handle updating vendors
 // TODO: 3. Handle deleting vendors

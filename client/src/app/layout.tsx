@@ -21,7 +21,6 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "NightShift Inventory Management System",
   description: "Smart Inventory · Vendor Traceability · Customer Insights",
-  generator: "v0.app",
 }
 
 export default function RootLayout({
