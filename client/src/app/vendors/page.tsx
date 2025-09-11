@@ -51,6 +51,7 @@ export default function VendorsPage() {
 
   // Filter vendors based on search and filter criteria
   useEffect(() => {
+    // console.log('vendors', vendors)
     let filtered = vendors || [];
 
     if (activeFilter !== 'all') {
@@ -285,6 +286,14 @@ export default function VendorsPage() {
           setEditingVendor(null);
         }}
         onSubmit={updateVendor}
+      />
+
+      {/* Delete Vendor Modal */}
+      <DeleteVendorModal
+        isOpen={!!deleteTarget}
+        vendor={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDeleteVendor}
       />
     </div>
   );
@@ -632,6 +641,7 @@ function NewVendorModal({
     gstNo: '',
     address: '',
     status: 'active' as 'active' | 'inactive',
+    specialities: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -651,6 +661,7 @@ function NewVendorModal({
           gstNo: '',
           address: '',
           status: 'active',
+          specialities: [] as string[],
         });
         onClose();
       }
@@ -772,6 +783,55 @@ function NewVendorModal({
                 </select>
               </div>
 
+              {/* Specialties */}
+              <div>
+                <label className='block text-sm font-medium text-foreground mb-2'>
+                  Specialties
+                </label>
+                <div className='flex flex-wrap gap-2 mb-2'>
+                  {formData.specialities.map((spec, idx) => (
+                    <span
+                      key={idx}
+                      className='px-2 py-1 text-sm bg-primary/20 text-primary rounded-full flex items-center gap-1'
+                    >
+                      {spec}
+                      <button
+                        type='button'
+                        className='ml-1 text-xs text-destructive'
+                        onClick={() =>
+                          setFormData({
+                            ...formData,
+                            specialities: formData.specialities.filter(
+                              (_, i) => i !== idx
+                            ),
+                          })
+                        }
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <input
+                  type='text'
+                  placeholder='Add specialty and press Enter'
+                  className='w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const value = e.currentTarget.value.trim();
+                      if (value && !formData.specialities.includes(value)) {
+                        setFormData({
+                          ...formData,
+                          specialities: [...formData.specialities, value],
+                        });
+                      }
+                      e.currentTarget.value = '';
+                    }
+                  }}
+                />
+              </div>
+
               {/* Submit Buttons */}
               <div className='flex gap-4 pt-4'>
                 <button
@@ -816,6 +876,7 @@ function EditVendorModal({
     gstNo: '',
     address: '',
     status: 'active' as 'active' | 'inactive',
+    specialities: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -829,6 +890,7 @@ function EditVendorModal({
         gstNo: vendor.gstNo,
         address: vendor.address || '',
         status: vendor.status,
+        specialities: vendor.specialities || [],
       });
     }
   }, [vendor]);
@@ -992,10 +1054,59 @@ function EditVendorModal({
                   <div>
                     <span className='text-muted-foreground'>Specialities:</span>
                     <span className='ml-2 text-foreground'>
-                      {vendor.specialities.length}
+                      {vendor.specialities && vendor.specialities.length}
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Specialties */}
+              <div>
+                <label className='block text-sm font-medium text-foreground mb-2'>
+                  Specialties
+                </label>
+                <div className='flex flex-wrap gap-2 mb-2'>
+                  {formData.specialities.map((spec, idx) => (
+                    <span
+                      key={idx}
+                      className='px-2 py-1 text-sm bg-primary/20 text-primary rounded-full flex items-center gap-1'
+                    >
+                      {spec}
+                      <button
+                        type='button'
+                        className='ml-1 text-xs text-destructive'
+                        onClick={() =>
+                          setFormData({
+                            ...formData,
+                            specialities: formData.specialities.filter(
+                              (_, i) => i !== idx
+                            ),
+                          })
+                        }
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <input
+                  type='text'
+                  placeholder='Add specialty and press Enter'
+                  className='w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const value = e.currentTarget.value.trim();
+                      if (value && !formData.specialities.includes(value)) {
+                        setFormData({
+                          ...formData,
+                          specialities: [...formData.specialities, value],
+                        });
+                      }
+                      e.currentTarget.value = '';
+                    }
+                  }}
+                />
               </div>
 
               {/* Submit Buttons */}
@@ -1032,17 +1143,21 @@ function EditVendorModal({
 }
 
 function DeleteVendorModal({
+  isOpen,
   vendor,
   onClose,
   onConfirm,
 }: {
+  isOpen: boolean;
   vendor: Vendor | null;
   onClose: () => void;
   onConfirm: () => void;
 }) {
+  if (!vendor) return null;
+
   return (
     <AnimatePresence>
-      {vendor && (
+      {isOpen && (
         <motion.div
           className='fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4'
           initial={{ opacity: 0 }}
@@ -1051,33 +1166,30 @@ function DeleteVendorModal({
           onClick={onClose}
         >
           <motion.div
-            className='bg-card border border-border rounded-2xl p-6 w-full max-w-md shadow-xl'
+            className='bg-card border border-border rounded-2xl p-6 w-full max-w-md'
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className='text-xl font-bold text-destructive mb-4'>
-              Confirm Deletion
+              Delete Vendor
             </h2>
-            <p className='text-muted-foreground mb-6'>
+            <p className='text-sm text-muted-foreground mb-6'>
               Are you sure you want to delete{' '}
-              <span className='text-foreground font-semibold'>
-                {vendor.name}
-              </span>
-              ? This action cannot be undone.
+              <span className='font-semibold'>{vendor.name}</span>? This action
+              cannot be undone.
             </p>
-
             <div className='flex gap-4'>
               <button
                 onClick={onClose}
-                className='flex-1 py-3 px-6 border border-border text-muted-foreground rounded-lg hover:bg-muted transition-all duration-300'
+                className='flex-1 py-2 px-4 border border-border rounded-lg hover:bg-muted'
               >
                 Cancel
               </button>
               <button
                 onClick={onConfirm}
-                className='flex-1 py-3 px-6 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition-all duration-300'
+                className='flex-1 py-2 px-4 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90'
               >
                 Delete
               </button>

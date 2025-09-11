@@ -21,6 +21,25 @@ public class VendorService {
         return vendorRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
     }
 
+    private String generateVendorId(ObjectId orgId) {
+        List<Vendor> vendors = vendorRepository.findAllByOrgId(orgId);
+
+        int maxId = vendors.stream()
+                .map(Vendor::getVendorId)
+                .filter(id -> id != null && id.startsWith("VEND-"))
+                .map(id -> id.substring(5)) // remove "VEN-"
+                .filter(num -> num.matches("\\d+")) // keep only numeric parts
+                .mapToInt(Integer::parseInt)
+                .max()
+                .orElse(0);
+        System.out.println(maxId);
+
+        int nextId = maxId + 1;
+
+        return String.format("VEND-%03d", nextId);
+    }
+
+
     public Vendor createVendor(Vendor vendor) {
         if (vendor.getId() != null && vendorRepository.existsById(vendor.getId())) {
             throw new RuntimeException("Vendor with this id already exists!");
@@ -34,6 +53,8 @@ public class VendorService {
         if (vendor.getGstNo() != null && vendorRepository.existsByGstNo(vendor.getGstNo())) {
             throw new RuntimeException("Vendor with this GST number already exists!");
         }
+
+        vendor.setVendorId(generateVendorId(vendor.getOrgId()));
 
         return vendorRepository.save(vendor);
     }
