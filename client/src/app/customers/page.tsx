@@ -1,147 +1,47 @@
-"use client"
+'use client';
 
-import type React from "react"
+import type React from 'react';
 
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Navbar } from "@/components/navbar"
-import useAuthStore from "@/store/useAuthStore"
-import { useRouter } from "next/navigation"
-
-// Mock data for demonstration
-const mockCustomers = [
-  {
-    id: "CUS-001",
-    name: "Acme Corporation",
-    email: "orders@acme.com",
-    phone: "555-0123",
-    address: "123 Industrial Ave, Tech City, TC 12345",
-    status: "active",
-    registrationDate: "2024-03-15",
-    totalOrders: 45,
-    totalSpent: 125000,
-    lastOrder: "2025-01-20",
-    orderFrequency: "weekly",
-    preferredCategories: ["Industrial Tools", "Bearings", "Safety Equipment"],
-    orderHistory: [
-      { month: "Jul", orders: 6, value: 15000 },
-      { month: "Aug", orders: 8, value: 18000 },
-      { month: "Sep", orders: 5, value: 12000 },
-      { month: "Oct", orders: 9, value: 22000 },
-      { month: "Nov", orders: 7, value: 16000 },
-      { month: "Dec", orders: 10, value: 25000 },
-    ],
-    satisfaction: 4.8,
-    loyaltyTier: "platinum",
-  },
-  {
-    id: "CUS-002",
-    name: "TechFlow Solutions",
-    email: "procurement@techflow.com",
-    phone: "555-0456",
-    address: "456 Business Blvd, Innovation Park, IP 67890",
-    status: "active",
-    registrationDate: "2024-05-22",
-    totalOrders: 32,
-    totalSpent: 89000,
-    lastOrder: "2025-01-19",
-    orderFrequency: "bi-weekly",
-    preferredCategories: ["Hydraulics", "Pumps", "Electronic Components"],
-    orderHistory: [
-      { month: "Jul", orders: 4, value: 12000 },
-      { month: "Aug", orders: 5, value: 14000 },
-      { month: "Sep", orders: 3, value: 8000 },
-      { month: "Oct", orders: 6, value: 16000 },
-      { month: "Nov", orders: 4, value: 11000 },
-      { month: "Dec", orders: 7, value: 18000 },
-    ],
-    satisfaction: 4.6,
-    loyaltyTier: "gold",
-  },
-  {
-    id: "CUS-003",
-    name: "BuildRight Construction",
-    email: "supplies@buildright.com",
-    phone: "555-0789",
-    address: "789 Construction Way, Builder City, BC 54321",
-    status: "active",
-    registrationDate: "2024-01-10",
-    totalOrders: 67,
-    totalSpent: 156000,
-    lastOrder: "2025-01-18",
-    orderFrequency: "monthly",
-    preferredCategories: ["Safety Gear", "Construction Tools", "Hardware"],
-    orderHistory: [
-      { month: "Jul", orders: 8, value: 20000 },
-      { month: "Aug", orders: 10, value: 24000 },
-      { month: "Sep", orders: 6, value: 15000 },
-      { month: "Oct", orders: 12, value: 28000 },
-      { month: "Nov", orders: 9, value: 21000 },
-      { month: "Dec", orders: 11, value: 26000 },
-    ],
-    satisfaction: 4.4,
-    loyaltyTier: "platinum",
-  },
-  {
-    id: "CUS-004",
-    name: "AutoParts Plus",
-    email: "orders@autoparts.com",
-    phone: "555-0321",
-    address: "321 Auto Street, Motor Town, MT 98765",
-    status: "pending",
-    registrationDate: "2024-11-05",
-    totalOrders: 12,
-    totalSpent: 34000,
-    lastOrder: "2025-01-15",
-    orderFrequency: "monthly",
-    preferredCategories: ["Auto Parts", "Filters", "Brake Components"],
-    orderHistory: [
-      { month: "Jul", orders: 0, value: 0 },
-      { month: "Aug", orders: 0, value: 0 },
-      { month: "Sep", orders: 0, value: 0 },
-      { month: "Oct", orders: 0, value: 0 },
-      { month: "Nov", orders: 4, value: 12000 },
-      { month: "Dec", orders: 8, value: 22000 },
-    ],
-    satisfaction: 4.2,
-    loyaltyTier: "silver",
-  },
-]
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Navbar } from '@/components/navbar';
+import useAuthStore from '@/store/useAuthStore';
+import useCustomerStore from '@/store/useCustomerStore';
+import { useRouter } from 'next/navigation';
 
 const statusColors = {
-  active: "accent",
-  pending: "chart-2",
-  inactive: "muted",
-}
-
-const tierColors = {
-  platinum: "primary",
-  gold: "chart-2",
-  silver: "muted",
-  bronze: "chart-4",
-}
+  active: 'accent',
+  inactive: 'muted',
+};
 
 const filterOptions = [
-  { label: "All Customers", value: "all" },
-  { label: "Active", value: "active" },
-  { label: "Pending", value: "pending" },
-  { label: "Inactive", value: "inactive" },
-]
+  { label: 'All Customers', value: 'all' },
+  { label: 'Active', value: 'active' },
+  { label: 'Inactive', value: 'inactive' },
+];
 
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState(mockCustomers)
-  const [filteredCustomers, setFilteredCustomers] = useState(mockCustomers)
-  const [activeFilter, setActiveFilter] = useState("all")
-  const [searchTerm, setSearchTerm] = useState("")
-  const [showFilters, setShowFilters] = useState(false)
-  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null)
-  const [showNewCustomerModal, setShowNewCustomerModal] = useState(false)
+  const { customers, loading, error, fetchCustomers, createCustomer } = useCustomerStore();
+  const [filteredCustomers, setFilteredCustomers] = useState(customers);
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
+  const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
 
+  // Fetch customers on component mount
   useEffect(() => {
-    let filtered = customers
+    fetchCustomers();
+  }, [fetchCustomers]);
 
-    if (activeFilter !== "all") {
-      filtered = filtered.filter((customer) => customer.status === activeFilter)
+  // Update filtered customers when customers, filter, or search term changes
+  useEffect(() => {
+    let filtered = customers;
+
+    if (activeFilter !== 'all') {
+      filtered = filtered.filter(
+        (customer) => customer.status === activeFilter
+      );
     }
 
     if (searchTerm) {
@@ -149,36 +49,58 @@ export default function CustomersPage() {
         (customer) =>
           customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          customer.preferredCategories.some((category) => category.toLowerCase().includes(searchTerm.toLowerCase())),
-      )
+          customer.customerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          customer.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          customer.preferredCategories.some((category) =>
+            category.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+      );
     }
 
-    setFilteredCustomers(filtered)
-  }, [activeFilter, searchTerm, customers])
+    setFilteredCustomers(filtered);
+  }, [activeFilter, searchTerm, customers]);
+
+  if (loading && customers.length === 0) {
+    return (
+      <div className='min-h-screen bg-background'>
+        <Navbar />
+        <main className='pt-24 pb-16'>
+          <div className='container mx-auto px-4 flex items-center justify-center h-96'>
+            <div className='text-center'>
+              <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
+              <p className='text-muted-foreground'>Loading customers...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className='min-h-screen bg-background'>
       <Navbar />
 
-      <main className="pt-24 pb-16">
+      <main className='pt-24 pb-16'>
         {/* Header Section */}
-        <section className="container mx-auto px-4 mb-8">
+        <section className='container mx-auto px-4 mb-8'>
           <motion.div
-            className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+            className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4'
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold font-mono text-primary neon-text mb-2">
+              <h1 className='text-4xl md:text-5xl font-bold font-mono text-primary neon-text mb-2'>
                 Customers Management
               </h1>
-              <p className="text-lg text-muted-foreground">Track customer relationships and analyze buying patterns</p>
+              <p className='text-lg text-muted-foreground'>
+                Track customer relationships and analyze buying patterns
+              </p>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className='flex items-center gap-4'>
               <motion.button
-                className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:neon-glow transition-all duration-300"
+                className='px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:neon-glow transition-all duration-300'
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowNewCustomerModal(true)}
@@ -186,7 +108,7 @@ export default function CustomersPage() {
                 Add Customer
               </motion.button>
               <motion.button
-                className="px-6 py-3 border border-secondary text-secondary rounded-lg font-semibold hover:bg-secondary hover:text-secondary-foreground transition-all duration-300"
+                className='px-6 py-3 border border-secondary text-secondary rounded-lg font-semibold hover:bg-secondary hover:text-secondary-foreground transition-all duration-300'
                 onClick={() => setShowFilters(!showFilters)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -198,21 +120,21 @@ export default function CustomersPage() {
         </section>
 
         {/* Search and Filters */}
-        <section className="container mx-auto px-4 mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
+        <section className='container mx-auto px-4 mb-8'>
+          <div className='flex flex-col md:flex-row gap-4'>
             {/* Search Bar */}
             <motion.div
-              className="flex-1"
+              className='flex-1'
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <input
-                type="text"
-                placeholder="+91-Search customers, categories, or contact info..."
+                type='text'
+                placeholder='Search customers, categories, or contact info...'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
               />
             </motion.div>
 
@@ -220,9 +142,9 @@ export default function CustomersPage() {
             <AnimatePresence>
               {showFilters && (
                 <motion.div
-                  className="flex flex-wrap gap-2"
+                  className='flex flex-wrap gap-2'
                   initial={{ opacity: 0, x: 20, width: 0 }}
-                  animate={{ opacity: 1, x: 0, width: "auto" }}
+                  animate={{ opacity: 1, x: 0, width: 'auto' }}
                   exit={{ opacity: 0, x: 20, width: 0 }}
                   transition={{ duration: 0.4 }}
                 >
@@ -231,8 +153,8 @@ export default function CustomersPage() {
                       key={option.value}
                       className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 ${
                         activeFilter === option.value
-                          ? "bg-primary text-primary-foreground neon-glow"
-                          : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
+                          ? 'bg-primary text-primary-foreground neon-glow'
+                          : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/50'
                       }`}
                       onClick={() => setActiveFilter(option.value)}
                       whileHover={{ scale: 1.05 }}
@@ -247,43 +169,62 @@ export default function CustomersPage() {
           </div>
         </section>
 
+        {/* Error Message */}
+        {error && (
+          <section className='container mx-auto px-4 mb-8'>
+            <div className='bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-500 text-center'>
+              {error}
+            </div>
+          </section>
+        )}
+
         {/* Customers Grid */}
-        <section className="container mx-auto px-4">
+        <section className='container mx-auto px-4'>
           <motion.div
-            className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+            className='grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6'
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence mode='popLayout'>
               {filteredCustomers.map((customer, index) => (
                 <CustomerCard
                   key={customer.id}
                   customer={customer}
                   index={index}
                   isSelected={selectedCustomer === customer.id}
-                  onSelect={() => setSelectedCustomer(selectedCustomer === customer.id ? null : customer.id)}
+                  onSelect={() =>
+                    setSelectedCustomer(
+                      selectedCustomer === customer.id ? null : customer.id
+                    )
+                  }
                 />
               ))}
             </AnimatePresence>
           </motion.div>
 
-          {filteredCustomers.length === 0 && (
+          {filteredCustomers.length === 0 && !loading && (
             <motion.div
-              className="text-center py-16"
+              className='text-center py-16'
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <div className="text-6xl mb-4">👥</div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">No customers found</h3>
-              <p className="text-muted-foreground">Try adjusting your search or filter criteria</p>
+              <div className='text-6xl mb-4'>👥</div>
+              <h3 className='text-xl font-semibold text-foreground mb-2'>
+                No customers found
+              </h3>
+              <p className='text-muted-foreground'>
+                {searchTerm || activeFilter !== 'all'
+                  ? 'Try adjusting your search or filter criteria'
+                  : 'Start by adding your first customer'}
+              </p>
             </motion.div>
           )}
         </section>
 
         {/* Customer Stats */}
-        <section className="container mx-auto px-4 mt-16">
+        <section className='container mx-auto px-4 mt-16'>
           <CustomerStats customers={filteredCustomers} />
         </section>
       </main>
@@ -293,15 +234,18 @@ export default function CustomersPage() {
         {showNewCustomerModal && (
           <NewCustomerModal
             onClose={() => setShowNewCustomerModal(false)}
-            onSubmit={(newCustomer) => {
-              setCustomers([...customers, newCustomer])
-              setShowNewCustomerModal(false)
+            onSubmit={async (newCustomerData) => {
+              const result = await createCustomer(newCustomerData);
+              if (result?.success) {
+                setShowNewCustomerModal(false);
+              }
             }}
+            loading={loading}
           />
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
 
 function CustomerCard({
@@ -310,14 +254,28 @@ function CustomerCard({
   isSelected,
   onSelect,
 }: {
-  customer: (typeof mockCustomers)[0]
-  index: number
-  isSelected: boolean
-  onSelect: () => void
+  customer: any;
+  index: number;
+  isSelected: boolean;
+  onSelect: () => void;
 }) {
+  // Calculate average satisfaction level
+  const avgSatisfaction = customer.satisfactionLevel.length > 0
+    ? customer.satisfactionLevel.reduce((sum: number, rating: number) => sum + rating, 0) / customer.satisfactionLevel.length
+    : 0;
+
+  // Calculate total orders and total spent from orders array
+  const totalOrders = customer.orders.length;
+  const totalSpent = customer.orders.reduce((sum: number, order: any) => sum + order.totalAmount, 0);
+
+  // Get last order date
+  const lastOrder = customer.orders.length > 0
+    ? new Date(Math.max(...customer.orders.map((order: any) => new Date(order.orderDate).getTime()))).toLocaleDateString()
+    : 'Never';
+
   return (
     <motion.div
-      className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 hover:border-primary/50 transition-all duration-300 group cursor-pointer"
+      className='bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 hover:border-primary/50 transition-all duration-300 group cursor-pointer'
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -50, scale: 0.9 }}
@@ -327,75 +285,87 @@ function CustomerCard({
       layout
     >
       {/* Neon glow effect on hover */}
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl" />
+      <div className='absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl' />
 
       {/* Customer Header */}
-      <div className="relative z-10">
-        <div className="flex justify-between items-start mb-4">
+      <div className='relative z-10'>
+        <div className='flex justify-between items-start mb-4'>
           <div>
-            <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors duration-300">
+            <h3 className='text-lg font-bold text-foreground group-hover:text-primary transition-colors duration-300'>
               {customer.name}
             </h3>
-            <p className="text-sm text-muted-foreground">{customer.id}</p>
+            <p className='text-sm text-muted-foreground'>{customer.customerId}</p>
+            {customer.gstNo && (
+              <p className='text-xs text-muted-foreground'>GST: {customer.gstNo}</p>
+            )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className='flex items-center gap-2'>
             <StatusBadge status={customer.status} />
-            <LoyaltyBadge tier={customer.loyaltyTier} />
           </div>
         </div>
 
         {/* Contact Info */}
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="text-primary">📧</span>
+        <div className='space-y-2 mb-4'>
+          <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+            <span className='text-primary'>📧</span>
             {customer.email}
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="text-primary">📞</span>
-            +91-{customer.phone}
+          <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+            <span className='text-primary'>📞</span>
+            {customer.phone}
           </div>
-          <div className="flex items-start gap-2 text-sm text-muted-foreground">
-            <span className="text-primary">📍</span>
-            <span className="flex-1">{customer.address}</span>
+          <div className='flex items-start gap-2 text-sm text-muted-foreground'>
+            <span className='text-primary'>📍</span>
+            <span className='flex-1'>{customer.address}</span>
           </div>
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className='grid grid-cols-2 gap-4 mb-4'>
           <div>
-            <p className="text-xs text-muted-foreground">Total Orders</p>
-            <p className="text-sm font-bold text-foreground">{customer.totalOrders}</p>
+            <p className='text-xs text-muted-foreground'>Total Orders</p>
+            <p className='text-sm font-bold text-foreground'>
+              {totalOrders}
+            </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Total Spent</p>
-            <p className="text-sm font-bold text-primary">${customer.totalSpent.toLocaleString()}</p>
+            <p className='text-xs text-muted-foreground'>Total Spent</p>
+            <p className='text-sm font-bold text-primary'>
+              ₹{totalSpent.toLocaleString()}
+            </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Last Order</p>
-            <p className="text-sm font-medium text-foreground">{customer.lastOrder}</p>
+            <p className='text-xs text-muted-foreground'>Last Order</p>
+            <p className='text-sm font-medium text-foreground'>
+              {lastOrder}
+            </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Satisfaction</p>
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-medium text-chart-2">⭐ {customer.satisfaction}</span>
+            <p className='text-xs text-muted-foreground'>Satisfaction</p>
+            <div className='flex items-center gap-1'>
+              <span className='text-sm font-medium text-chart-2'>
+                ⭐ {avgSatisfaction.toFixed(1)}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Preferred Categories */}
-        <div className="mb-4">
-          <p className="text-xs text-muted-foreground mb-2">Preferred Categories</p>
-          <div className="flex flex-wrap gap-1">
-            {customer.preferredCategories.slice(0, 2).map((category) => (
+        <div className='mb-4'>
+          <p className='text-xs text-muted-foreground mb-2'>
+            Preferred Categories
+          </p>
+          <div className='flex flex-wrap gap-1'>
+            {customer.preferredCategories.slice(0, 2).map((category: string) => (
               <span
                 key={category}
-                className="px-2 py-1 text-xs bg-secondary/20 text-secondary rounded-full border border-secondary/30"
+                className='px-2 py-1 text-xs bg-secondary/20 text-secondary rounded-full border border-secondary/30'
               >
                 {category}
               </span>
             ))}
             {customer.preferredCategories.length > 2 && (
-              <span className="px-2 py-1 text-xs bg-muted/20 text-muted-foreground rounded-full border border-muted/30">
+              <span className='px-2 py-1 text-xs bg-muted/20 text-muted-foreground rounded-full border border-muted/30'>
                 +{customer.preferredCategories.length - 2}
               </span>
             )}
@@ -407,21 +377,40 @@ function CustomerCard({
           {isSelected && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
+              animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="border-t border-border pt-4 mt-4">
-                <h4 className="text-sm font-semibold text-foreground mb-3">Order History</h4>
-                <OrderHistoryChart data={customer.orderHistory} />
-                <div className="mt-4 grid grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <span className="text-muted-foreground">Order Frequency: </span>
-                    <span className="text-foreground font-medium">{customer.orderFrequency}</span>
+              <div className='border-t border-border pt-4 mt-4'>
+                <h4 className='text-sm font-semibold text-foreground mb-3'>
+                  Recent Orders
+                </h4>
+                {customer.orders.length > 0 ? (
+                  <div className='space-y-2'>
+                    {customer.orders.slice(0, 3).map((order: any) => (
+                      <div key={order.orderId} className='flex justify-between items-center text-xs'>
+                        <span className='text-muted-foreground'>{order.orderId}</span>
+                        <span className={`px-2 py-1 rounded-full ${
+                          order.status === 'delivered' ? 'bg-green-500/20 text-green-500' :
+                          order.status === 'shipped' ? 'bg-blue-500/20 text-blue-500' :
+                          'bg-yellow-500/20 text-yellow-500'
+                        }`}>
+                          {order.status}
+                        </span>
+                        <span className='text-foreground font-medium'>₹{order.totalAmount}</span>
+                      </div>
+                    ))}
                   </div>
+                ) : (
+                  <p className='text-xs text-muted-foreground'>No orders yet</p>
+                )}
+                
+                <div className='mt-4 grid grid-cols-1 gap-2 text-xs'>
                   <div>
-                    <span className="text-muted-foreground">Member Since: </span>
-                    <span className="text-foreground font-medium">{customer.registrationDate}</span>
+                    <span className='text-muted-foreground'>Member Since: </span>
+                    <span className='text-foreground font-medium'>
+                      {new Date(customer.dateOfJoining).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -430,10 +419,10 @@ function CustomerCard({
         </AnimatePresence>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 mt-4">
+        <div className='flex gap-2 mt-4'>
           <motion.button
-            type="button"
-            className="flex-1 py-2 px-4 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-primary-foreground hover:neon-glow transition-all duration-300"
+            type='button'
+            className='flex-1 py-2 px-4 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-primary-foreground hover:neon-glow transition-all duration-300'
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={(e) => e.stopPropagation()}
@@ -441,8 +430,8 @@ function CustomerCard({
             View Orders
           </motion.button>
           <motion.button
-            type="button"
-            className="flex-1 py-2 px-4 bg-secondary/10 text-secondary rounded-lg text-sm font-medium hover:bg-secondary hover:text-secondary-foreground hover:neon-glow transition-all duration-300"
+            type='button'
+            className='flex-1 py-2 px-4 bg-secondary/10 text-secondary rounded-lg text-sm font-medium hover:bg-secondary hover:text-secondary-foreground hover:neon-glow transition-all duration-300'
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={(e) => e.stopPropagation()}
@@ -452,11 +441,11 @@ function CustomerCard({
         </div>
       </div>
     </motion.div>
-  )
+  );
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colorClass = statusColors[status as keyof typeof statusColors] || "muted"
+  const colorClass = statusColors[status as keyof typeof statusColors] || 'muted';
 
   return (
     <motion.span
@@ -465,125 +454,77 @@ function StatusBadge({ status }: { status: string }) {
     >
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </motion.span>
-  )
+  );
 }
 
-function LoyaltyBadge({ tier }: { tier: string }) {
-  const colorClass = tierColors[tier as keyof typeof tierColors] || "muted"
-
-  return (
-    <motion.span
-      className={`px-2 py-1 text-xs font-medium rounded-full bg-${colorClass}/20 text-${colorClass} border border-${colorClass}/30`}
-      whileHover={{ scale: 1.05 }}
-    >
-      {tier.charAt(0).toUpperCase() + tier.slice(1)}
-    </motion.span>
-  )
-}
-
-function OrderHistoryChart({ data }: { data: { month: string; orders: number; value: number }[] }) {
-  const maxOrders = Math.max(...data.map((d) => d.orders))
-  const maxValue = Math.max(...data.map((d) => d.value))
-
-  return (
-    <div className="space-y-4">
-      {/* Orders Chart */}
-      <div>
-        <p className="text-xs text-muted-foreground mb-2">Orders per Month</p>
-        <div className="h-20 flex items-end justify-between gap-1">
-          {data.map((item, index) => (
-            <div key={`orders-${item.month}`} className="flex-1 flex flex-col items-center">
-              <motion.div
-                className="w-full bg-primary/30 rounded-t-sm relative overflow-hidden"
-                style={{ height: `${item.orders > 0 ? Math.max((item.orders / maxOrders) * 100, 10) : 0}%` }}
-                initial={{ height: 0 }}
-                animate={{
-                  height: `${item.orders > 0 ? Math.max((item.orders / maxOrders) * 100, 10) : 0}%`,
-                }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-primary"
-                  initial={{ scaleY: 0 }}
-                  animate={{ scaleY: 1 }}
-                  transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
-                  style={{ transformOrigin: "bottom" }}
-                />
-              </motion.div>
-              <span className="text-xs text-muted-foreground mt-1">{item.month}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Value Chart */}
-      <div>
-        <p className="text-xs text-muted-foreground mb-2">Value per Month ($)</p>
-        <div className="h-20 flex items-end justify-between gap-1">
-          {data.map((item, index) => (
-            <div key={`value-${item.month}`} className="flex-1 flex flex-col items-center">
-              <motion.div
-                className="w-full bg-secondary/30 rounded-t-sm relative overflow-hidden"
-                style={{ height: `${item.value > 0 ? Math.max((item.value / maxValue) * 100, 10) : 0}%` }}
-                initial={{ height: 0 }}
-                animate={{
-                  height: `${item.value > 0 ? Math.max((item.value / maxValue) * 100, 10) : 0}%`,
-                }}
-                transition={{ duration: 0.8, delay: 0.3 + index * 0.1 }}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-secondary"
-                  initial={{ scaleY: 0 }}
-                  animate={{ scaleY: 1 }}
-                  transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
-                  style={{ transformOrigin: "bottom" }}
-                />
-              </motion.div>
-              <span className="text-xs text-muted-foreground mt-1">{item.month}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function CustomerStats({ customers }: { customers: typeof mockCustomers }) {
+function CustomerStats({ customers }: { customers: any[] }) {
   const stats = {
     total: customers.length,
-    active: customers.filter((c) => c.status === "active").length,
-    pending: customers.filter((c) => c.status === "pending").length,
-    totalRevenue: customers.reduce((sum, customer) => sum + customer.totalSpent, 0),
-    avgOrderValue:
-      customers.reduce((sum, customer) => sum + customer.totalSpent, 0) /
-      customers.reduce((sum, customer) => sum + customer.totalOrders, 0),
-    avgSatisfaction: customers.reduce((sum, customer) => sum + customer.satisfaction, 0) / customers.length,
-  }
+    active: customers.filter((c) => c.status === 'active').length,
+    inactive: customers.filter((c) => c.status === 'inactive').length,
+    totalRevenue: customers.reduce(
+      (sum, customer) => sum + customer.orders.reduce((orderSum: number, order: any) => orderSum + order.totalAmount, 0),
+      0
+    ),
+    avgSatisfaction: customers.length > 0
+      ? customers.reduce((sum, customer) => {
+          const customerAvg = customer.satisfactionLevel.length > 0
+            ? customer.satisfactionLevel.reduce((s: number, r: number) => s + r, 0) / customer.satisfactionLevel.length
+            : 0;
+          return sum + customerAvg;
+        }, 0) / customers.length
+      : 0,
+  };
+
+  const totalOrders = customers.reduce((sum, customer) => sum + customer.orders.length, 0);
+  const avgOrderValue = totalOrders > 0 ? stats.totalRevenue / totalOrders : 0;
 
   return (
     <motion.div
-      className="bg-card/30 backdrop-blur-sm border border-border rounded-2xl p-8"
+      className='bg-card/30 backdrop-blur-sm border border-border rounded-2xl p-8'
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay: 0.6 }}
     >
-      <h3 className="text-2xl font-bold text-foreground mb-6 text-center">Customer Analytics</h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-        <StatCard label="Total Customers" value={stats.total} color="primary" />
-        <StatCard label="Active" value={stats.active} color="accent" />
-        <StatCard label="Pending" value={stats.pending} color="chart-2" />
-        <StatCard label="Total Revenue" value={`$${(stats.totalRevenue / 1000).toFixed(0)}K`} color="primary" />
-        <StatCard label="Avg Order Value" value={`$${stats.avgOrderValue.toFixed(0)}`} color="secondary" />
-        <StatCard label="Avg Satisfaction" value={stats.avgSatisfaction.toFixed(1)} color="chart-2" />
+      <h3 className='text-2xl font-bold text-foreground mb-6 text-center'>
+        Customer Analytics
+      </h3>
+      <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6'>
+        <StatCard label='Total Customers' value={stats.total} color='primary' />
+        <StatCard label='Active' value={stats.active} color='accent' />
+        <StatCard label='Inactive' value={stats.inactive} color='chart-2' />
+        <StatCard
+          label='Total Revenue'
+          value={`₹${(stats.totalRevenue / 1000).toFixed(0)}K`}
+          color='primary'
+        />
+        <StatCard
+          label='Avg Order Value'
+          value={`₹${avgOrderValue.toFixed(0)}`}
+          color='secondary'
+        />
+        <StatCard
+          label='Avg Satisfaction'
+          value={stats.avgSatisfaction.toFixed(1)}
+          color='chart-2'
+        />
       </div>
     </motion.div>
-  )
+  );
 }
 
-function StatCard({ label, value, color }: { label: string; value: string | number; color: string }) {
+function StatCard({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: string | number;
+  color: string;
+}) {
   return (
     <motion.div
-      className="text-center p-4 rounded-lg bg-background/50 hover:bg-background/70 transition-all duration-300"
+      className='text-center p-4 rounded-lg bg-background/50 hover:bg-background/70 transition-all duration-300'
       whileHover={{ scale: 1.05, y: -2 }}
     >
       <motion.div
@@ -594,54 +535,55 @@ function StatCard({ label, value, color }: { label: string; value: string | numb
       >
         {value}
       </motion.div>
-      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className='text-xs text-muted-foreground'>{label}</div>
     </motion.div>
-  )
+  );
 }
 
-function NewCustomerModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (customer: any) => void }) {
+function NewCustomerModal({
+  onClose,
+  onSubmit,
+  loading,
+}: {
+  onClose: () => void;
+  onSubmit: (customer: any) => void;
+  loading: boolean;
+}) {
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
     preferredCategories: [] as string[],
-  })
+    gstNo: '',
+    status: 'active' as 'active' | 'inactive',
+  });
 
   const categoryOptions = [
-    "Industrial Tools",
-    "Bearings",
-    "Safety Equipment",
-    "Hydraulics",
-    "Pumps",
-    "Electronic Components",
-    "Safety Gear",
-    "Construction Tools",
-    "Hardware",
-    "Auto Parts",
-    "Filters",
-    "Brake Components",
-  ]
+    'Industrial Tools',
+    'Bearings',
+    'Safety Equipment',
+    'Hydraulics',
+    'Pumps',
+    'Electronic Components',
+    'Safety Gear',
+    'Construction Tools',
+    'Hardware',
+    'Auto Parts',
+    'Filters',
+    'Brake Components',
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const newCustomer = {
-      id: `CUS-${String(Math.floor(Math.random() * 1000)).padStart(3, "0")}`,
+    e.preventDefault();
+    
+    const customerData = {
       ...formData,
-      status: "pending",
-      registrationDate: new Date().toISOString().split("T")[0],
-      totalOrders: 0,
-      totalSpent: 0,
-      lastOrder: "Never",
-      orderFrequency: "monthly",
-      orderHistory: [],
-      satisfaction: 0,
-      loyaltyTier: "bronze",
-    }
+      dateOfJoining: new Date(),
+    };
 
-    onSubmit(newCustomer)
-  }
+    onSubmit(customerData);
+  };
 
   const toggleCategory = (category: string) => {
     setFormData((prev) => ({
@@ -649,94 +591,146 @@ function NewCustomerModal({ onClose, onSubmit }: { onClose: () => void; onSubmit
       preferredCategories: prev.preferredCategories.includes(category)
         ? prev.preferredCategories.filter((c) => c !== category)
         : [...prev.preferredCategories, category],
-    }))
-  }
+    }));
+  };
 
   return (
     <motion.div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50'
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={onClose}
     >
       <motion.div
-        className="bg-card border border-border rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        className='bg-card border border-border rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto'
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-primary">Add New Customer</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+        <div className='flex justify-between items-center mb-6'>
+          <h2 className='text-2xl font-bold text-primary'>Add New Customer</h2>
+          <button
+            onClick={onClose}
+            className='text-muted-foreground hover:text-foreground transition-colors'
+          >
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className='space-y-6'>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Company Name *</label>
+              <label className='block text-sm font-medium text-foreground mb-2'>
+                Company Name *
+              </label>
               <input
-                type="text"
+                type='text'
                 required
                 value={formData.name}
-                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
-                placeholder="+91-Enter company name"
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
+                placeholder='Enter company name'
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Email *</label>
+              <label className='block text-sm font-medium text-foreground mb-2'>
+                Email *
+              </label>
               <input
-                type="email"
+                type='email'
                 required
                 value={formData.email}
-                onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
-                placeholder="+91-company@example.com"
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, email: e.target.value }))
+                }
+                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
+                placeholder='company@example.com'
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Phone *</label>
+              <label className='block text-sm font-medium text-foreground mb-2'>
+                Phone *
+              </label>
               <input
-                type="tel"
+                type='tel'
                 required
                 value={formData.phone}
-                onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
-                className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
-                placeholder="+91-555-0123"
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, phone: e.target.value }))
+                }
+                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
+                placeholder='555-0123'
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Address *</label>
+              <label className='block text-sm font-medium text-foreground mb-2'>
+                GST Number
+              </label>
               <input
-                type="text"
-                required
-                value={formData.address}
-                onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
-                className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
-                placeholder="+91-123 Business St, City, State 12345"
+                type='text'
+                value={formData.gstNo}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, gstNo: e.target.value }))
+                }
+                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
+                placeholder='GST Number (optional)'
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-3">Preferred Categories</label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <label className='block text-sm font-medium text-foreground mb-2'>
+              Address *
+            </label>
+            <textarea
+              required
+              value={formData.address}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, address: e.target.value }))
+              }
+              className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
+              placeholder='123 Business St, City, State 12345'
+              rows={3}
+            />
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-foreground mb-2'>
+              Status *
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))
+              }
+              className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
+            >
+              <option value='active'>Active</option>
+              <option value='inactive'>Inactive</option>
+            </select>
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-foreground mb-3'>
+              Preferred Categories
+            </label>
+            <div className='grid grid-cols-2 md:grid-cols-3 gap-2'>
               {categoryOptions.map((category) => (
                 <motion.button
                   key={category}
-                  type="button"
+                  type='button'
                   onClick={() => toggleCategory(category)}
                   className={`px-3 py-2 text-sm rounded-lg border transition-all duration-300 ${
                     formData.preferredCategories.includes(category)
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-card text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
                   }`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -747,27 +741,36 @@ function NewCustomerModal({ onClose, onSubmit }: { onClose: () => void; onSubmit
             </div>
           </div>
 
-          <div className="flex gap-4 pt-4">
+          <div className='flex gap-4 pt-4'>
             <motion.button
-              type="button"
+              type='button'
               onClick={onClose}
-              className="flex-1 py-3 px-6 border border-border text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground transition-all duration-300"
+              className='flex-1 py-3 px-6 border border-border text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground transition-all duration-300'
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              disabled={loading}
             >
               Cancel
             </motion.button>
             <motion.button
-              type="submit"
-              className="flex-1 py-3 px-6 bg-primary text-primary-foreground rounded-lg hover:neon-glow transition-all duration-300"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              type='submit'
+              className='flex-1 py-3 px-6 bg-primary text-primary-foreground rounded-lg hover:neon-glow transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed'
+              whileHover={{ scale: loading ? 1 : 1.02 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
+              disabled={loading}
             >
-              Add Customer
+              {loading ? (
+                <div className='flex items-center justify-center gap-2'>
+                  <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground'></div>
+                  Creating...
+                </div>
+              ) : (
+                'Add Customer'
+              )}
             </motion.button>
           </div>
         </form>
       </motion.div>
     </motion.div>
-  )
+  );
 }
