@@ -5,6 +5,8 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Navbar } from "@/components/navbar"
+import useAuthStore from "@/store/useAuthStore"
+import { useRouter } from "next/navigation"
 
 // Mock data for demonstration
 const mockCustomers = [
@@ -12,7 +14,7 @@ const mockCustomers = [
     id: "CUS-001",
     name: "Acme Corporation",
     email: "orders@acme.com",
-    phone: "+1-555-0123",
+    phone: "555-0123",
     address: "123 Industrial Ave, Tech City, TC 12345",
     status: "active",
     registrationDate: "2024-03-15",
@@ -36,7 +38,7 @@ const mockCustomers = [
     id: "CUS-002",
     name: "TechFlow Solutions",
     email: "procurement@techflow.com",
-    phone: "+1-555-0456",
+    phone: "555-0456",
     address: "456 Business Blvd, Innovation Park, IP 67890",
     status: "active",
     registrationDate: "2024-05-22",
@@ -60,7 +62,7 @@ const mockCustomers = [
     id: "CUS-003",
     name: "BuildRight Construction",
     email: "supplies@buildright.com",
-    phone: "+1-555-0789",
+    phone: "555-0789",
     address: "789 Construction Way, Builder City, BC 54321",
     status: "active",
     registrationDate: "2024-01-10",
@@ -84,7 +86,7 @@ const mockCustomers = [
     id: "CUS-004",
     name: "AutoParts Plus",
     email: "orders@autoparts.com",
-    phone: "+1-555-0321",
+    phone: "555-0321",
     address: "321 Auto Street, Motor Town, MT 98765",
     status: "pending",
     registrationDate: "2024-11-05",
@@ -207,7 +209,7 @@ export default function CustomersPage() {
             >
               <input
                 type="text"
-                placeholder="Search customers, categories, or contact info..."
+                placeholder="+91-Search customers, categories, or contact info..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
@@ -350,7 +352,7 @@ function CustomerCard({
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="text-primary">📞</span>
-            {customer.phone}
+            +91-{customer.phone}
           </div>
           <div className="flex items-start gap-2 text-sm text-muted-foreground">
             <span className="text-primary">📍</span>
@@ -682,7 +684,7 @@ function NewCustomerModal({ onClose, onSubmit }: { onClose: () => void; onSubmit
                 value={formData.name}
                 onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                 className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
-                placeholder="Enter company name"
+                placeholder="+91-Enter company name"
               />
             </div>
 
@@ -694,7 +696,7 @@ function NewCustomerModal({ onClose, onSubmit }: { onClose: () => void; onSubmit
                 value={formData.email}
                 onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                 className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
-                placeholder="company@example.com"
+                placeholder="+91-company@example.com"
               />
             </div>
 
@@ -706,7 +708,7 @@ function NewCustomerModal({ onClose, onSubmit }: { onClose: () => void; onSubmit
                 value={formData.phone}
                 onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
                 className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
-                placeholder="+1-555-0123"
+                placeholder="+91-555-0123"
               />
             </div>
 
@@ -718,7 +720,7 @@ function NewCustomerModal({ onClose, onSubmit }: { onClose: () => void; onSubmit
                 value={formData.address}
                 onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
                 className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
-                placeholder="123 Business St, City, State 12345"
+                placeholder="+91-123 Business St, City, State 12345"
               />
             </div>
           </div>

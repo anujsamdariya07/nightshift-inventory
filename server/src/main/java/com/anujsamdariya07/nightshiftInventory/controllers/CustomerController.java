@@ -1,6 +1,7 @@
 package com.anujsamdariya07.nightshiftInventory.controllers;
 
 import com.anujsamdariya07.nightshiftInventory.entity.Customer;
+import com.anujsamdariya07.nightshiftInventory.entity.CustomerDTO;
 import com.anujsamdariya07.nightshiftInventory.entity.Employee;
 import com.anujsamdariya07.nightshiftInventory.entity.Organization;
 import com.anujsamdariya07.nightshiftInventory.services.CustomerService;
@@ -29,7 +30,7 @@ public class CustomerController {
     private OrganizationService organizationService;
 
     @GetMapping
-    public ResponseEntity<List<Customer>> getAllCustomersForCurrentOrg(HttpServletRequest request) {
+    public ResponseEntity<?> getAllCustomersForCurrentOrg(HttpServletRequest request) {
         try {
             Employee currentUser = employeeService.getCurrentUser(request);
             ObjectId orgId = currentUser.getOrgId();
@@ -40,13 +41,13 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Customer> getCustomerById(HttpServletRequest request, @PathVariable String id) {
+    public ResponseEntity<?> getCustomerById(HttpServletRequest request, @PathVariable String id) {
         try {
             Employee currentUser = employeeService.getCurrentUser(request);
             ObjectId orgId = currentUser.getOrgId();
             ObjectId customerId = new ObjectId(id);
 
-            Customer customer = customerService.getCustomerByOrgAndId(orgId, customerId);
+            CustomerDTO customer = customerService.getCustomerByOrgAndId(orgId, customerId);
             return ResponseEntity.ok(customer);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -76,7 +77,7 @@ public class CustomerController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Customer> updateCustomer(HttpServletRequest request, @PathVariable String id, @RequestBody Customer customer) {
+    public ResponseEntity<?> updateCustomer(HttpServletRequest request, @PathVariable String id, @RequestBody Customer customer) {
         try {
             Employee currentUser = employeeService.getCurrentUser(request);
             ObjectId orgId = currentUser.getOrgId();

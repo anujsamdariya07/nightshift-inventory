@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Loader, Menu, X, LogOut, Loader2 } from 'lucide-react';
@@ -29,6 +29,8 @@ export function Navbar() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const { authUser, logout, loading } = useAuthStore();
+
+  const router = useRouter();
 
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
@@ -299,6 +301,7 @@ export function Navbar() {
                 <button
                   onClick={async () => {
                     await logout();
+                    router.push('/');
                     setShowLogoutModal(false);
                   }}
                   disabled={loading}

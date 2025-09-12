@@ -12,6 +12,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Document(collection = "customers")
@@ -29,6 +30,8 @@ public class Customer {
     @JsonSerialize(using = ToStringSerializer.class)
     private ObjectId orgId;
 
+    private String customerId;
+
     private String name;
 
     private String phone;
@@ -38,10 +41,26 @@ public class Customer {
     private String address;
 
     @Builder.Default
-    private String status = "active"; // Enum: active, inactive
+    private String status = "active";
 
     @Builder.Default
     private ArrayList<CustomerOrder> orders = new ArrayList<>();
 
+//    Worth of the above orders to be displayed in the client side
+
+//    Last date of order also to be displayed
+
+    @Builder.Default
+    private ArrayList<Integer> satisfactionLevel = new ArrayList<>();
+
+    @Builder.Default
+    private ArrayList<String> preferredCategories = new ArrayList<>();
+
+//    Also display the orders done in the last 5 months
+
+//    Also display order frequency
+
     private String gstNo;
+
+    private Date dateOfJoining = new Date();
 }
