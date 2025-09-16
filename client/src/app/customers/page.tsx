@@ -21,7 +21,8 @@ const filterOptions = [
 ];
 
 export default function CustomersPage() {
-  const { customers, loading, error, fetchCustomers, createCustomer } = useCustomerStore();
+  const { customers, loading, error, fetchCustomers, createCustomer } =
+    useCustomerStore();
   const [filteredCustomers, setFilteredCustomers] = useState(customers);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,7 +50,9 @@ export default function CustomersPage() {
         (customer) =>
           customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          customer.customerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          customer.customerId
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
           customer.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
           customer.preferredCategories.some((category) =>
             category.toLowerCase().includes(searchTerm.toLowerCase())
@@ -260,18 +263,32 @@ function CustomerCard({
   onSelect: () => void;
 }) {
   // Calculate average satisfaction level
-  const avgSatisfaction = customer.satisfactionLevel.length > 0
-    ? customer.satisfactionLevel.reduce((sum: number, rating: number) => sum + rating, 0) / customer.satisfactionLevel.length
-    : 0;
+  const avgSatisfaction =
+    customer.satisfactionLevel.length > 0
+      ? customer.satisfactionLevel.reduce(
+          (sum: number, rating: number) => sum + rating,
+          0
+        ) / customer.satisfactionLevel.length
+      : 0;
 
   // Calculate total orders and total spent from orders array
   const totalOrders = customer.orders.length;
-  const totalSpent = customer.orders.reduce((sum: number, order: any) => sum + order.totalAmount, 0);
+  const totalSpent = customer.orders.reduce(
+    (sum: number, order: any) => sum + order.totalAmount,
+    0
+  );
 
   // Get last order date
-  const lastOrder = customer.orders.length > 0
-    ? new Date(Math.max(...customer.orders.map((order: any) => new Date(order.orderDate).getTime()))).toLocaleDateString()
-    : 'Never';
+  const lastOrder =
+    customer.orders.length > 0
+      ? new Date(
+          Math.max(
+            ...customer.orders.map((order: any) =>
+              new Date(order.orderDate).getTime()
+            )
+          )
+        ).toLocaleDateString()
+      : 'Never';
 
   return (
     <motion.div
@@ -294,9 +311,13 @@ function CustomerCard({
             <h3 className='text-lg font-bold text-foreground group-hover:text-primary transition-colors duration-300'>
               {customer.name}
             </h3>
-            <p className='text-sm text-muted-foreground'>{customer.customerId}</p>
+            <p className='text-sm text-muted-foreground'>
+              {customer.customerId}
+            </p>
             {customer.gstNo && (
-              <p className='text-xs text-muted-foreground'>GST: {customer.gstNo}</p>
+              <p className='text-xs text-muted-foreground'>
+                GST: {customer.gstNo}
+              </p>
             )}
           </div>
           <div className='flex items-center gap-2'>
@@ -324,9 +345,7 @@ function CustomerCard({
         <div className='grid grid-cols-2 gap-4 mb-4'>
           <div>
             <p className='text-xs text-muted-foreground'>Total Orders</p>
-            <p className='text-sm font-bold text-foreground'>
-              {totalOrders}
-            </p>
+            <p className='text-sm font-bold text-foreground'>{totalOrders}</p>
           </div>
           <div>
             <p className='text-xs text-muted-foreground'>Total Spent</p>
@@ -336,9 +355,7 @@ function CustomerCard({
           </div>
           <div>
             <p className='text-xs text-muted-foreground'>Last Order</p>
-            <p className='text-sm font-medium text-foreground'>
-              {lastOrder}
-            </p>
+            <p className='text-sm font-medium text-foreground'>{lastOrder}</p>
           </div>
           <div>
             <p className='text-xs text-muted-foreground'>Satisfaction</p>
@@ -356,14 +373,16 @@ function CustomerCard({
             Preferred Categories
           </p>
           <div className='flex flex-wrap gap-1'>
-            {customer.preferredCategories.slice(0, 2).map((category: string) => (
-              <span
-                key={category}
-                className='px-2 py-1 text-xs bg-secondary/20 text-secondary rounded-full border border-secondary/30'
-              >
-                {category}
-              </span>
-            ))}
+            {customer.preferredCategories
+              .slice(0, 2)
+              .map((category: string) => (
+                <span
+                  key={category}
+                  className='px-2 py-1 text-xs bg-secondary/20 text-secondary rounded-full border border-secondary/30'
+                >
+                  {category}
+                </span>
+              ))}
             {customer.preferredCategories.length > 2 && (
               <span className='px-2 py-1 text-xs bg-muted/20 text-muted-foreground rounded-full border border-muted/30'>
                 +{customer.preferredCategories.length - 2}
@@ -388,26 +407,39 @@ function CustomerCard({
                 {customer.orders.length > 0 ? (
                   <div className='space-y-2'>
                     {customer.orders.slice(0, 3).map((order: any) => (
-                      <div key={order.orderId} className='flex justify-between items-center text-xs'>
-                        <span className='text-muted-foreground'>{order.orderId}</span>
-                        <span className={`px-2 py-1 rounded-full ${
-                          order.status === 'delivered' ? 'bg-green-500/20 text-green-500' :
-                          order.status === 'shipped' ? 'bg-blue-500/20 text-blue-500' :
-                          'bg-yellow-500/20 text-yellow-500'
-                        }`}>
+                      <div
+                        key={order.orderId}
+                        className='flex justify-between items-center text-xs'
+                      >
+                        <span className='text-muted-foreground'>
+                          {order.orderId}
+                        </span>
+                        <span
+                          className={`px-2 py-1 rounded-full ${
+                            order.status === 'delivered'
+                              ? 'bg-green-500/20 text-green-500'
+                              : order.status === 'shipped'
+                              ? 'bg-blue-500/20 text-blue-500'
+                              : 'bg-yellow-500/20 text-yellow-500'
+                          }`}
+                        >
                           {order.status}
                         </span>
-                        <span className='text-foreground font-medium'>₹{order.totalAmount}</span>
+                        <span className='text-foreground font-medium'>
+                          ₹{order.totalAmount}
+                        </span>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <p className='text-xs text-muted-foreground'>No orders yet</p>
                 )}
-                
+
                 <div className='mt-4 grid grid-cols-1 gap-2 text-xs'>
                   <div>
-                    <span className='text-muted-foreground'>Member Since: </span>
+                    <span className='text-muted-foreground'>
+                      Member Since:{' '}
+                    </span>
                     <span className='text-foreground font-medium'>
                       {new Date(customer.dateOfJoining).toLocaleDateString()}
                     </span>
@@ -445,7 +477,8 @@ function CustomerCard({
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colorClass = statusColors[status as keyof typeof statusColors] || 'muted';
+  const colorClass =
+    statusColors[status as keyof typeof statusColors] || 'muted';
 
   return (
     <motion.span
@@ -463,20 +496,33 @@ function CustomerStats({ customers }: { customers: any[] }) {
     active: customers.filter((c) => c.status === 'active').length,
     inactive: customers.filter((c) => c.status === 'inactive').length,
     totalRevenue: customers.reduce(
-      (sum, customer) => sum + customer.orders.reduce((orderSum: number, order: any) => orderSum + order.totalAmount, 0),
+      (sum, customer) =>
+        sum +
+        customer.orders.reduce(
+          (orderSum: number, order: any) => orderSum + order.totalAmount,
+          0
+        ),
       0
     ),
-    avgSatisfaction: customers.length > 0
-      ? customers.reduce((sum, customer) => {
-          const customerAvg = customer.satisfactionLevel.length > 0
-            ? customer.satisfactionLevel.reduce((s: number, r: number) => s + r, 0) / customer.satisfactionLevel.length
-            : 0;
-          return sum + customerAvg;
-        }, 0) / customers.length
-      : 0,
+    avgSatisfaction:
+      customers.length > 0
+        ? customers.reduce((sum, customer) => {
+            const customerAvg =
+              customer.satisfactionLevel.length > 0
+                ? customer.satisfactionLevel.reduce(
+                    (s: number, r: number) => s + r,
+                    0
+                  ) / customer.satisfactionLevel.length
+                : 0;
+            return sum + customerAvg;
+          }, 0) / customers.length
+        : 0,
   };
 
-  const totalOrders = customers.reduce((sum, customer) => sum + customer.orders.length, 0);
+  const totalOrders = customers.reduce(
+    (sum, customer) => sum + customer.orders.length,
+    0
+  );
   const avgOrderValue = totalOrders > 0 ? stats.totalRevenue / totalOrders : 0;
 
   return (
@@ -576,7 +622,7 @@ function NewCustomerModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const customerData = {
       ...formData,
       dateOfJoining: new Date(),
@@ -708,7 +754,10 @@ function NewCustomerModal({
             <select
               value={formData.status}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))
+                setFormData((prev) => ({
+                  ...prev,
+                  status: e.target.value as 'active' | 'inactive',
+                }))
               }
               className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
             >
