@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Types } from 'mongoose';
+import { Employee } from './useEmployeeStore';
 
 interface AuthUser {
   id: string;
@@ -21,32 +22,9 @@ interface AuthUser {
 
 interface CheckAuthResponse {
   message: string;
-  employee: AuthUser | null;
+  employee: Employee | null;
 }
 
-interface Message {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  content: string;
-  isRead: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface Employee {
-  id: string;
-  orgId: string;
-  name: string;
-  username: string;
-  password: string;
-  mustChangePassword: boolean;
-  role: 'worker' | 'admin';
-  mobileNo: string;
-  address: string;
-  attendance: number;
-  messages: Array<Message>;
-}
 
 interface OrderItem {
   itemName: string;
@@ -132,20 +110,20 @@ interface Organization {
 }
 
 interface AuthState {
-  authUser: AuthUser | null;
+  authUser: Employee | null;
   isCheckingAuth: boolean;
   loading: boolean;
   organization: Organization | null;
   message: string | null;
   error: string | null;
 
-  setAuthUser: (user: AuthUser | null) => void;
+  setAuthUser: (user: Employee | null) => void;
   checkAuth: () => Promise<void>;
   signUp: (
     orgData: OrgData
   ) => Promise<{ success: boolean; message?: string; error?: string }>;
   login: (credentials: {
-    username: string;
+    email: string;
     password: string;
   }) => Promise<{ success: boolean; message?: string; error?: string }>;
   logout: () => Promise<void>;
@@ -161,7 +139,7 @@ interface OrgData {
 }
 
 interface LoginData {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -185,6 +163,7 @@ const useAuthStore = create<AuthState>()(
               withCredentials: true,
             }
           );
+          console.log(1)
           console.log('FINE');
           set({ authUser: res.data.employee });
         } catch (error) {
@@ -200,7 +179,7 @@ const useAuthStore = create<AuthState>()(
         set({ loading: true, error: null });
         try {
           const response = await axiosInstance.post<{
-            employee: AuthUser;
+            employee: Employee;
             organization: Organization;
             message: string;
           }>('/auth/sign-up', orgData);
@@ -233,7 +212,7 @@ const useAuthStore = create<AuthState>()(
         set({ loading: true, error: null });
         try {
           const response = await axiosInstance.post<{
-            employee: AuthUser;
+            employee: Employee;
             organization: Organization;
             message: string;
           }>('/auth/login', loginData);

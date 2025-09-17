@@ -12,5 +12,6 @@ public interface ItemRepository
         extends MongoRepository<Item, ObjectId> {
     List<Item> findAllByOrgId(ObjectId orgId);
     Item findByOrgIdAndName(ObjectId orgId, String name);
+    boolean existsByNameAndOrgId(String name, ObjectId orgId);
     boolean existsByName(String name);
 }

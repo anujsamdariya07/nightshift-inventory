@@ -441,7 +441,7 @@ function EmployeeCard({
             <div className='text-right'>
               <p className='text-sm text-muted-foreground'>Salary</p>
               <p className='text-lg font-bold text-secondary'>
-                ${(employee.salary / 1000).toFixed(0)}K
+                ₹{(employee.salary / 1000).toFixed(0)}K
               </p>
             </div>
           </div>
@@ -582,7 +582,7 @@ function EmployeeStats({ employees }: { employees: any[] }) {
         <StatCard label='Inactive' value={stats.inactive} color='destructive' />
         <StatCard
           label='Avg Salary'
-          value={`$${(stats.avgSalary / 1000).toFixed(0)}K`}
+          value={`₹${(stats.avgSalary / 1000).toFixed(0)}K`}
           color='secondary'
         />
         <StatCard
@@ -779,7 +779,7 @@ function NewEmployeeModal({
 
             <div>
               <label className='block text-sm font-medium text-foreground mb-2'>
-                Salary ($)
+                Salary (₹)
               </label>
               <input
                 type='number'

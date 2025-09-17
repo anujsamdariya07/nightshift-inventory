@@ -41,12 +41,13 @@ public class ItemController {
 
     @PostMapping
     public ResponseEntity<?> createItem(HttpServletRequest request, @RequestBody ItemRequest itemRequest) {
-        if (itemService.existsByName(itemRequest.getName())) {
+        Employee currentUser = employeeService.getCurrentUser(request);
+        ObjectId orgId = currentUser.getOrgId();
+
+        if (itemService.existsByNameAndOrgId(itemRequest.getName(), orgId)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("An item with the same name already exists!");
         }
 
-        Employee currentUser = employeeService.getCurrentUser(request);
-        ObjectId orgId = currentUser.getOrgId();
         itemRequest.setOrgId(orgId);
 
         Item savedItem = itemService.createItem(itemRequest);

@@ -31,6 +31,14 @@ public class AuthController {
     @Autowired
     private EmployeeService employeeService;
 
+//    @GetMapping("/current")
+//    public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
+//        Employee currentUser = employeeService.getCurrentUser(request);
+//        if (currentUser != null) {
+//            Optional<Organization> org = organizationService.findOrgById(currentUser.getOrgId());
+//        }
+//    }
+
     @GetMapping("/current")
     public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
         String userId = CookieUtil.getCookieValue(request, "loggedInUser");

@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
   });
   const [showToast, setShowToast] = useState(false);
@@ -26,7 +26,7 @@ export default function LoginPage() {
     setError('');
 
     const loginData = {
-      username: formData.username,
+      email: formData.email,
       password: formData.password,
     };
 
@@ -36,7 +36,7 @@ export default function LoginPage() {
       setShowToast(true);
       setMessage(res.message!);
       setTimeout(() => setShowToast(false), 3000);
-      setFormData({ username: '', password: '' });
+      setFormData({ email: '', password: '' });
 
       router.push('/');
     } else {
@@ -78,7 +78,7 @@ export default function LoginPage() {
               Employee Login
             </h1>
             <p className='text-xl text-muted-foreground mb-8'>
-              Sign in with your registered username and password.
+              Sign in with your registered email and password.
             </p>
             <div className='w-24 h-1 bg-gradient-to-r from-primary via-secondary to-accent mx-auto rounded-full' />
           </motion.div>
@@ -103,16 +103,16 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className='space-y-6'>
               <div>
                 <label className='block text-sm font-medium mb-2'>
-                  Username
+                  Email
                 </label>
                 <input
-                  type='text'
-                  name='username'
-                  value={formData.username}
+                  type='email'
+                  name='email'
+                  value={formData.email}
                   onChange={handleChange}
                   required
                   className='w-full px-4 py-3 bg-input border border-border rounded-lg'
-                  placeholder='Your username'
+                  placeholder='Your email'
                 />
               </div>
 

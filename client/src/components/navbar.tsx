@@ -109,7 +109,7 @@ export function Navbar() {
                   <span className='text-sm font-medium text-muted-foreground'>
                     Hi,{' '}
                     <span className='text-primary font-semibold'>
-                      {authUser.username}
+                      {authUser.name}
                     </span>
                   </span>
                   <button

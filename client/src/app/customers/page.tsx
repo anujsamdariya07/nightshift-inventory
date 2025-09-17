@@ -333,7 +333,7 @@ function CustomerCard({
           </div>
           <div className='flex items-center gap-2 text-sm text-muted-foreground'>
             <span className='text-primary'>📞</span>
-            {customer.phone}
+            +91-{customer.phone}
           </div>
           <div className='flex items-start gap-2 text-sm text-muted-foreground'>
             <span className='text-primary'>📍</span>

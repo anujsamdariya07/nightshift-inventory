@@ -38,11 +38,17 @@ public class EmployeeService {
     }
 
     public Employee getEmployeeById(ObjectId id) {
-        Optional<Employee> employeeById = employeeRepository.findById(id);
-        if (employeeById.isEmpty()) {
-            throw new NoSuchElementException("Employee does not exists!");
-        }
-        return employeeById.get();
+//        System.out.println("userId: " + id);
+//        System.out.println("Hey over here!");
+//        Optional<Employee> employeeById = employeeRepository.findById(id);
+//        if (employeeById.isEmpty()) {
+//            System.out.println("No over here!");
+//            throw new NoSuchElementException("Employee does not exists!");
+//        }
+//        return employeeById.get();
+        Optional<Employee> employee = employeeRepository.findById(id);
+        System.out.println("employee: " + employee.isPresent());
+        return employee.get();
     }
 
     private String generateEmployeeId(ObjectId orgId) {

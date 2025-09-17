@@ -8,6 +8,7 @@ import { Navbar } from '@/components/navbar';
 import useAuthStore from '@/store/useAuthStore';
 import useItemStore from '@/store/useItemStore';
 import { useRouter } from 'next/navigation';
+import { Loader } from 'lucide-react';
 
 const stockStatusColors = {
   'in-stock': 'accent',
@@ -82,7 +83,10 @@ export default function ItemsPage() {
         <main className='pt-24 pb-16'>
           <div className='container mx-auto px-4 flex items-center justify-center h-96'>
             <div className='text-center'>
-              <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
+              {/* <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div> */}
+              <div className='flex justify-center items-center mb-4'>
+                <Loader className='animate-spin h-12 w-12 text-primary' />
+              </div>
               <p className='text-muted-foreground'>Loading items...</p>
             </div>
           </div>
@@ -807,7 +811,7 @@ function NewItemModal({
             >
               {loading ? (
                 <div className='flex items-center justify-center gap-2'>
-                  <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground'></div>
+                  <Loader className="animate-spin h-4 w-4 text-primary-foreground" />
                   Adding...
                 </div>
               ) : (
@@ -1007,7 +1011,7 @@ function QuantityUpdateModal({
             >
               {loading ? (
                 <div className='flex items-center justify-center gap-2'>
-                  <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
+                  <Loader className="animate-spin h-4 w-4 text-white" />
                   Processing...
                 </div>
               ) : type === 'replenishment' ? (

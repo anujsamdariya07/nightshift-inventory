@@ -26,6 +26,10 @@ public class ItemService {
         return itemRepository.findById(id).orElse(null);
     }
 
+    public boolean existsByNameAndOrgId(String name, ObjectId orgId) {
+        return itemRepository.existsByNameAndOrgId(name, orgId);
+    }
+
     public boolean existsByName(String name) {
         return itemRepository.existsByName(name);
     }

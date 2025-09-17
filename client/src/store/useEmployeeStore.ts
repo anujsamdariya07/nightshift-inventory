@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface PerformanceReview {
+export interface PerformanceReview {
   id: string;
   employee: Employee;
   reviewer: Employee;
@@ -13,7 +13,7 @@ interface PerformanceReview {
   reviewDate: string;
 }
 
-interface Message {
+export interface Message {
   id: string;
   senderId: string;
   receiverId: string;
@@ -23,7 +23,7 @@ interface Message {
   updatedAt: string;
 }
 
-interface Employee {
+export interface Employee {
   id: string;
   orgId: string;
   employeeId: string;
@@ -47,7 +47,7 @@ interface Employee {
   messages: Message[];
 }
 
-interface EmployeeCreateData {
+export interface EmployeeCreateData {
   name: string;
   email: string;
   department?: string;
@@ -60,11 +60,11 @@ interface EmployeeCreateData {
   skills?: string[];
 }
 
-interface EmployeeUpdateData extends Partial<EmployeeCreateData> {
+export interface EmployeeUpdateData extends Partial<EmployeeCreateData> {
   id?: string;
 }
 
-interface EmployeeState {
+export interface EmployeeState {
   employees: Employee[];
   employee: Employee | null;
   loading: boolean;

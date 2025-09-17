@@ -847,7 +847,14 @@ function NewVendorModal({
                   className='flex-1 py-3 px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-300 disabled:opacity-50'
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Creating...' : 'Add Vendor'}
+                  {isSubmitting ? (
+                    <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                      <span>Creating...</span>
+                      <Loader className='animate-spin h-4 w-4 text-primary-foreground' />
+                    </div>
+                  ) : (
+                    'Add Vendor'
+                  )}
                 </button>
               </div>
             </form>
