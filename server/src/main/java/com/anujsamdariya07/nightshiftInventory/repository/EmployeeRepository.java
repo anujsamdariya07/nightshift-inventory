@@ -11,13 +11,13 @@ import java.util.Optional;
 @Repository
 public interface EmployeeRepository
         extends MongoRepository<Employee, ObjectId> {
-    List<Employee> findByOrgId(ObjectId orgId);
+    public List<Employee> findByOrgId(ObjectId orgId);
 
-    Optional<Employee> findByOrgIdAndId
-            (ObjectId orgId, ObjectId id);
+    public boolean existsByEmailAndOrgId(String email, ObjectId orgId);
 
-    Optional<Employee> findByUsername(String username);
+    public boolean existsByPhone(String phone);
 
-    public boolean existsByMobileNo(String gstNo);
-    public boolean existsByUsernameAndOrgId(String username, ObjectId orgId);
+    public boolean existsByEmail(String email);
+
+    public Optional<Employee> findByEmail(String email);
 }

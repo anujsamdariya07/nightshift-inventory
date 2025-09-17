@@ -15,6 +15,9 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 
@@ -32,7 +35,7 @@ public class AuthController {
     public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
         String userId = CookieUtil.getCookieValue(request, "loggedInUser");
         if (userId != null) {
-            Employee currentUser = employeeService.getEmployeeById(new ObjectId(userId)).orElseThrow(() -> new RuntimeException("Error while getting current user!"));
+            Employee currentUser = employeeService.getEmployeeById(new ObjectId(userId));
             return ResponseEntity.ok(new GetCurrentUserResponse(currentUser, "User found!"));
         }
         return ResponseEntity.status(HttpStatus.OK).body(new GetCurrentUserResponse(null, "Not logged in"));
@@ -41,8 +44,6 @@ public class AuthController {
     @PostMapping("/sign-up")
     public ResponseEntity<?> signUp(@RequestBody SignupRequest request, HttpServletResponse response) {
         try {
-            // System.out.println("HERE");
-
             if (organizationService.findOrgByEmail(request.getOrgEmail()).isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body("Organization already exists with this email.");
@@ -56,7 +57,6 @@ public class AuthController {
                         .body("Organization already exists with this GST number.");
             }
 
-            // 1. Create and save Organization
             Organization organization = Organization.builder()
                     .name(request.getOrgName())
                     .mobileNo(request.getOrgMobileNo())
@@ -66,31 +66,35 @@ public class AuthController {
                     .build();
             organizationService.saveOrganization(organization);
 
-            // 2. Extract username from email
-            String username = request.getOrgEmail().split("@")[0];
-
-            // 3. Create and save Admin Employee
             Employee admin = employeeService.saveNewAdminEmployee(
                     Employee.builder()
                             .orgId(organization.getId())
-                            .name(request.getOrgName())
-                            .username(username)
+                            .employeeId("ADMIN-" + System.currentTimeMillis())
+                            .name(request.getOrgName() + " Admin")
+                            .email(request.getOrgEmail())
                             .password(request.getAdminPassword())
-                            .mobileNo(request.getOrgMobileNo())
-                            .address(request.getOrgAddress())
-                            .role("admin")
                             .mustChangePassword(true)
+                            .role(Employee.Role.ADMIN)
+                            .department("Administration")
+                            .phone(request.getOrgMobileNo())
+                            .location(request.getOrgAddress())
+                            .status(Employee.EmployeeStatus.ACTIVE)
+                            .attendance(0)
+                            .hireDate(new Date())
+                            .experience(0)
+                            .salary(new BigDecimal("0.00"))
+                            .skills(new ArrayList<>())
+                            .performance(new ArrayList<>())
                             .build()
             );
 
             organization.getEmployeeDetails().add(admin);
-
             organizationService.saveOrganization(organization);
 
             ResponseCookie userCookie = ResponseCookie.from("loggedInUser", admin.getId().toHexString())
                     .httpOnly(true)
-                    .secure(true) // true in production with https
-                    .sameSite("None") // VERY IMPORTANT for cross-origin
+                    .secure(true)
+                    .sameSite("None")
                     .path("/")
                     .maxAge(24 * 60 * 60)
                     .build();
@@ -98,24 +102,25 @@ public class AuthController {
             response.addHeader(HttpHeaders.SET_COOKIE, userCookie.toString());
 
             SignupResponse signupResponse = new SignupResponse(organization, admin, "Organization signed up successfully!");
-
             return ResponseEntity.status(HttpStatus.OK).body(signupResponse);
+
         } catch (Exception e) {
             throw new RuntimeException("Error in signing up!", e);
         }
     }
 
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request) {
-        String username = loginRequest.getUsername();
+        String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
 
-        if (username == null || password == null) {
-            return new ResponseEntity<>("Username or password not provided!", HttpStatus.NO_CONTENT);
+        if (email == null || password == null) {
+            return new ResponseEntity<>("Email or password not provided!", HttpStatus.NO_CONTENT);
         }
 
         Optional<Employee> employee = employeeService.loginEmployee(
-                username,
+                email,
                 password
         );
 

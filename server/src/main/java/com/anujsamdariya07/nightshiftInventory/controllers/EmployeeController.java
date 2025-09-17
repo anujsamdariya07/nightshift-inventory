@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -27,11 +26,15 @@ public class EmployeeController {
     public ResponseEntity<?> getEmployeesByOrgId(HttpServletRequest request) {
         Employee currentUser = employeeService.getCurrentUser(request);
         ObjectId orgId = currentUser.getOrgId();
+
+        System.out.println("HERE");
+
         return ResponseEntity.status(HttpStatus.OK).body(employeeService.getEmployeesByOrgId(orgId));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getEmployeeById(@PathVariable String id) {
+        System.out.println("HERE");
         return ResponseEntity.status(HttpStatus.OK).body(employeeService.getEmployeeById(new ObjectId(id)));
     }
 
@@ -39,16 +42,13 @@ public class EmployeeController {
     public ResponseEntity<?> createEmployee(@RequestBody Employee employee, HttpServletRequest request) {
         Employee currentUser = employeeService.getCurrentUser(request);
         ObjectId orgId = currentUser.getOrgId();
-        if (employeeService.employeeExistsByUsernameAndOrgId(employee.getUsername(), orgId)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Employee with the same username already exists!");
-        }
-        System.out.println(orgId);
         employee.setId(null);
         employee.setOrgId(orgId);
         Employee savedNewEmployee = employeeService.saveNewEmployee(employee);
         Optional<Organization> organization = organizationService.findOrgById(orgId);
         organization.ifPresent(value -> value.getEmployeeDetails().add(savedNewEmployee));
         organizationService.saveOrganization(organization.get());
+
         return ResponseEntity.status(HttpStatus.CREATED).body(savedNewEmployee);
     }
 
