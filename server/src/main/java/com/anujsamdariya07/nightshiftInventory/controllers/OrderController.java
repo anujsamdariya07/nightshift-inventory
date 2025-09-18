@@ -49,7 +49,9 @@ public class OrderController {
         order.setOrgId(orgId);
         Order savedOrder = orderService.createOrder(order);
         Optional<Organization> organization = organizationService.findOrgById(orgId);
-        organization.ifPresent(value -> value.getOrders().add(savedOrder));
+        organization.ifPresent(value -> {
+            value.getOrders().add(savedOrder);
+        });
         organizationService.saveOrganization(organization.get());
         return ResponseEntity.status(HttpStatus.CREATED).body(savedOrder);
     }
@@ -57,11 +59,18 @@ public class OrderController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateOrder(@PathVariable String id, @RequestBody Order order) {
         Order savedOrder = orderService.updateOrder(new ObjectId(id), order);
+        if (savedOrder == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found!");
+        }
         return ResponseEntity.status(HttpStatus.OK).body(savedOrder);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOrder(@PathVariable String id) {
+        Order orderById = orderService.getOrderById(new ObjectId(id));
+        if (orderById == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found!");
+        }
         orderService.deleteOrder(new ObjectId(id));
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

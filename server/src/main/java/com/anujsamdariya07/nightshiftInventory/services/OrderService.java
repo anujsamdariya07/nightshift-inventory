@@ -1,16 +1,14 @@
 package com.anujsamdariya07.nightshiftInventory.services;
 
-import com.anujsamdariya07.nightshiftInventory.entity.Item;
 import com.anujsamdariya07.nightshiftInventory.entity.Order;
-import com.anujsamdariya07.nightshiftInventory.entity.OrderItem;
-import com.anujsamdariya07.nightshiftInventory.repository.ItemRepository;
+import com.anujsamdariya07.nightshiftInventory.entity.Vendor;
 import com.anujsamdariya07.nightshiftInventory.repository.OrderRepository;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class OrderService {
@@ -27,13 +25,37 @@ public class OrderService {
         return orderRepository.findById(id).orElse(null);
     }
 
+    private String generateOrderId(ObjectId orgId) {
+        List<Order> orders = orderRepository.findAllByOrgId(orgId);
+
+        int maxId = orders.stream()
+                .map(Order::getOrderId)
+                .filter(id -> id != null && id.startsWith("ORD-"))
+                .map(id -> id.substring(4))
+                .filter(num -> num.matches("\\d+"))
+                .mapToInt(Integer::parseInt)
+                .max()
+                .orElse(0);
+        System.out.println(maxId);
+
+        int nextId = maxId + 1;
+
+        return String.format("ORD-%03d", nextId);
+    }
+
     public Order createOrder(Order orderRequest) {
         Order order = Order.builder()
                 .orgId(orderRequest.getOrgId())
+                .orderId(generateOrderId(orderRequest.getOrgId()))
                 .customerId(orderRequest.getCustomerId())
+                .customerName(orderRequest.getCustomerName())
                 .employeeId(orderRequest.getEmployeeId())
+                .employeeName(orderRequest.getEmployeeName())
                 .items(orderRequest.getItems())
                 .totalAmount(orderRequest.getTotalAmount())
+                .status(Order.OrderStatus.PENDING)
+                .orderDate(new Date())
+                .deadline(orderRequest.getDeadline())
                 .notes(orderRequest.getNotes())
                 .build();
 
@@ -55,16 +77,23 @@ public class OrderService {
         itemService.deductByOrder(orderRequest.getItems(), existingOrder.getOrgId());
 
         existingOrder.setCustomerId(orderRequest.getCustomerId());
+        existingOrder.setCustomerName(orderRequest.getCustomerName());
         existingOrder.setEmployeeId(orderRequest.getEmployeeId());
+        existingOrder.setEmployeeName(orderRequest.getEmployeeName());
         existingOrder.setItems(orderRequest.getItems());
         existingOrder.setTotalAmount(orderRequest.getTotalAmount());
         existingOrder.setNotes(orderRequest.getNotes());
         existingOrder.setStatus(orderRequest.getStatus() != null ? orderRequest.getStatus() : existingOrder.getStatus());
+        existingOrder.setDeadline(orderRequest.getDeadline());
 
         return orderRepository.save(existingOrder);
     }
 
     public void deleteOrder(ObjectId id) {
-        orderRepository.deleteById(id);
+        Order existingOrder = getOrderById(id);
+        if (existingOrder != null) {
+            itemService.revertByOrder(existingOrder.getItems(), existingOrder.getOrgId());
+            orderRepository.deleteById(id);
+        }
     }
 }
