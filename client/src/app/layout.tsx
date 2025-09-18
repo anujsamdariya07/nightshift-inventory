@@ -5,6 +5,7 @@ import "./globals.css"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import AuthProvider from "@/lib/AuthProvider"
+import { Toaster } from "sonner"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -35,6 +36,7 @@ export default function RootLayout({
         <main className="min-h-screen">
           <AuthProvider>
           {children}
+          <Toaster position="bottom-right" />
           </AuthProvider>
         </main>
         <footer className="relative z-20 bg-card/80 backdrop-blur-md py-8">

@@ -1,136 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Navbar } from '@/components/navbar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { UserRound } from 'lucide-react';
-
-// Dummy employee data
-const dummyEmployees: Employee[] = [
-  {
-    id: '1',
-    name: 'Sarah Chen',
-    position: 'Senior Software Engineer',
-    department: 'Engineering',
-    employeeId: 'EMP001',
-    email: 'sarah.chen@neoncorp.com',
-    phone: '+1 (555) 123-4567',
-    hireDate: '2021-03-15',
-    status: 'active' as const,
-    salary: 125000,
-    manager: 'Alex Rodriguez',
-    performanceRating: 4.8,
-    avatar:
-      'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-    skills: ['React', 'TypeScript', 'Node.js'],
-    location: 'San Francisco, CA',
-  },
-  {
-    id: '2',
-    name: 'Marcus Johnson',
-    position: 'Product Manager',
-    department: 'Product',
-    employeeId: 'EMP002',
-    email: 'marcus.johnson@neoncorp.com',
-    phone: '+1 (555) 234-5678',
-    hireDate: '2020-08-22',
-    status: 'active' as const,
-    salary: 140000,
-    manager: 'Jennifer Liu',
-    performanceRating: 4.6,
-    avatar:
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    skills: ['Strategy', 'Analytics', 'Leadership'],
-    location: 'New York, NY',
-  },
-  {
-    id: '3',
-    name: 'Elena Vasquez',
-    position: 'UX Designer',
-    department: 'Design',
-    employeeId: 'EMP003',
-    email: 'elena.vasquez@neoncorp.com',
-    phone: '+1 (555) 345-6789',
-    hireDate: '2022-01-10',
-    status: 'on-leave' as const,
-    salary: 95000,
-    manager: 'David Kim',
-    performanceRating: 4.9,
-    avatar:
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-    skills: ['Figma', 'User Research', 'Prototyping'],
-    location: 'Austin, TX',
-  },
-  {
-    id: '4',
-    name: 'James Thompson',
-    position: 'DevOps Engineer',
-    department: 'Engineering',
-    employeeId: 'EMP004',
-    email: 'james.thompson@neoncorp.com',
-    phone: '+1 (555) 456-7890',
-    hireDate: '2019-11-05',
-    status: 'active' as const,
-    salary: 115000,
-    manager: 'Alex Rodriguez',
-    performanceRating: 4.5,
-    avatar:
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    skills: ['AWS', 'Docker', 'Kubernetes'],
-    location: 'Seattle, WA',
-  },
-  {
-    id: '5',
-    name: 'Priya Patel',
-    position: 'Data Scientist',
-    department: 'Analytics',
-    employeeId: 'EMP005',
-    email: 'priya.patel@neoncorp.com',
-    phone: '+1 (555) 567-8901',
-    hireDate: '2021-09-12',
-    status: 'active' as const,
-    salary: 130000,
-    manager: 'Dr. Michael Chang',
-    performanceRating: 4.7,
-    avatar:
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
-    skills: ['Python', 'Machine Learning', 'SQL'],
-    location: 'Boston, MA',
-  },
-  {
-    id: '6',
-    name: "Kevin O'Connor",
-    position: 'Sales Director',
-    department: 'Sales',
-    employeeId: 'EMP006',
-    email: 'kevin.oconnor@neoncorp.com',
-    phone: '+1 (555) 678-9012',
-    hireDate: '2018-06-18',
-    status: 'inactive' as const,
-    salary: 160000,
-    manager: 'Sarah Williams',
-    performanceRating: 4.2,
-    avatar:
-      'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face',
-    skills: ['Negotiation', 'CRM', 'Strategy'],
-    location: 'Chicago, IL',
-  },
-];
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import useEmployeeStore, {
+  Employee,
+  EmployeeCreateData,
+} from '@/store/useEmployeeStore';
+import { Navbar } from '@/components/navbar';
+import { Loader2 } from 'lucide-react';
 
 const statusColors = {
-  active: 'accent',
-  inactive: 'destructive',
-  'on-leave': 'chart-2',
+  ACTIVE: 'accent',
+  INACTIVE: 'destructive',
+  SUSPENDED: 'chart-2',
 };
 
 const filterOptions = [
   { label: 'All Employees', value: 'all' },
-  { label: 'Active', value: 'active' },
-  { label: 'On Leave', value: 'on-leave' },
-  { label: 'Inactive', value: 'inactive' },
+  { label: 'Active', value: 'ACTIVE' },
+  { label: 'Suspended', value: 'SUSPENDED' },
+  { label: 'Inactive', value: 'INACTIVE' },
 ];
 
 const departmentOptions = [
@@ -140,17 +32,51 @@ const departmentOptions = [
   { label: 'Design', value: 'Design' },
   { label: 'Analytics', value: 'Analytics' },
   { label: 'Sales', value: 'Sales' },
+  { label: 'Marketing', value: 'Marketing' },
+  { label: 'HR', value: 'HR' },
 ];
 
 export default function EmployeesPage() {
-  const [employees] = useState(dummyEmployees);
-  const [filteredEmployees, setFilteredEmployees] = useState(dummyEmployees);
+  const {
+    employees,
+    loading,
+    error,
+    fetchEmployees,
+    createEmployee,
+    deleteEmployee,
+  } = useEmployeeStore();
+
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [showNewEmployeeModal, setShowNewEmployeeModal] = useState(false);
+
+  // Inside EmployeesPage component
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(
+    null
+  );
+
+  const handleDeleteClick = (employee: Employee) => {
+    setEmployeeToDelete(employee);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteEmployee = async () => {
+    if (employeeToDelete) {
+      await deleteEmployee(employeeToDelete.id);
+    }
+    setEmployeeToDelete(null);
+    setShowDeleteModal(false);
+  };
+
+  // Fetch employees on component mount
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
 
   // Update filtered employees when filters or search term changes
   useEffect(() => {
@@ -172,18 +98,46 @@ export default function EmployeesPage() {
       filtered = filtered.filter(
         (employee) =>
           employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          employee.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          employee.employeeId.toLowerCase().includes(searchTerm.toLowerCase())
+          employee.department
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          employee.employeeId
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          employee.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     setFilteredEmployees(filtered);
   }, [activeFilter, departmentFilter, searchTerm, employees]);
 
+  const handleCreateEmployee = async (employeeData: EmployeeCreateData) => {
+    const result = await createEmployee(employeeData);
+    if (result.success) {
+      setShowNewEmployeeModal(false);
+    }
+  };
+
+  const handleDeleteEmployee = async (id: string) => {
+    if (confirm('Are you sure you want to delete this employee?')) {
+      await deleteEmployee(id);
+    }
+  };
+
+  if (loading && employees.length === 0) {
+    return (
+      <div className='min-h-screen bg-background flex items-center justify-center'>
+        <div className='text-center'>
+          <Loader2 className='h-12 w-12 text-primary animate-spin mx-auto mb-4' />
+          <p className='text-muted-foreground'>Loading employees...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className='min-h-screen bg-background'>
       <Navbar />
-
       <main className='pt-24 pb-16'>
         {/* Header Section */}
         <section className='container mx-auto px-4 mb-8'>
@@ -196,14 +150,25 @@ export default function EmployeesPage() {
                 Manage your team members, track performance, and organize
                 departments
               </p>
+              {error && (
+                <p className='text-destructive text-sm mt-2'>{error}</p>
+              )}
             </div>
 
             <div className='flex items-center gap-4'>
               <Button
-                className='px-6 py-3 bg-primary text-primary-foreground hover:neon-glow transition-all duration-300'
+                className='px-6 py-3 bg-primary text-primary-foreground hover:neon-glow transition-all duration-300 flex items-center justify-center gap-2'
                 onClick={() => setShowNewEmployeeModal(true)}
+                disabled={loading}
               >
-                Add Employee
+                {loading ? (
+                  <>
+                    <Loader2 className='h-5 w-5 animate-spin' />
+                    Loading...
+                  </>
+                ) : (
+                  'Add Employee'
+                )}
               </Button>
               <Button
                 variant='outline'
@@ -223,7 +188,7 @@ export default function EmployeesPage() {
             <div className='flex-1'>
               <input
                 type='text'
-                placeholder='Search employees by name, position, or ID...'
+                placeholder='Search employees by name, department, ID, or email...'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
@@ -298,11 +263,12 @@ export default function EmployeesPage() {
                     selectedEmployee === employee.id ? null : employee.id
                   )
                 }
+                onDelete={() => handleDeleteClick(employee)}
               />
             ))}
           </div>
 
-          {filteredEmployees.length === 0 && (
+          {filteredEmployees.length === 0 && !loading && (
             <div className='text-center py-16 animate-fade-in'>
               <div className='text-6xl mb-4'>👥</div>
               <h3 className='text-xl font-semibold text-foreground mb-2'>
@@ -329,32 +295,22 @@ export default function EmployeesPage() {
       {showNewEmployeeModal && (
         <NewEmployeeModal
           onClose={() => setShowNewEmployeeModal(false)}
-          onSubmit={(newEmployeeData) => {
-            console.log('New employee:', newEmployeeData);
-            setShowNewEmployeeModal(false);
-          }}
+          onSubmit={handleCreateEmployee}
+          loading={loading}
+        />
+      )}
+
+      {/* Delete modal */}
+      {showDeleteModal && (
+        <DeleteConfirmModal
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={confirmDeleteEmployee}
+          employee={employeeToDelete}
+          loading={loading}
         />
       )}
     </div>
   );
-}
-
-interface Employee {
-  id: string;
-  name: string;
-  position: string;
-  department: string;
-  employeeId: string;
-  email: string;
-  phone: string;
-  hireDate: string;
-  status: 'active' | 'inactive' | 'on-leave';
-  salary: number;
-  manager: string;
-  performanceRating: number;
-  avatar: string;
-  skills: string[];
-  location: string;
 }
 
 function EmployeeCard({
@@ -362,18 +318,29 @@ function EmployeeCard({
   index,
   isSelected,
   onSelect,
+  onDelete,
 }: {
   employee: Employee;
   index: number;
   isSelected: boolean;
   onSelect: () => void;
+  onDelete: () => void;
 }) {
   const statusColor =
     statusColors[employee.status as keyof typeof statusColors] || 'muted';
-  const yearsOfService = Math.floor(
-    (new Date().getTime() - new Date(employee.hireDate).getTime()) /
-      (1000 * 3600 * 24 * 365)
-  );
+
+  const yearsOfService =
+    employee.yearsOfService ||
+    Math.floor(
+      (new Date().getTime() - new Date(employee.hireDate).getTime()) /
+        (1000 * 3600 * 24 * 365)
+    );
+
+  const avgRating =
+    employee.performance?.length > 0
+      ? employee.performance.reduce((sum, review) => sum + review.rating, 0) /
+        employee.performance.length
+      : 0;
 
   return (
     <Card
@@ -404,12 +371,10 @@ function EmployeeCard({
                 <Badge
                   className={`px-2 py-1 text-xs font-medium rounded-full bg-${statusColor}/20 text-${statusColor} border border-${statusColor}/30`}
                 >
-                  {employee.status.replace('-', ' ').toUpperCase()}
+                  {employee.status.replace('-', ' ')}
                 </Badge>
               </div>
-              <p className='text-primary font-medium mb-1'>
-                {employee.position}
-              </p>
+              <p className='text-primary font-medium mb-1'>{employee.role}</p>
               <div className='flex items-center gap-4 text-sm text-muted-foreground'>
                 <span>{employee.department}</span>
                 <span>•</span>
@@ -425,16 +390,18 @@ function EmployeeCard({
               <p className='text-sm text-muted-foreground'>Performance</p>
               <div className='flex items-center gap-1'>
                 <span className='text-lg font-bold text-accent'>
-                  {employee.performanceRating}
+                  {avgRating ? avgRating.toFixed(1) : 'N/A'}
                 </span>
-                <span className='text-sm text-muted-foreground'>/5.0</span>
+                {avgRating > 0 && (
+                  <span className='text-sm text-muted-foreground'>/5.0</span>
+                )}
               </div>
             </div>
 
             <div className='text-right'>
               <p className='text-sm text-muted-foreground'>Experience</p>
               <p className='text-lg font-bold text-chart-2'>
-                {yearsOfService}y
+                {employee.experience || yearsOfService}y
               </p>
             </div>
 
@@ -462,11 +429,15 @@ function EmployeeCard({
                   </p>
                   <p>
                     <span className='text-muted-foreground'>Phone:</span>{' '}
-                    <span className='text-foreground'>{employee.phone}</span>
+                    <span className='text-foreground'>
+                      {employee.phone || 'N/A'}
+                    </span>
                   </p>
                   <p>
                     <span className='text-muted-foreground'>Location:</span>{' '}
-                    <span className='text-foreground'>{employee.location}</span>
+                    <span className='text-foreground'>
+                      {employee.location || 'N/A'}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -484,7 +455,9 @@ function EmployeeCard({
                   </p>
                   <p>
                     <span className='text-muted-foreground'>Manager:</span>{' '}
-                    <span className='text-foreground'>{employee.manager}</span>
+                    <span className='text-foreground'>
+                      {employee.manager?.name || 'N/A'}
+                    </span>
                   </p>
                   <p>
                     <span className='text-muted-foreground'>
@@ -502,15 +475,21 @@ function EmployeeCard({
                   Skills & Expertise
                 </h4>
                 <div className='flex flex-wrap gap-2'>
-                  {employee.skills.map((skill, idx) => (
-                    <Badge
-                      key={idx}
-                      variant='secondary'
-                      className='text-xs bg-secondary/20 text-secondary border border-secondary/30'
-                    >
-                      {skill}
-                    </Badge>
-                  ))}
+                  {employee.skills?.length > 0 ? (
+                    employee.skills.map((skill, idx) => (
+                      <Badge
+                        key={idx}
+                        variant='secondary'
+                        className='text-xs bg-secondary/20 text-secondary border border-secondary/30'
+                      >
+                        {skill}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className='text-sm text-muted-foreground'>
+                      No skills listed
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -537,6 +516,17 @@ function EmployeeCard({
               >
                 Performance Review
               </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                className='hover:border-destructive hover:text-destructive'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+              >
+                Delete
+              </Button>
             </div>
           </div>
         )}
@@ -545,20 +535,26 @@ function EmployeeCard({
   );
 }
 
-function EmployeeStats({ employees }: { employees: any[] }) {
+function EmployeeStats({ employees }: { employees: Employee[] }) {
   const stats = {
     total: employees.length,
-    active: employees.filter((emp) => emp.status === 'active').length,
-    onLeave: employees.filter((emp) => emp.status === 'on-leave').length,
-    inactive: employees.filter((emp) => emp.status === 'inactive').length,
+    active: employees.filter((emp) => emp.status === 'ACTIVE').length,
+    suspended: employees.filter((emp) => emp.status === 'SUSPENDED').length,
+    inactive: employees.filter((emp) => emp.status === 'INACTIVE').length,
     avgSalary:
       employees.length > 0
         ? employees.reduce((sum, emp) => sum + emp.salary, 0) / employees.length
         : 0,
     avgPerformance:
       employees.length > 0
-        ? employees.reduce((sum, emp) => sum + emp.performanceRating, 0) /
-          employees.length
+        ? employees.reduce((sum, emp) => {
+            const empAvg =
+              emp.performance?.length > 0
+                ? emp.performance.reduce((s, r) => s + r.rating, 0) /
+                  emp.performance.length
+                : 0;
+            return sum + empAvg;
+          }, 0) / employees.length
         : 0,
   };
 
@@ -578,7 +574,7 @@ function EmployeeStats({ employees }: { employees: any[] }) {
       <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8'>
         <StatCard label='Total Employees' value={stats.total} color='primary' />
         <StatCard label='Active' value={stats.active} color='accent' />
-        <StatCard label='On Leave' value={stats.onLeave} color='chart-2' />
+        <StatCard label='Suspended' value={stats.suspended} color='chart-2' />
         <StatCard label='Inactive' value={stats.inactive} color='destructive' />
         <StatCard
           label='Avg Salary'
@@ -636,33 +632,27 @@ function StatCard({
 function NewEmployeeModal({
   onClose,
   onSubmit,
+  loading,
 }: {
   onClose: () => void;
-  onSubmit: (employee: any) => void;
+  onSubmit: (employee: EmployeeCreateData) => void;
+  loading: boolean;
 }) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<EmployeeCreateData>({
     name: '',
-    position: '',
-    department: '',
     email: '',
+    department: '',
     phone: '',
     salary: 0,
-    manager: '',
+    location: '',
+    experience: 0,
+    status: 'ACTIVE',
+    skills: [],
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      ...formData,
-      id: Date.now().toString(),
-      employeeId: `EMP${String(Date.now()).slice(-3)}`,
-      hireDate: new Date().toISOString().split('T')[0],
-      status: 'active',
-      performanceRating: 0,
-      avatar: '',
-      skills: [],
-      location: '',
-    });
+    onSubmit(formData);
   };
 
   return (
@@ -671,7 +661,7 @@ function NewEmployeeModal({
       onClick={onClose}
     >
       <Card
-        className='bg-card border border-border p-8 w-full max-w-md animate-slide-up'
+        className='bg-card border border-border p-8 w-full max-w-md max-h-[90vh] overflow-y-auto animate-slide-up'
         onClick={(e) => e.stopPropagation()}
       >
         <div className='flex justify-between items-center mb-6'>
@@ -701,29 +691,28 @@ function NewEmployeeModal({
             />
           </div>
 
+          <div>
+            <label className='block text-sm font-medium text-foreground mb-2'>
+              Email *
+            </label>
+            <input
+              type='email'
+              required
+              value={formData.email}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, email: e.target.value }))
+              }
+              className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
+              placeholder='employee@company.com'
+            />
+          </div>
+
           <div className='grid grid-cols-2 gap-4'>
             <div>
               <label className='block text-sm font-medium text-foreground mb-2'>
-                Position *
-              </label>
-              <input
-                type='text'
-                required
-                value={formData.position}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, position: e.target.value }))
-                }
-                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
-                placeholder='Job title'
-              />
-            </div>
-
-            <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Department *
+                Department
               </label>
               <select
-                required
                 value={formData.department}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -743,40 +732,62 @@ function NewEmployeeModal({
                 <option value='HR'>HR</option>
               </select>
             </div>
+
+            <div>
+              <label className='block text-sm font-medium text-foreground mb-2'>
+                Status
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    status: e.target.value as
+                      | 'ACTIVE'
+                      | 'INACTIVE'
+                      | 'SUSPENDED',
+                  }))
+                }
+                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
+              >
+                <option value='ACTIVE'>Active</option>
+                <option value='INACTIVE'>Inactive</option>
+                <option value='SUSPENDED'>Suspended</option>
+              </select>
+            </div>
           </div>
 
           <div>
             <label className='block text-sm font-medium text-foreground mb-2'>
-              Email *
+              Phone
             </label>
             <input
-              type='email'
-              required
-              value={formData.email}
+              type='tel'
+              value={formData.phone}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, email: e.target.value }))
+                setFormData((prev) => ({ ...prev, phone: e.target.value }))
               }
               className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
-              placeholder='employee@neoncorp.com'
+              placeholder='+1 (555) 123-4567'
+            />
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium text-foreground mb-2'>
+              Location
+            </label>
+            <input
+              type='text'
+              value={formData.location}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, location: e.target.value }))
+              }
+              className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
+              placeholder='City, State'
             />
           </div>
 
           <div className='grid grid-cols-2 gap-4'>
-            <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Phone
-              </label>
-              <input
-                type='tel'
-                value={formData.phone}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, phone: e.target.value }))
-                }
-                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
-                placeholder='+1 (555) 123-4567'
-              />
-            </div>
-
             <div>
               <label className='block text-sm font-medium text-foreground mb-2'>
                 Salary (₹)
@@ -795,21 +806,25 @@ function NewEmployeeModal({
                 placeholder='80000'
               />
             </div>
-          </div>
 
-          <div>
-            <label className='block text-sm font-medium text-foreground mb-2'>
-              Manager
-            </label>
-            <input
-              type='text'
-              value={formData.manager}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, manager: e.target.value }))
-              }
-              className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
-              placeholder='Manager name'
-            />
+            <div>
+              <label className='block text-sm font-medium text-foreground mb-2'>
+                Experience (years)
+              </label>
+              <input
+                type='number'
+                min='0'
+                value={formData.experience}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    experience: parseInt(e.target.value) || 0,
+                  }))
+                }
+                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
+                placeholder='5'
+              />
+            </div>
           </div>
 
           <div className='flex gap-4 pt-4'>
@@ -818,17 +833,86 @@ function NewEmployeeModal({
               variant='outline'
               onClick={onClose}
               className='flex-1'
+              disabled={loading}
             >
               Cancel
             </Button>
             <Button
               type='submit'
-              className='flex-1 bg-primary text-primary-foreground hover:neon-glow transition-all duration-300'
+              className='flex-1 bg-primary text-primary-foreground hover:neon-glow transition-all duration-300 flex items-center justify-center gap-2'
+              disabled={loading}
             >
-              Add Employee
+              {loading ? (
+                <>
+                  <Loader2 className='h-5 w-5 animate-spin' />
+                  Creating...
+                </>
+              ) : (
+                'Add Employee'
+              )}
             </Button>
           </div>
         </form>
+      </Card>
+    </div>
+  );
+}
+
+function DeleteConfirmModal({
+  onClose,
+  onConfirm,
+  employee,
+  loading,
+}: {
+  onClose: () => void;
+  onConfirm: () => void;
+  employee: Employee | null;
+  loading: boolean;
+}) {
+  if (!employee) return null;
+
+  return (
+    <div
+      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in'
+      onClick={onClose}
+    >
+      <Card
+        className='bg-card border border-border p-6 w-full max-w-md animate-slide-up'
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className='text-xl font-bold text-destructive mb-4'>
+          Confirm Deletion
+        </h2>
+        <p className='text-muted-foreground mb-6'>
+          Are you sure you want to delete{' '}
+          <span className='font-semibold text-foreground'>{employee.name}</span>
+          ? This action cannot be undone.
+        </p>
+
+        <div className='flex gap-4'>
+          <Button
+            variant='outline'
+            onClick={onClose}
+            className='flex-1'
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={onConfirm}
+            className='flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/80 flex items-center justify-center gap-2'
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 className='h-4 w-4 animate-spin' />
+                Deleting...
+              </>
+            ) : (
+              'Delete'
+            )}
+          </Button>
+        </div>
       </Card>
     </div>
   );

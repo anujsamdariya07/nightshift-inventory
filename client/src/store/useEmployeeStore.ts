@@ -1,6 +1,6 @@
+import { showErrorToast, showSuccessToast } from '@/components/ToastComponent';
 import { axiosInstance } from '@/lib/axios';
 import { AxiosError } from 'axios';
-import { toast } from 'sonner';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -8,7 +8,7 @@ export interface PerformanceReview {
   id: string;
   employee: Employee;
   reviewer: Employee;
-  rating: number; // 1 to 5 rating
+  rating: number; // 1 to 5
   comments: string;
   reviewDate: string;
 }
@@ -64,11 +64,29 @@ export interface EmployeeUpdateData extends Partial<EmployeeCreateData> {
   id?: string;
 }
 
+export interface StoreResponse<T> {
+  success: boolean;
+  data?: T | null;
+  message?: string;
+  error?: string;
+}
+
 export interface EmployeeState {
   employees: Employee[];
   employee: Employee | null;
   loading: boolean;
   error: string | null;
+
+  fetchEmployees: () => Promise<StoreResponse<Employee[]>>;
+  fetchEmployeeById: (id: string) => Promise<StoreResponse<Employee>>;
+  createEmployee: (
+    employeeData: EmployeeCreateData
+  ) => Promise<StoreResponse<Employee>>;
+  updateEmployee: (
+    id: string,
+    employeeData: EmployeeUpdateData
+  ) => Promise<StoreResponse<Employee>>;
+  deleteEmployee: (id: string) => Promise<StoreResponse<null>>;
 }
 
 const useEmployeeStore = create<EmployeeState>()(
@@ -91,9 +109,11 @@ const useEmployeeStore = create<EmployeeState>()(
           };
         } catch (error) {
           const err = error as AxiosError<{ message: string }>;
-          const msg = err.response?.data.message;
+          const msg =
+            err.response?.data.message || 'Failed to fetch employees!';
           set({ error: msg || 'Failed to fetch employees!' });
-          toast.error('Error while fetching employees!', {
+          showErrorToast({
+            message: 'Error while fetching employees!',
             description: msg,
           });
           return { success: false, error: msg };
@@ -120,7 +140,8 @@ const useEmployeeStore = create<EmployeeState>()(
             err.response?.data.message ||
             'Failed to fetch the employee with the given ID!';
           set({ error: msg });
-          toast.error('Error while fetching employee with the given ID!', {
+          showErrorToast({
+            message: 'Error while fetching employee with the given ID!',
             description: msg,
           });
           return { success: false, error: msg };
@@ -137,10 +158,9 @@ const useEmployeeStore = create<EmployeeState>()(
             employeeData
           );
           const employee = response.data;
-          set((state) => ({
-            employees: [...state.employees, employee],
-          }));
+          set((state) => ({ employees: [...state.employees, employee] }));
           set({ error: null });
+          showSuccessToast({ message: 'Employee Created Successfully!' });
           return {
             success: true,
             data: employee,
@@ -151,7 +171,8 @@ const useEmployeeStore = create<EmployeeState>()(
           const msg =
             err.response?.data.message || 'Failed to create the employee!';
           set({ error: msg });
-          toast.error('Error while creating employee!', {
+          showErrorToast({
+            message: 'Error while creating employee!',
             description: msg,
           });
           return { success: false, error: msg };
@@ -173,7 +194,7 @@ const useEmployeeStore = create<EmployeeState>()(
             employees: state.employees.map((e) => (e.id === id ? employee : e)),
           }));
           set({ error: null });
-          toast.success('Employee Updated Successfully!');
+          showSuccessToast({ message: 'Employee Updated Successfully!' });
           return {
             success: true,
             data: employee,
@@ -184,7 +205,8 @@ const useEmployeeStore = create<EmployeeState>()(
           const msg =
             err.response?.data.message || 'Failed to update the employee!';
           set({ error: msg });
-          toast.error('Error while updating the employee!', {
+          showErrorToast({
+            message: 'Error while updating the employee!',
             description: msg,
           });
           return { success: false, error: msg };
@@ -201,7 +223,7 @@ const useEmployeeStore = create<EmployeeState>()(
             employees: state.employees.filter((e) => e.id !== id),
           }));
           set({ error: null });
-          toast.success('Employee Deleted Successfully!');
+          showSuccessToast({ message: 'Employee Deleted Successfully!' });
           return {
             success: true,
             data: null,
@@ -211,7 +233,8 @@ const useEmployeeStore = create<EmployeeState>()(
           const err = error as AxiosError<{ message: string }>;
           const msg =
             err.response?.data.message || 'Failed to delete employee!';
-          toast.error('Error while deleting employee!', {
+          showErrorToast({
+            message: 'Error while deleting employee!',
             description: msg,
           });
           set({ error: msg });
@@ -221,9 +244,7 @@ const useEmployeeStore = create<EmployeeState>()(
         }
       },
     }),
-    {
-      name: 'employee-storage',
-    }
+    { name: 'employee-storage' }
   )
 );
 
