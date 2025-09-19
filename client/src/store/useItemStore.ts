@@ -12,7 +12,7 @@ interface UpdateHistory {
   date: Date;
 }
 
-interface Item {
+export interface Item {
   id: string;
   orgId: string;
   name: string;

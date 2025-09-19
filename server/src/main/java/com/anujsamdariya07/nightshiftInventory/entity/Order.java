@@ -32,13 +32,11 @@ public class Order {
     @JsonSerialize(using = ToStringSerializer.class)
     private ObjectId orgId;
 
-    @JsonSerialize(using = ToStringSerializer.class)
-    private ObjectId customerId;
+    private String customerId;
 
     private String customerName;
 
-    @JsonSerialize(using = ToStringSerializer.class)
-    private ObjectId employeeId;
+    private String employeeId;
 
     private String employeeName;
 

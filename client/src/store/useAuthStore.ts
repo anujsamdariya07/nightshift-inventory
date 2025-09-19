@@ -5,26 +5,15 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Types } from 'mongoose';
 import { Employee } from './useEmployeeStore';
-
-interface AuthUser {
-  id: string;
-  orgId: string;
-  name: string;
-  username: string;
-  password: string;
-  mustChangePassword: boolean;
-  role: 'admin' | 'employee' | 'manager';
-  mobileNo: string;
-  address: string;
-  attendance: number;
-  messages: string | null;
-}
+import { Vendor } from './useVendorStore';
+import { Item } from './useItemStore';
+import { Customer } from './useCustomerStore';
+import { showErrorToast, showSuccessToast } from '@/components/ToastComponent';
 
 interface CheckAuthResponse {
   message: string;
   employee: Employee | null;
 }
-
 
 interface OrderItem {
   itemName: string;
@@ -43,55 +32,6 @@ interface Order {
 
   orderDate: Date;
   notes?: string;
-}
-
-interface CustomerOrder {
-  orderId: string;
-  status: 'pending' | 'completed' | 'shipped';
-  orderDate: Date;
-  totalAmount: number;
-}
-
-interface Customer {
-  id: string;
-  orgId: string;
-  name: string;
-  phone: string;
-  email: string;
-  address: string;
-  status: 'active' | 'inactive';
-  orders: Array<CustomerOrder>;
-  gstNo: string;
-}
-
-interface UpdateHistory {
-  vendorName: string;
-  quantityUpdated: number;
-  cost: number;
-  updateType: 'replenishment' | 'order';
-  date: Date;
-}
-
-interface Item {
-  id: string;
-  orgId: string;
-  name: string;
-  quantity: number;
-  threshold: number;
-  lastDateOfUpdate: Date;
-  image: string;
-  updateHistory: Array<UpdateHistory>;
-}
-
-interface Vendor {
-  id: string;
-  orgId: string;
-  name: string;
-  email: string;
-  phone: string;
-  status: 'active' | 'inactive';
-  gstNo: string;
-  address: string;
 }
 
 interface Organization {
@@ -163,12 +103,16 @@ const useAuthStore = create<AuthState>()(
               withCredentials: true,
             }
           );
-          console.log(1)
+          console.log(1);
           console.log('FINE');
           set({ authUser: res.data.employee });
         } catch (error) {
           console.log('ERROR');
           console.error('Error in checkAuth', error);
+          showErrorToast({
+            message: 'Error in checking user!',
+            description: 'Check auth not found!',
+          });
           set({ authUser: null });
         } finally {
           set({ isCheckingAuth: false });
@@ -190,7 +134,9 @@ const useAuthStore = create<AuthState>()(
             organization: response.data.organization,
           });
 
-          toast.success('Organization registered successfully!');
+          showSuccessToast({
+            message: 'Organization registered successfully!',
+          });
 
           return { success: true, message: response.data.message };
         } catch (error: unknown) {
@@ -200,7 +146,8 @@ const useAuthStore = create<AuthState>()(
             error: err.response?.data?.message || 'Organization signup failed.',
           });
 
-          toast.error('Error registering organization!', {
+          showErrorToast({
+            message: 'Error registering organization!',
             description: err.response?.data?.message || 'Something went wrong!',
           });
 
@@ -224,7 +171,7 @@ const useAuthStore = create<AuthState>()(
             message: response.data.message,
           });
 
-          toast.success(response.data.message);
+          showSuccessToast({ message: response.data.message });
 
           return { success: true, message: response.data.message };
         } catch (error) {
@@ -234,7 +181,8 @@ const useAuthStore = create<AuthState>()(
             error: err.response?.data?.message || 'Login failed.',
           });
 
-          toast.error('Error logging in!', {
+          showErrorToast({
+            message: 'Error logging in!',
             description: err.response?.data?.message || 'Something went wrong!',
           });
 
@@ -251,14 +199,15 @@ const useAuthStore = create<AuthState>()(
             { withCredentials: true }
           );
           set({ authUser: null, organization: null });
-          toast.success('Logged out successfully!');
+          showSuccessToast({ message: 'Logged out successfully!' });
         } catch (error) {
           const err = error as AxiosError<{ message: string }>;
-          toast.error('Error logging out!', {
+          showErrorToast({
+            message: 'Error logging out!',
             description: err.response?.data?.message || 'Something went wrong!',
           });
         } finally {
-          set({ loading: true });
+          set({ loading: false });
         }
       },
     }),

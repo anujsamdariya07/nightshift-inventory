@@ -244,7 +244,13 @@ const useEmployeeStore = create<EmployeeState>()(
         }
       },
     }),
-    { name: 'employee-storage' }
+    {
+      name: 'employee-storage',
+      partialize: (state) => ({
+        employee: state.employee,
+        employees: state.employees,
+      }),
+    }
   )
 );
 

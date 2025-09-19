@@ -47,6 +47,8 @@ public class OrderController {
         Employee currentUser = employeeService.getCurrentUser(request);
         ObjectId orgId = currentUser.getOrgId();
         order.setOrgId(orgId);
+        order.setEmployeeId(currentUser.getEmployeeId());
+        order.setEmployeeName(currentUser.getName());
         Order savedOrder = orderService.createOrder(order);
         Optional<Organization> organization = organizationService.findOrgById(orgId);
         organization.ifPresent(value -> {
