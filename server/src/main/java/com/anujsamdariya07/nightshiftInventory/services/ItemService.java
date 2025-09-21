@@ -98,6 +98,8 @@ public class ItemService {
         for (OrderItem item : items) {
             Item extractedItem = itemRepository.findByOrgIdAndName(orgId, item.getItemName());
 
+            System.out.println("extractedItem.getName()" + extractedItem.getName());
+
             int deducted = Math.min(item.getQuantity(), extractedItem.getQuantity());
             int remainingQuantity = extractedItem.getQuantity() - deducted;
 
@@ -119,9 +121,12 @@ public class ItemService {
         }
     }
 
-    public void revertByOrder(List<OrderItem> items, ObjectId orgId) {
+    public void revertByOrder(ArrayList<OrderItem> items, ObjectId orgId) {
+        System.out.println("Revert by order!");
+        System.out.println(items != null);
         for (OrderItem item : items) {
             Item extractedItem = itemRepository.findByOrgIdAndName(orgId, item.getItemName());
+            System.out.println("extractedItem.getName(): " + extractedItem.getName());
 
             int reverted = item.getQuantity();
             extractedItem.setQuantity(extractedItem.getQuantity() + reverted);

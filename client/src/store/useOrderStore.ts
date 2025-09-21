@@ -75,8 +75,8 @@ export interface OrderState {
 export interface OrderCreateData {
   customerId: string;
   customerName: string;
-  employeeId: string;
-  employeeName: string;
+  employeeId?: string;
+  employeeName?: string;
   items: OrderItem[];
   totalAmount: number;
   status: 'PENDING' | 'DELIVERED' | 'SHIPPED' | 'PROCESSING';
@@ -88,12 +88,9 @@ export interface OrderCreateData {
 export interface OrderUpdateData {
   customerId?: string;
   customerName?: string;
-  employeeId: string;
-  employeeName: string;
   items?: OrderItem[];
   totalAmount?: number;
   status?: 'PENDING' | 'DELIVERED' | 'SHIPPED' | 'PROCESSING';
-  orderDate: Date;
   deadline?: Date;
   notes?: string;
 }
@@ -124,7 +121,11 @@ const useOrderStore = create<OrderState>()(
             description: msg,
           });
           set({ error: msg });
-          return { success: false, error: error, message: 'Failed to fetch orders!' };
+          return {
+            success: false,
+            error: error,
+            message: 'Failed to fetch orders!',
+          };
         } finally {
           set({ loading: false });
         }
@@ -177,6 +178,8 @@ const useOrderStore = create<OrderState>()(
           });
           set({ error: msg });
           return { success: false, message: 'Failed to create order' };
+        } finally {
+          set({ loading: false });
         }
       },
 
@@ -212,6 +215,7 @@ const useOrderStore = create<OrderState>()(
         set({ loading: true, error: null });
         try {
           await axiosInstance.delete(`/orders/${id}`);
+          set((state) => ({ orders: state.orders.filter((o) => o.id != id) }));
           showSuccessToast({ message: 'Order deleted successfully!' });
           return {
             success: true,

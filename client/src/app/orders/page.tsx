@@ -5,7 +5,14 @@ import type React from 'react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navbar } from '@/components/navbar';
-import useOrderStore, { Order, OrderCreateData, OrderItem } from '@/store/useOrderStore';
+import useOrderStore, {
+  Order,
+  OrderCreateData,
+  OrderItem,
+} from '@/store/useOrderStore';
+import { Loader } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 const statusColors = {
   PENDING: 'chart-4',
@@ -39,6 +46,24 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(
+    null
+  );
+
+  const handleDeleteClick = (order: Order) => {
+    setOrderToDelete(order);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (orderToDelete) {
+      await deleteOrder(orderToDelete.id);
+    }
+    setOrderToDelete(null);
+    setShowDeleteModal(false);
+  };
+
   useEffect(() => {
     // Fetch orders on component mount
     findOrders();
@@ -56,9 +81,9 @@ export default function OrdersPage() {
         (order) =>
           order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.items.some((item) =>
+          (order.items && order.items.some((item) =>
             item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
-          )
+          ))
       );
     }
 
@@ -66,6 +91,7 @@ export default function OrdersPage() {
   }, [activeFilter, searchTerm, orders]);
 
   const handleCreateOrder = async (orderData: OrderCreateData) => {
+    console.log('orderData', orderData)
     const result = await createOrder(orderData);
     if (result.success) {
       setShowNewOrderModal(false);
@@ -77,10 +103,7 @@ export default function OrdersPage() {
     if (!orderToUpdate) return;
 
     const updateData = {
-      employeeId: orderToUpdate.employeeId,
-      employeeName: orderToUpdate.employeeName,
       status,
-      orderDate: orderToUpdate.orderDate,
     };
 
     const result = await updateOrder(id, updateData);
@@ -94,11 +117,7 @@ export default function OrdersPage() {
     return (
       <div className='min-h-screen bg-background flex items-center justify-center'>
         <div className='text-center'>
-          <motion.div
-            className='w-16 h-16 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4'
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          />
+          <Loader className='w-10 h-10 mx-auto mb-4 animate-spin text-primary' />
           <p className='text-muted-foreground'>Loading orders...</p>
         </div>
       </div>
@@ -217,7 +236,7 @@ export default function OrdersPage() {
                     setSelectedOrder(order);
                     setShowUpdateModal(true);
                   }}
-                  onDelete={(id) => deleteOrder(id)}
+                  onDelete={() => handleDeleteClick(order)}
                 />
               ))}
             </AnimatePresence>
@@ -266,6 +285,16 @@ export default function OrdersPage() {
         onUpdate={handleUpdateOrder}
         loading={loading}
       />
+
+      {/* Delete modal */}
+      {showDeleteModal && (
+        <DeleteConfirmModal
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={confirmDeleteOrder}
+          order={orderToDelete}
+          loading={loading}
+        />
+      )}
     </div>
   );
 }
@@ -279,7 +308,7 @@ function OrderCard({
   order: Order;
   index: number;
   onUpdateStatus: (order: Order) => void;
-  onDelete: (id: string) => void;
+  onDelete: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -320,7 +349,7 @@ function OrderCard({
         <div>
           <p className='text-xs text-muted-foreground'>Total Amount</p>
           <p className='text-sm font-bold text-primary'>
-            ${order.totalAmount.toFixed(2)}
+            ₹{order.totalAmount.toFixed(2)}
           </p>
         </div>
         <div>
@@ -332,7 +361,7 @@ function OrderCard({
         <div>
           <p className='text-xs text-muted-foreground'>Items</p>
           <p className='text-sm font-medium text-foreground'>
-            {order.items.length} items
+            {order.items && order.items.length} items
           </p>
         </div>
       </div>
@@ -350,19 +379,20 @@ function OrderCard({
       {/* Items Preview */}
       <div className='mb-4'>
         <p className='text-xs text-muted-foreground mb-2'>
-          Items ({order.items.length})
+          Items ({order.items && order.items.length})
         </p>
         <div className='space-y-2'>
-          {order.items
-            .slice(0, expanded ? order.items.length : 2)
-            .map((item, itemIndex) => (
-              <ItemRow key={itemIndex} item={item} />
-            ))}
+          {order.items &&
+            order.items
+              .slice(0, expanded ? order.items.length : 2)
+              .map((item, itemIndex) => (
+                <ItemRow key={itemIndex} item={item} />
+              ))}
         </div>
       </div>
 
       {/* Expand/Collapse Button */}
-      {order.items.length > 2 && (
+      {order.items && order.items.length > 2 && (
         <motion.button
           className='w-full py-2 text-sm text-primary hover:text-primary/80 transition-colors duration-300'
           onClick={() => setExpanded(!expanded)}
@@ -385,7 +415,10 @@ function OrderCard({
         </motion.button>
         <motion.button
           className='py-2 px-4 bg-destructive/10 text-destructive rounded-lg text-sm font-medium hover:bg-destructive hover:text-destructive-foreground transition-all duration-300'
-          onClick={() => onDelete(order.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -394,7 +427,7 @@ function OrderCard({
       </div>
 
       {/* Glow effect */}
-      <div className='absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl' />
+      <div className='absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl pointer-events-none' />
     </motion.div>
   );
 }
@@ -405,12 +438,12 @@ function ItemRow({ item }: { item: OrderItem }) {
       <div className='flex-1'>
         <p className='text-sm font-medium text-foreground'>{item.itemName}</p>
         <p className='text-xs text-muted-foreground'>
-          Qty: {item.quantity} × ${item.priceAtOrder}
+          Qty: {item.quantity} × ₹{item.priceAtOrder}
         </p>
       </div>
       <div className='text-right'>
         <p className='text-sm font-bold text-foreground'>
-          ${(item.quantity * item.priceAtOrder).toFixed(2)}
+          ₹{(item.quantity * item.priceAtOrder).toFixed(2)}
         </p>
       </div>
     </div>
@@ -458,7 +491,7 @@ function OrderStats({ orders }: { orders: Order[] }) {
         <StatCard label='Delivered' value={stats.delivered} color='accent' />
         <StatCard
           label='Total Value'
-          value={`$${stats.totalValue.toFixed(0)}`}
+          value={`₹${stats.totalValue.toFixed(0)}`}
           color='primary'
         />
       </div>
@@ -507,8 +540,6 @@ function NewOrderModal({
   const [formData, setFormData] = useState<{
     customerId: string;
     customerName: string;
-    employeeId: string;
-    employeeName: string;
     items: Array<{
       itemId: string;
       itemName: string;
@@ -521,8 +552,6 @@ function NewOrderModal({
   }>({
     customerId: '',
     customerName: '',
-    employeeId: '',
-    employeeName: '',
     items: [{ itemId: '', itemName: '', quantity: 1, priceAtOrder: 0 }],
     status: 'PENDING',
     deadline: '',
@@ -535,8 +564,6 @@ function NewOrderModal({
     const orderData: OrderCreateData = {
       customerId: formData.customerId,
       customerName: formData.customerName,
-      employeeId: formData.employeeId,
-      employeeName: formData.employeeName,
       items: formData.items,
       totalAmount: formData.items.reduce(
         (sum, item) => sum + item.quantity * item.priceAtOrder,
@@ -554,8 +581,6 @@ function NewOrderModal({
     setFormData({
       customerId: '',
       customerName: '',
-      employeeId: '',
-      employeeName: '',
       items: [{ itemId: '', itemName: '', quantity: 1, priceAtOrder: 0 }],
       status: 'PENDING',
       deadline: '',
@@ -653,28 +678,6 @@ function NewOrderModal({
                 <h3 className='text-lg font-semibold text-foreground'>
                   Employee Information
                 </h3>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <input
-                    type='text'
-                    placeholder='Employee ID'
-                    value={formData.employeeId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, employeeId: e.target.value })
-                    }
-                    className='px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
-                    required
-                  />
-                  <input
-                    type='text'
-                    placeholder='Employee Name'
-                    value={formData.employeeName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, employeeName: e.target.value })
-                    }
-                    className='px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
-                    required
-                  />
-                </div>
               </div>
 
               {/* Items */}
@@ -820,7 +823,7 @@ function NewOrderModal({
                   Order Summary
                 </h4>
                 <p className='text-xl font-bold text-primary'>
-                  Total: $
+                  Total: ₹
                   {formData.items
                     .reduce(
                       (sum, item) => sum + item.quantity * item.priceAtOrder,
@@ -845,7 +848,14 @@ function NewOrderModal({
                   className='flex-1 py-3 px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-300 disabled:opacity-50'
                   disabled={loading}
                 >
-                  {loading ? 'Creating...' : 'Create Order'}
+                  {loading ? (
+                    <div className='flex items-center justify-center space-x-2'>
+                      <Loader className='animate-spin text-white' size={20} />
+                      <span>Creating...</span>
+                    </div>
+                  ) : (
+                    'Create Order'
+                  )}
                 </button>
               </div>
             </form>
@@ -954,7 +964,14 @@ function UpdateStatusModal({
                   className='flex-1 py-3 px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-300 disabled:opacity-50'
                   disabled={loading}
                 >
-                  {loading ? 'Updating...' : 'Update Status'}
+                  {loading ? (
+                    <div className='flex items-center justify-center space-x-2'>
+                      <Loader className='animate-spin' size={20} />
+                      <span>Updating...</span>
+                    </div>
+                  ) : (
+                    'Update Status'
+                  )}
                 </button>
               </div>
             </form>
@@ -962,5 +979,65 @@ function UpdateStatusModal({
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+function DeleteConfirmModal({
+  onClose,
+  onConfirm,
+  order,
+  loading,
+}: {
+  onClose: () => void;
+  onConfirm: () => void;
+  order: Order | null;
+  loading: boolean;
+}) {
+  if (!order) return null;
+
+  return (
+    <div
+      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in'
+      onClick={onClose}
+    >
+      <Card
+        className='bg-card border border-border p-6 w-full max-w-md animate-slide-up'
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className='text-xl font-bold text-destructive mb-4'>
+          Confirm Deletion
+        </h2>
+        <p className='text-muted-foreground mb-6'>
+          Are you sure you want to delete{' '}
+          <span className='font-semibold text-foreground'>{order.id}</span>
+          ? This action cannot be undone.
+        </p>
+
+        <div className='flex gap-4'>
+          <Button
+            variant='outline'
+            onClick={onClose}
+            className='flex-1'
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={onConfirm}
+            className='flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/80 flex items-center justify-center gap-2'
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader className='h-4 w-4 animate-spin' />
+                Deleting...
+              </>
+            ) : (
+              'Delete'
+            )}
+          </Button>
+        </div>
+      </Card>
+    </div>
   );
 }

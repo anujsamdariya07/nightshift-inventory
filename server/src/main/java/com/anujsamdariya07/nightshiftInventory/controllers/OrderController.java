@@ -46,10 +46,12 @@ public class OrderController {
     public ResponseEntity<?> createOrder(HttpServletRequest request, @RequestBody Order order) {
         Employee currentUser = employeeService.getCurrentUser(request);
         ObjectId orgId = currentUser.getOrgId();
+        String employeeId = currentUser.getEmployeeId();
+        String employeeName = currentUser.getName();
         order.setOrgId(orgId);
-        order.setEmployeeId(currentUser.getEmployeeId());
-        order.setEmployeeName(currentUser.getName());
-        Order savedOrder = orderService.createOrder(order);
+        order.setEmployeeId(employeeId);
+        order.setEmployeeName(employeeName);
+        Order savedOrder = orderService.createOrder(request, order);
         Optional<Organization> organization = organizationService.findOrgById(orgId);
         organization.ifPresent(value -> {
             value.getOrders().add(savedOrder);
@@ -69,11 +71,16 @@ public class OrderController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOrder(@PathVariable String id) {
+        System.out.println("Delete Order 1");
         Order orderById = orderService.getOrderById(new ObjectId(id));
+        System.out.println("Delete Order 2");
         if (orderById == null) {
+            System.out.println("Delete Order 3");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found!");
         }
+        System.out.println("Delete Order 4");
         orderService.deleteOrder(new ObjectId(id));
+        System.out.println("Delete Order 5");
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
