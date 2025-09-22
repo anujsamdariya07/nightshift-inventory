@@ -81,6 +81,7 @@ interface VendorState {
   deleteVendor: (
     id: string
   ) => Promise<{ success: boolean; message?: string; error?: string }>;
+  logout: () => Promise<void>;
 }
 
 const useVendorStore = create<VendorState>()(
@@ -243,6 +244,10 @@ const useVendorStore = create<VendorState>()(
         } finally {
           set({ loading: false });
         }
+      },
+
+      logout: async () => {
+        set({ vendors: [], vendor: null });
       },
     }),
     {

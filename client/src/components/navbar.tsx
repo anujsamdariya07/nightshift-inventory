@@ -7,6 +7,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Loader, Menu, X, LogOut, Loader2 } from 'lucide-react';
 import useAuthStore from '@/store/useAuthStore';
+import useCustomerStore from '@/store/useCustomerStore';
+import useEmployeeStore from '@/store/useEmployeeStore';
+import useItemStore from '@/store/useItemStore';
+import useOrderStore from '@/store/useOrderStore';
+import useVendorStore from '@/store/useVendorStore';
 
 const navItems = [
   { name: 'Orders', href: '/orders' },
@@ -29,6 +34,11 @@ export function Navbar() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const { authUser, logout, loading } = useAuthStore();
+  const { logout: customerLogout } = useCustomerStore();
+  const { logout: employeeLogout } = useEmployeeStore();
+  const { logout: itemLogout } = useItemStore();
+  const { logout: orderLogout } = useOrderStore();
+  const { logout: vendorLogout } = useVendorStore();
 
   const router = useRouter();
 
@@ -251,7 +261,9 @@ export function Navbar() {
                   <div className='flex flex-col space-y-2 mt-4'>
                     <span className='px-4 text-sm font-medium text-muted-foreground'>
                       Hi,{' '}
-                      <span className='text-primary'>{authUser.username}</span>
+                      <span className='text-primary'>
+                        {authUser.name.split(' ')[0]}
+                      </span>
                     </span>
                     <button
                       onClick={() => setShowLogoutModal(true)}
@@ -301,6 +313,11 @@ export function Navbar() {
                 <button
                   onClick={async () => {
                     await logout();
+                    await customerLogout();
+                    await employeeLogout();
+                    await itemLogout();
+                    await orderLogout();
+                    await vendorLogout();
                     router.push('/');
                     setShowLogoutModal(false);
                   }}

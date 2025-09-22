@@ -87,6 +87,7 @@ export interface EmployeeState {
     employeeData: EmployeeUpdateData
   ) => Promise<StoreResponse<Employee>>;
   deleteEmployee: (id: string) => Promise<StoreResponse<null>>;
+  logout: () => Promise<void>;
 }
 
 const useEmployeeStore = create<EmployeeState>()(
@@ -242,6 +243,10 @@ const useEmployeeStore = create<EmployeeState>()(
         } finally {
           set({ loading: false });
         }
+      },
+
+      logout: async () => {
+        set({ employees: [], employee: null });
       },
     }),
     {

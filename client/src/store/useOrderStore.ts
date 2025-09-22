@@ -70,6 +70,8 @@ export interface OrderState {
     message: string;
     error?: any;
   }>;
+
+  logout: () => Promise<void>;
 }
 
 export interface OrderCreateData {
@@ -234,6 +236,10 @@ const useOrderStore = create<OrderState>()(
         } finally {
           set({ loading: false });
         }
+      },
+
+      logout: async () => {
+        set({ orders: [], order: null });
       },
     }),
     {

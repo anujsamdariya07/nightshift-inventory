@@ -23,6 +23,7 @@ const filterOptions = [
 export default function CustomersPage() {
   const { customers, loading, error, fetchCustomers, createCustomer } =
     useCustomerStore();
+  const { authUser } = useAuthStore();
   const [filteredCustomers, setFilteredCustomers] = useState(customers);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,10 +31,16 @@ export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
   const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
 
+  const router = useRouter();
+
   // Fetch customers on component mount
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
+
+  useEffect(() => {
+    if (!authUser) router.push('/');
+  }, []);
 
   // Update filtered customers when customers, filter, or search term changes
   useEffect(() => {

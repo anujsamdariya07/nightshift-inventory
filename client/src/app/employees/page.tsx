@@ -11,6 +11,8 @@ import useEmployeeStore, {
 } from '@/store/useEmployeeStore';
 import { Navbar } from '@/components/navbar';
 import { Loader2 } from 'lucide-react';
+import useAuthStore from '@/store/useAuthStore';
+import { useRouter } from 'next/navigation';
 
 const statusColors = {
   ACTIVE: 'accent',
@@ -53,7 +55,8 @@ export default function EmployeesPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [showNewEmployeeModal, setShowNewEmployeeModal] = useState(false);
-
+  const { authUser } = useAuthStore();
+  const router = useRouter();
   // Inside EmployeesPage component
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(
@@ -77,7 +80,9 @@ export default function EmployeesPage() {
   useEffect(() => {
     fetchEmployees();
   }, [fetchEmployees]);
-
+  useEffect(() => {
+    if (!authUser) router.push('/');
+  }, []);
   // Update filtered employees when filters or search term changes
   useEffect(() => {
     let filtered = employees;

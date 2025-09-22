@@ -28,24 +28,7 @@ interface ItemState {
   item: Item | null;
   loading: boolean;
   error: string | null;
-}
 
-interface ItemCreateData {
-  name: string;
-  quantity: number;
-  threshold: number;
-  image?: string;
-}
-
-interface ItemUpdateData {
-  name: string;
-  quantity: number;
-  threshold: number;
-  image?: string;
-  updateHistory: UpdateHistory[];
-}
-
-interface ItemActions {
   fetchItems: () => Promise<{
     success: boolean;
     items?: Item[];
@@ -77,9 +60,25 @@ interface ItemActions {
     cost: number,
     updateType: 'replenishment' | 'order'
   ) => Promise<{ success: boolean; item?: Item; error?: string }>;
+  logout: () => Promise<void>;
 }
 
-const useItemStore = create<ItemState & ItemActions>()(
+interface ItemCreateData {
+  name: string;
+  quantity: number;
+  threshold: number;
+  image?: string;
+}
+
+interface ItemUpdateData {
+  name: string;
+  quantity: number;
+  threshold: number;
+  image?: string;
+  updateHistory: UpdateHistory[];
+}
+
+const useItemStore = create<ItemState>()(
   persist(
     (set, get) => ({
       items: [],
@@ -251,6 +250,10 @@ const useItemStore = create<ItemState & ItemActions>()(
         } finally {
           set({ loading: false });
         }
+      },
+
+      logout: async () => {
+        set({ items: [], item: null });
       },
     }),
     {

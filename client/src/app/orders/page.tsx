@@ -13,6 +13,8 @@ import useOrderStore, {
 import { Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import useAuthStore from '@/store/useAuthStore';
+import { useRouter } from 'next/navigation';
 
 const statusColors = {
   PENDING: 'chart-4',
@@ -48,7 +50,8 @@ export default function OrdersPage() {
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
-
+  const { authUser } = useAuthStore();
+  const router = useRouter();
   const handleDeleteClick = (order: Order) => {
     setOrderToDelete(order);
     setShowDeleteModal(true);
@@ -65,6 +68,9 @@ export default function OrdersPage() {
   useEffect(() => {
     // Fetch orders on component mount
     findOrders();
+  }, []);
+  useEffect(() => {
+    if (!authUser) router.push('/');
   }, []);
 
   useEffect(() => {

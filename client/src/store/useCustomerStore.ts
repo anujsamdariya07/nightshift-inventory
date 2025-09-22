@@ -80,6 +80,7 @@ export interface CustomerState {
     id: string
   ) => Promise<ApiResponse<Customer>>;
   deleteCustomer: (id: string) => Promise<ApiResponse<null>>;
+  logout: () => Promise<void>;
 }
 
 const useCustomerStore = create<CustomerState>()(
@@ -211,6 +212,10 @@ const useCustomerStore = create<CustomerState>()(
         } finally {
           set({ loading: false });
         }
+      },
+
+      logout: async () => {
+        set({ customers: [], customer: null });
       },
     }),
     {

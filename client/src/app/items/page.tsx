@@ -44,11 +44,15 @@ export default function ItemsPage() {
     item: any;
     type: 'replenishment' | 'order';
   }>({ show: false, item: null, type: 'replenishment' });
-
+  const { authUser } = useAuthStore();
+  const router = useRouter();
   // Fetch items on component mount
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+  useEffect(() => {
+    if (!authUser) router.push('/');
+  }, []);
 
   // Helper function to get stock status
   const getStockStatus = (item: any) => {

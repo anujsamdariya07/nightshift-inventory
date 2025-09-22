@@ -7,6 +7,8 @@ import { Navbar } from '@/components/navbar';
 import useVendorStore, { type Vendor } from '@/store/useVendorStore';
 import { toast } from 'sonner';
 import { Loader } from 'lucide-react';
+import useAuthStore from '@/store/useAuthStore';
+import { useRouter } from 'next/navigation';
 
 const statusColors = {
   active: 'accent',
@@ -28,7 +30,8 @@ export default function VendorsPage() {
   const [showNewVendorModal, setShowNewVendorModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
-
+  const { authUser } = useAuthStore();
+  const router = useRouter();
   const [deleteTarget, setDeleteTarget] = useState<Vendor | null>(null);
 
   const {
@@ -48,6 +51,9 @@ export default function VendorsPage() {
     };
     loadVendors();
   }, [fetchVendors]);
+  useEffect(() => {
+    if (!authUser) router.push('/');
+  }, []);
 
   // Filter vendors based on search and filter criteria
   useEffect(() => {

@@ -26,6 +26,8 @@ import useItemStore, { Item } from '@/store/useItemStore';
 import useVendorStore, { Vendor } from '@/store/useVendorStore';
 import useCustomerStore, { Customer } from '@/store/useCustomerStore';
 import { Navbar } from '@/components/navbar';
+import useAuthStore from '@/store/useAuthStore';
+import { useRouter } from 'next/navigation';
 
 const InventoryDashboard = () => {
   // Sample data - matches your existing structure
@@ -561,6 +563,7 @@ const InventoryDashboard = () => {
   });
 
   const { findOrders, loading: orderLoading, orders } = useOrderStore();
+  const { authUser } = useAuthStore();
   const {
     fetchEmployees,
     loading: employeeLoading,
@@ -573,6 +576,8 @@ const InventoryDashboard = () => {
   } = useCustomerStore();
   const { fetchVendors, loading: vendorLoading, vendors } = useVendorStore();
   const { fetchItems, loading: itemLoading, items } = useItemStore();
+
+  const router = useRouter();
 
   // Get alerts
   const lowStockItems = dashboardData.items.filter(
@@ -625,7 +630,9 @@ const InventoryDashboard = () => {
   const visibleLowStockItems = lowStockItems.filter(
     (item) => !dismissedAlerts.has(item.id)
   );
-
+  useEffect(() => {
+    if (!authUser) router.push('/');
+  }, []);
   useEffect(() => {
     const findFn = async () => {
       await findOrders();
