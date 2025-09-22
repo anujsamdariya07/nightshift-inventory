@@ -34,6 +34,8 @@ public class Item {
 
     private int quantity;
 
+    private String itemId;
+
     @Builder.Default
     private int threshold = 10;
 

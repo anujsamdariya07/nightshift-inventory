@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-
+import { Github, Linkedin, Twitter } from 'lucide-react';
 const quickLinks = [
   { name: 'Home', href: '/' },
   { name: 'Features', href: '/features' },
@@ -11,9 +11,13 @@ const quickLinks = [
 ];
 
 const socialLinks = [
-  { name: 'Twitter', href: '#', icon: '𝕏' },
-  { name: 'LinkedIn', href: '#', icon: 'in' },
-  { name: 'GitHub', href: '#', icon: 'gh' },
+  { name: 'Twitter', href: 'https://x.com/anujsamdariya07', icon: Twitter },
+  {
+    name: 'LinkedIn',
+    href: 'https://www.linkedin.com/in/anuj-samdariya-569162254/',
+    icon: Linkedin,
+  },
+  { name: 'GitHub', href: 'https://github.com/anujsamdariya07/', icon: Github },
 ];
 
 export function Footer() {
@@ -58,19 +62,19 @@ export function Footer() {
               Connect
             </h3>
             <div className='space-y-2 mb-4'>
-              <p className='text-muted-foreground'>support@nightshift.com</p>
-              <p className='text-muted-foreground'>+1 (555) 123-4567</p>
+              <p className='text-muted-foreground'>anujsamdariya07@gmail.com</p>
             </div>
             <div className='flex space-x-4'>
               {socialLinks.map((social) => (
                 <motion.a
                   key={social.name}
                   href={social.href}
+                  target='_blank'
                   className='w-10 h-10 bg-muted rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300 hover:neon-glow'
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  {social.icon}
+                  <social.icon />
                 </motion.a>
               ))}
             </div>

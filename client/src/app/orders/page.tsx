@@ -15,6 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import useAuthStore from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
+import useItemStore, { Item } from '@/store/useItemStore';
+import useCustomerStore, { Customer } from '@/store/useCustomerStore';
 
 const statusColors = {
   PENDING: 'chart-4',
@@ -50,7 +52,9 @@ export default function OrdersPage() {
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
-  const { authUser } = useAuthStore();
+  const { authUser, loading: authLoading } = useAuthStore();
+  const { fetchItems, items } = useItemStore();
+  const { fetchCustomers, customers } = useCustomerStore();
   const router = useRouter();
   const handleDeleteClick = (order: Order) => {
     setOrderToDelete(order);
@@ -68,9 +72,11 @@ export default function OrdersPage() {
   useEffect(() => {
     // Fetch orders on component mount
     findOrders();
+    fetchItems();
+    fetchCustomers();
   }, []);
   useEffect(() => {
-    if (!authUser) router.push('/');
+    if (!authLoading && !authUser) router.push('/');
   }, []);
 
   useEffect(() => {
@@ -277,6 +283,8 @@ export default function OrdersPage() {
         onClose={() => setShowNewOrderModal(false)}
         onSubmit={handleCreateOrder}
         loading={loading}
+        customers={customers}
+        items={items}
       />
 
       {/* Update Status Modal */}
@@ -536,21 +544,20 @@ function NewOrderModal({
   onClose,
   onSubmit,
   loading,
+  customers,
+  items,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (order: OrderCreateData) => void;
+  customers: Customer[];
+  items: Item[];
   loading: boolean;
 }) {
   const [formData, setFormData] = useState<{
     customerId: string;
     customerName: string;
-    items: Array<{
-      itemId: string;
-      itemName: string;
-      quantity: number;
-      priceAtOrder: number;
-    }>;
+    items: OrderItem[];
     status: Order['status'];
     deadline: string;
     notes: string;
@@ -603,9 +610,16 @@ function NewOrderModal({
     });
   };
 
-  const updateItem = (index: number, field: string, value: any) => {
+  // const updateItem = (index: number, field: string, value: any) => {
+  //   const updatedItems = formData.items.map((item, i) =>
+  //     i === index ? { ...item, [field]: value } : item
+  //   );
+  //   setFormData({ ...formData, items: updatedItems });
+  // };
+
+  const updateItem = (index: number, updatedFields: Partial<OrderItem>) => {
     const updatedItems = formData.items.map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
+      i === index ? { ...item, ...updatedFields } : item
     );
     setFormData({ ...formData, items: updatedItems });
   };
@@ -654,35 +668,41 @@ function NewOrderModal({
                 <h3 className='text-lg font-semibold text-foreground'>
                   Customer Information
                 </h3>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <input
-                    type='text'
-                    placeholder='Customer ID'
-                    value={formData.customerId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, customerId: e.target.value })
-                    }
-                    className='px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
-                    required
-                  />
-                  <input
-                    type='text'
-                    placeholder='Customer Name'
-                    value={formData.customerName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, customerName: e.target.value })
-                    }
-                    className='px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
-                    required
-                  />
+                <div className='grid grid-cols-1 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-foreground mb-2'>
+                      Select Customer
+                    </label>
+                    <select
+                      value={formData.customerId}
+                      onChange={(e) => {
+                        const selectedCustomer =
+                          customers &&
+                          customers.find(
+                            (c) => c.customerId === e.target.value
+                          );
+                        setFormData({
+                          ...formData,
+                          customerId: selectedCustomer?.customerId || '',
+                          customerName: selectedCustomer?.name || '',
+                        });
+                      }}
+                      className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20'
+                      required
+                    >
+                      <option value=''>Select Customer</option>
+                      {customers &&
+                        customers.map((customer) => (
+                          <option
+                            key={customer.customerId}
+                            value={customer.customerId}
+                          >
+                            {customer.customerId} - {customer.name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
                 </div>
-              </div>
-
-              {/* Employee Information */}
-              <div className='space-y-4'>
-                <h3 className='text-lg font-semibold text-foreground'>
-                  Employee Information
-                </h3>
               </div>
 
               {/* Items */}
@@ -703,67 +723,100 @@ function NewOrderModal({
                 {formData.items.map((item, index) => (
                   <div
                     key={index}
-                    className='grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-background/50 rounded-lg'
+                    className='grid grid-cols-1 gap-4 p-4 bg-background/50 rounded-lg'
                   >
-                    <input
-                      type='text'
-                      placeholder='Item ID'
-                      value={item.itemId}
-                      onChange={(e) =>
-                        updateItem(index, 'itemId', e.target.value)
-                      }
-                      className='px-3 py-2 bg-input border border-border rounded text-foreground placeholder-muted-foreground focus:border-primary'
-                      required
-                    />
-                    <input
-                      type='text'
-                      placeholder='Item Name'
-                      value={item.itemName}
-                      onChange={(e) =>
-                        updateItem(index, 'itemName', e.target.value)
-                      }
-                      className='px-3 py-2 bg-input border border-border rounded text-foreground placeholder-muted-foreground focus:border-primary'
-                      required
-                    />
-                    <input
-                      type='number'
-                      placeholder='Quantity'
-                      min='1'
-                      value={item.quantity}
-                      onChange={(e) =>
-                        updateItem(
-                          index,
-                          'quantity',
-                          Number.parseInt(e.target.value) || 1
-                        )
-                      }
-                      className='px-3 py-2 bg-input border border-border rounded text-foreground placeholder-muted-foreground focus:border-primary'
-                      required
-                    />
-                    <input
-                      type='number'
-                      placeholder='Price'
-                      min='0'
-                      step='0.01'
-                      value={item.priceAtOrder}
-                      onChange={(e) =>
-                        updateItem(
-                          index,
-                          'priceAtOrder',
-                          Number.parseFloat(e.target.value) || 0
-                        )
-                      }
-                      className='px-3 py-2 bg-input border border-border rounded text-foreground placeholder-muted-foreground focus:border-primary'
-                      required
-                    />
-                    <button
-                      type='button'
-                      onClick={() => removeItem(index)}
-                      className='px-3 py-2 bg-destructive/20 text-destructive rounded hover:bg-destructive hover:text-destructive-foreground transition-colors'
-                      disabled={formData.items.length === 1}
-                    >
-                      Remove
-                    </button>
+                    {/* Item Selection */}
+                    <div>
+                      <label className='block text-sm font-medium text-foreground mb-2'>
+                        Select Item
+                      </label>
+                      <select
+                        value={item.itemId}
+                        onChange={(e) => {
+                          const selectedItem = items.find(
+                            (i) => i.itemId === e.target.value
+                          );
+                          updateItem(index, {
+                            itemId: selectedItem?.itemId || '',
+                            itemName: selectedItem?.name || '',
+                          });
+                        }}
+                        className='w-full px-3 py-2 bg-input border border-border rounded text-foreground focus:border-primary'
+                        required
+                      >
+                        <option value=''>Select Item</option>
+                        {items.map((i) => (
+                          <option key={i.itemId} value={i.itemId}>
+                            {i.itemId} - {i.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Quantity and Price in same row */}
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                      <div>
+                        <label className='block text-sm font-medium text-foreground mb-2'>
+                          Quantity
+                        </label>
+                        <input
+                          type='number'
+                          placeholder='Quantity'
+                          min='1'
+                          value={item.quantity}
+                          onChange={(e) =>
+                            updateItem(index, {
+                              quantity: Number.parseInt(e.target.value) || 1,
+                            })
+                          }
+                          className='w-full px-3 py-2 bg-input border border-border rounded text-foreground focus:border-primary'
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className='block text-sm font-medium text-foreground mb-2'>
+                          Price per Unit (₹)
+                        </label>
+                        <input
+                          type='number'
+                          placeholder='Price'
+                          min='0'
+                          step='0.01'
+                          value={item.priceAtOrder}
+                          onChange={(e) =>
+                            updateItem(index, {
+                              priceAtOrder: Number.parseFloat(e.target.value),
+                            })
+                          }
+                          className='w-full px-3 py-2 bg-input border border-border rounded text-foreground focus:border-primary'
+                          required
+                        />
+                      </div>
+
+                      <div className='flex items-end'>
+                        <button
+                          type='button'
+                          onClick={() => removeItem(index)}
+                          className='w-full px-3 py-2 bg-destructive/20 text-destructive rounded hover:bg-destructive hover:text-destructive-foreground transition-colors'
+                          disabled={formData.items.length === 1}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Item Total Display */}
+                    {item.quantity > 0 && item.priceAtOrder > 0 && (
+                      <div className='bg-background/30 p-3 rounded border-l-4 border-primary'>
+                        <p className='text-sm text-muted-foreground'>
+                          Item Total:
+                        </p>
+                        <p className='text-lg font-bold text-primary'>
+                          ₹{(item.quantity * item.priceAtOrder).toFixed(2)}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -823,19 +876,34 @@ function NewOrderModal({
               </div>
 
               {/* Total Amount Display */}
-              <div className='bg-background/50 p-4 rounded-lg'>
+              <div className='bg-gradient-to-r from-primary/10 to-secondary/10 p-6 rounded-lg border border-primary/20'>
                 <h4 className='text-lg font-semibold text-foreground mb-2'>
                   Order Summary
                 </h4>
-                <p className='text-xl font-bold text-primary'>
-                  Total: ₹
-                  {formData.items
-                    .reduce(
-                      (sum, item) => sum + item.quantity * item.priceAtOrder,
-                      0
-                    )
-                    .toFixed(2)}
-                </p>
+                <div className='space-y-2'>
+                  <div className='flex justify-between text-sm text-muted-foreground'>
+                    <span>Items: {formData.items.length}</span>
+                    <span>
+                      Total Quantity:{' '}
+                      {formData.items.reduce(
+                        (sum, item) => sum + item.quantity,
+                        0
+                      )}
+                    </span>
+                  </div>
+                  <div className='border-t pt-2'>
+                    <p className='text-2xl font-bold text-primary'>
+                      Total: ₹
+                      {formData.items
+                        .reduce(
+                          (sum, item) =>
+                            sum + item.quantity * item.priceAtOrder,
+                          0
+                        )
+                        .toFixed(2)}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Submit Buttons */}

@@ -2,6 +2,7 @@ package com.anujsamdariya07.nightshiftInventory.services;
 
 import com.anujsamdariya07.nightshiftInventory.dto.ItemRequest;
 import com.anujsamdariya07.nightshiftInventory.entity.Item;
+import com.anujsamdariya07.nightshiftInventory.entity.Order;
 import com.anujsamdariya07.nightshiftInventory.entity.OrderItem;
 import com.anujsamdariya07.nightshiftInventory.entity.UpdateHistory;
 import com.anujsamdariya07.nightshiftInventory.repository.ItemRepository;
@@ -34,6 +35,24 @@ public class ItemService {
         return itemRepository.existsByName(name);
     }
 
+    private String generateItemId(ObjectId orgId) {
+        List<Item> items = itemRepository.findAllByOrgId(orgId);
+
+        int maxId = items.stream()
+                .map(Item::getItemId)
+                .filter(id -> id != null && id.startsWith("ITEM-"))
+                .map(id -> id.substring(5))
+                .filter(num -> num.matches("\\d+"))
+                .mapToInt(Integer::parseInt)
+                .max()
+                .orElse(0);
+        System.out.println(maxId);
+
+        int nextId = maxId + 1;
+
+        return String.format("ITEM-%03d", nextId);
+    }
+
     public Item createItem(ItemRequest itemRequest) {
         Item item = Item.builder()
                 .orgId(itemRequest.getOrgId())
@@ -56,6 +75,7 @@ public class ItemService {
             item.setUpdateHistory(new ArrayList<>());
         }
         item.getUpdateHistory().add(updateHistory);
+        item.setItemId(generateItemId(itemRequest.getOrgId()));
 
         return itemRepository.save(item);
     }

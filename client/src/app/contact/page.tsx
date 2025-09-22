@@ -5,6 +5,7 @@ import type React from 'react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Navbar } from '@/components/navbar';
+import { Github, Linkedin, Twitter } from 'lucide-react';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -155,7 +156,7 @@ export default function ContactPage() {
                     <div>
                       <p className='text-sm text-muted-foreground'>Email</p>
                       <p className='text-foreground font-medium'>
-                        support@nightshift.com
+                        anujsamdariya07@gmail.com
                       </p>
                     </div>
                   </div>
@@ -179,9 +180,9 @@ export default function ContactPage() {
                     <div>
                       <p className='text-sm text-muted-foreground'>Address</p>
                       <p className='text-foreground font-medium'>
-                        123 Innovation Drive
+                        Jabalpur, 482003
                         <br />
-                        Tech City, TC 12345
+                        Madhya Pradesh
                       </p>
                     </div>
                   </div>
@@ -195,18 +196,19 @@ export default function ContactPage() {
                 </h3>
                 <div className='flex gap-4'>
                   {[
-                    { name: 'Twitter', icon: '𝕏', color: 'primary' },
-                    { name: 'LinkedIn', icon: 'in', color: 'secondary' },
-                    { name: 'GitHub', icon: 'gh', color: 'accent' },
+                    { name: 'Twitter', icon: Twitter, color: 'primary', href: 'https://x.com/anujsamdariya07' },
+                    { name: 'LinkedIn', icon: Linkedin, color: 'secondary', href: 'https://www.linkedin.com/in/anuj-samdariya-569162254/' },
+                    { name: 'GitHub', icon: Github, color: 'accent', href: 'https://github.com/anujsamdariya07/' },
                   ].map((social) => (
                     <motion.a
                       key={social.name}
-                      href='#'
+                      href={social.href}
+                      target='_blank'
                       className={`w-12 h-12 bg-${social.color}/20 rounded-lg flex items-center justify-center text-${social.color} hover:bg-${social.color} hover:text-${social.color}-foreground hover:neon-glow transition-all duration-300`}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      {social.icon}
+                      <social.icon/>
                     </motion.a>
                   ))}
                 </div>

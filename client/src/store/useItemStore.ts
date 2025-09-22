@@ -16,6 +16,7 @@ export interface Item {
   id: string;
   orgId: string;
   name: string;
+  itemId: string,
   quantity: number;
   threshold: number;
   lastDateOfUpdate: Date;
