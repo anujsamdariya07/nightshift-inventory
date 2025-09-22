@@ -12,7 +12,7 @@ export interface RestockItem {
 }
 
 export interface Vendor {
-  id: string;   
+  id: string;
   orgId: string;
   name: string;
   vendorId: string;

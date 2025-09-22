@@ -47,9 +47,7 @@ export default function OrdersPage() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [orderToDelete, setOrderToDelete] = useState<Order | null>(
-    null
-  );
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
 
   const handleDeleteClick = (order: Order) => {
     setOrderToDelete(order);
@@ -81,9 +79,10 @@ export default function OrdersPage() {
         (order) =>
           order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (order.items && order.items.some((item) =>
-            item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
-          ))
+          (order.items &&
+            order.items.some((item) =>
+              item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
+            ))
       );
     }
 
@@ -91,7 +90,7 @@ export default function OrdersPage() {
   }, [activeFilter, searchTerm, orders]);
 
   const handleCreateOrder = async (orderData: OrderCreateData) => {
-    console.log('orderData', orderData)
+    console.log('orderData', orderData);
     const result = await createOrder(orderData);
     if (result.success) {
       setShowNewOrderModal(false);
@@ -1009,8 +1008,8 @@ function DeleteConfirmModal({
         </h2>
         <p className='text-muted-foreground mb-6'>
           Are you sure you want to delete{' '}
-          <span className='font-semibold text-foreground'>{order.id}</span>
-          ? This action cannot be undone.
+          <span className='font-semibold text-foreground'>{order.id}</span>?
+          This action cannot be undone.
         </p>
 
         <div className='flex gap-4'>

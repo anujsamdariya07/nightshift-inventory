@@ -38,7 +38,7 @@ export default function LoginPage() {
       setTimeout(() => setShowToast(false), 3000);
       setFormData({ email: '', password: '' });
 
-      router.push('/');
+      router.push('/dashboard');
     } else {
       setError(res.error || 'Login failed. Please try again.');
     }
@@ -54,7 +54,7 @@ export default function LoginPage() {
   //   }
   //   checkAuth()
   // }, [])
-  
+
   useEffect(() => {
     if (authUser) {
       router.push('/');
@@ -102,9 +102,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className='space-y-6'>
               <div>
-                <label className='block text-sm font-medium mb-2'>
-                  Email
-                </label>
+                <label className='block text-sm font-medium mb-2'>Email</label>
                 <input
                   type='email'
                   name='email'

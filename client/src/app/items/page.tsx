@@ -811,7 +811,7 @@ function NewItemModal({
             >
               {loading ? (
                 <div className='flex items-center justify-center gap-2'>
-                  <Loader className="animate-spin h-4 w-4 text-primary-foreground" />
+                  <Loader className='animate-spin h-4 w-4 text-primary-foreground' />
                   Adding...
                 </div>
               ) : (
@@ -1011,7 +1011,7 @@ function QuantityUpdateModal({
             >
               {loading ? (
                 <div className='flex items-center justify-center gap-2'>
-                  <Loader className="animate-spin h-4 w-4 text-white" />
+                  <Loader className='animate-spin h-4 w-4 text-white' />
                   Processing...
                 </div>
               ) : type === 'replenishment' ? (

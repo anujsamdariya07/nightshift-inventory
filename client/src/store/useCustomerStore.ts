@@ -6,7 +6,7 @@ import { persist } from 'zustand/middleware';
 
 export interface CustomerOrder {
   orderId: string;
-  status: 'pending' | 'shipped' | 'delivered';
+  status: 'pending' | 'shipped' | 'delivered' | 'processing';
   orderDate: Date;
   totalAmount: number;
 }

@@ -46,7 +46,7 @@ export default function SignupPage() {
         adminPassword: '',
       });
 
-      router.push('/');
+      router.push('/dashboard');
     } else {
       setError(result.error || 'Something went wrong!');
     }
@@ -57,10 +57,10 @@ export default function SignupPage() {
   };
 
   useEffect(() => {
-      if (authUser) {
-        router.push('/');
-      }
-    }, [authUser]);
+    if (authUser) {
+      router.push('/');
+    }
+  }, [authUser]);
 
   return (
     <div className='min-h-screen bg-background'>

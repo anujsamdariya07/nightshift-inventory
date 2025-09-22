@@ -9,29 +9,11 @@ import { Vendor } from './useVendorStore';
 import { Item } from './useItemStore';
 import { Customer } from './useCustomerStore';
 import { showErrorToast, showSuccessToast } from '@/components/ToastComponent';
+import { Order } from './useOrderStore';
 
 interface CheckAuthResponse {
   message: string;
   employee: Employee | null;
-}
-
-interface OrderItem {
-  itemName: string;
-  quantity: number;
-  priceAtOrder: number;
-}
-
-interface Order {
-  id: string;
-  orgId: string;
-  customerId: string;
-  employeeId: string;
-  items: Array<OrderItem>;
-  totalAmount: number;
-  status: 'pending' | 'completed';
-
-  orderDate: Date;
-  notes?: string;
 }
 
 interface Organization {
