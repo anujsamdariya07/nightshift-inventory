@@ -1,6 +1,6 @@
+import { showErrorToast, showSuccessToast } from '@/components/ToastComponent';
 import { axiosInstance } from '@/lib/axios';
 import { AxiosError } from 'axios';
-import { toast } from 'sonner';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -106,15 +106,14 @@ const useVendorStore = create<VendorState>()(
           return { success: true, vendors: vendors };
         } catch (error) {
           const err = error as AxiosError<{ message: string }>;
-          set({
-            error: err.response?.data?.message || 'Failed to get vendors!',
+          const msg = err.response?.data?.message || 'Failed to get vendors!';
+          set({ error: msg });
+          showErrorToast({
+            message: 'Error while fetching vendors!',
+            description: msg,
           });
 
-          toast.error('Error while fetching vendors!', {
-            description: err.response?.data?.message || 'Something went wrong!',
-          });
-
-          return { success: false, error: err.response?.data?.message };
+          return { success: false, error: msg };
         } finally {
           set({ loading: false });
         }
@@ -137,15 +136,14 @@ const useVendorStore = create<VendorState>()(
           return { success: true, vendor: vendor };
         } catch (error) {
           const err = error as AxiosError<{ message: string }>;
-          set({
-            error: err.response?.data?.message || 'Failed to get the vendor!',
+          const msg =
+            err.response?.data?.message || 'Failed to get the vendor!';
+          set({ error: msg });
+          showErrorToast({
+            message: 'Error while fetching vendor!',
+            description: msg,
           });
-
-          toast.error('Error while fetching vendor!', {
-            description: err.response?.data?.message || 'Something went wrong!',
-          });
-
-          return { success: false, error: err.response?.data?.message };
+          return { success: false, error: msg };
         } finally {
           set({ loading: false });
         }
@@ -167,15 +165,14 @@ const useVendorStore = create<VendorState>()(
           return { success: true, message: 'Vendor created successfully!' };
         } catch (error) {
           const err = error as AxiosError<{ message: string }>;
-          set({
-            error: err.response?.data?.message || 'Failed to create vendor!',
+          const msg = err.response?.data?.message || 'Failed to create vendor!';
+          set({ error: msg });
+          showErrorToast({
+            message: 'Error while creating vendor!',
+            description: msg,
           });
 
-          toast.error('Error while creating vendor!', {
-            description: err.response?.data?.message || 'Something went wrong!',
-          });
-
-          return { success: false, error: err.response?.data?.message };
+          return { success: false, error: msg };
         } finally {
           set({ loading: false });
         }
@@ -198,7 +195,7 @@ const useVendorStore = create<VendorState>()(
             vendors: state.vendors.map((v) => (v.id == id ? vendor : v)),
             error: null,
           }));
-          toast.success('Vendor updated successfully!');
+          showSuccessToast({ message: 'Vendor updated successfully!' });
           return {
             success: true,
             message: 'Vendor updated successfully!',
@@ -206,15 +203,14 @@ const useVendorStore = create<VendorState>()(
           };
         } catch (error) {
           const err = error as AxiosError<{ message: string }>;
-          set({
-            error: err.response?.data?.message || 'Failed to update vendor!',
+          const msg = err.response?.data?.message || 'Failed to update vendor!';
+          set({ error: msg });
+          showErrorToast({
+            message: 'Error while updating vendor!',
+            description: msg,
           });
 
-          toast.error('Error while updating vendor!', {
-            description: err.response?.data?.message || 'Something went wrong!',
-          });
-
-          return { success: false, error: err.response?.data?.message };
+          return { success: false, error: msg };
         } finally {
           set({ loading: false });
         }
@@ -228,19 +224,17 @@ const useVendorStore = create<VendorState>()(
             vendors: state.vendors.filter((v) => v.id !== id),
           }));
           set({ error: null });
-          toast.success('Vendor deleted successfully!');
+          showSuccessToast({ message: 'Vendor deleted successfully!' });
           return { success: true, message: 'Vendor deleted successfully' };
         } catch (error) {
           const err = error as AxiosError<{ message: string }>;
-          set({
-            error: err.response?.data?.message || 'Failed to delete vendor!',
-          });
-
-          toast.error('Error while deleting vendor!', {
+          const msg = err.response?.data?.message || 'Failed to delete vendor!';
+          set({ error: msg });
+          showErrorToast({
+            message: 'Error while deleting vendor!',
             description: err.response?.data?.message || 'Something went wrong!',
           });
-
-          return { success: false, error: err.response?.data?.message };
+          return { success: false, error: msg };
         } finally {
           set({ loading: false });
         }

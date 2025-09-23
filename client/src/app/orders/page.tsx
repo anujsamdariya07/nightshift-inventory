@@ -539,7 +539,7 @@ function StatCard({
   );
 }
 
-function NewOrderModal({
+export function NewOrderModal({
   isOpen,
   onClose,
   onSubmit,

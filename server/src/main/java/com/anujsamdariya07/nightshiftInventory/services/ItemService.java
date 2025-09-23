@@ -166,6 +166,7 @@ public class ItemService {
             UpdateHistory updateHistory = UpdateHistory.builder()
                     .vendorName("Order")
                     .quantityUpdated(deducted)
+                    .cost(item.getPriceAtOrder())
                     .updateType(UpdateHistory.UpdateTypes.ORDER)
                     .date(new Date())
                     .build();
@@ -195,6 +196,7 @@ public class ItemService {
                     .vendorName("Order Revert")
                     .quantityUpdated(reverted)
                     .updateType(UpdateHistory.UpdateTypes.ORDERREVERT)
+                    .cost(item.getPriceAtOrder())
                     .date(new Date())
                     .build();
 
@@ -202,7 +204,6 @@ public class ItemService {
                 extractedItem.setUpdateHistory(new ArrayList<>());
             }
             extractedItem.getUpdateHistory().add(updateHistory);
-
 
             itemRepository.save(extractedItem);
         }

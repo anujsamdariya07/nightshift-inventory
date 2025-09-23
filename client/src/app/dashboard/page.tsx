@@ -20,14 +20,17 @@ import {
   X,
 } from 'lucide-react';
 import Link from 'next/link';
-import useOrderStore, { Order } from '@/store/useOrderStore';
+import useOrderStore, { Order, OrderCreateData } from '@/store/useOrderStore';
 import useEmployeeStore, { Employee } from '@/store/useEmployeeStore';
 import useItemStore, { Item } from '@/store/useItemStore';
 import useVendorStore, { Vendor } from '@/store/useVendorStore';
 import useCustomerStore, { Customer } from '@/store/useCustomerStore';
 import { Navbar } from '@/components/navbar';
 import useAuthStore from '@/store/useAuthStore';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { NewItemModal } from '../items/page';
+import { NewOrderModal } from '../orders/page';
+import { NewVendorModal } from '../vendors/page';
 
 const InventoryDashboard = () => {
   // Sample data - matches your existing structure
@@ -568,7 +571,12 @@ const InventoryDashboard = () => {
     ],
   });
 
-  const { findOrders, loading: orderLoading, orders } = useOrderStore();
+  const {
+    findOrders,
+    loading: orderLoading,
+    orders,
+    createOrder,
+  } = useOrderStore();
   const { authUser } = useAuthStore();
   const {
     fetchEmployees,
@@ -580,10 +588,25 @@ const InventoryDashboard = () => {
     loading: customerLoading,
     customers,
   } = useCustomerStore();
-  const { fetchVendors, loading: vendorLoading, vendors } = useVendorStore();
-  const { fetchItems, loading: itemLoading, items } = useItemStore();
+  const {
+    fetchVendors,
+    loading: vendorLoading,
+    vendors,
+    createVendor,
+  } = useVendorStore();
+  const {
+    fetchItems,
+    loading: itemLoading,
+    createItem,
+    items,
+  } = useItemStore();
+
+  const [showNewItemModal, setShowNewItemModal] = useState(false);
+  const [showNewOrderModal, setShowNewOrderModal] = useState(false);
+  const [showNewVendorModal, setShowNewVendorModal] = useState(false);
 
   const router = useRouter();
+  const pathName = usePathname();
 
   // Get alerts
   const lowStockItems = dashboardData.items.filter(
@@ -830,15 +853,16 @@ const InventoryDashboard = () => {
                       Recent Orders
                     </h3>
                   </div>
-                  <Link href={'/orders'}>
-                    <motion.button
-                      className='text-sm text-primary hover:text-primary/80 flex items-center gap-1'
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <Eye className='w-4 h-4' />
-                      View All
-                    </motion.button>
-                  </Link>
+                  <motion.button
+                    className='text-sm text-primary hover:text-primary/80 flex items-center gap-1'
+                    whileHover={{ scale: 1.05 }}
+                    onClick={() => {
+                      router.push('/employees');
+                    }}
+                  >
+                    <Eye className='w-4 h-4' />
+                    View All
+                  </motion.button>
                 </div>
 
                 <div className='space-y-3'>
@@ -964,21 +988,27 @@ const InventoryDashboard = () => {
                     icon={Plus}
                     label='Add New Item'
                     color='primary'
+                    onClick={() => setShowNewItemModal(true)}
                   />
                   <QuickActionButton
                     icon={ShoppingCart}
                     label='Create Order'
                     color='accent'
+                    onClick={() => setShowNewOrderModal(true)}
                   />
                   <QuickActionButton
                     icon={Truck}
                     label='Add Vendor'
                     color='secondary'
+                    onClick={() => setShowNewVendorModal(true)}
                   />
                   <QuickActionButton
                     icon={Users}
                     label='Manage Staff'
                     color='chart-2'
+                    onClick={() => {
+                      router.push('/employees');
+                    }}
                   />
                 </div>
               </motion.div>
@@ -1096,6 +1126,47 @@ const InventoryDashboard = () => {
           </div>
         </section>
       </main>
+
+      <AnimatePresence>
+        {showNewItemModal && (
+          <NewItemModal
+            onClose={() => setShowNewItemModal(false)}
+            onSubmit={async (newItemData) => {
+              const result = await createItem(newItemData);
+              if (result?.success) {
+                setShowNewItemModal(false);
+              }
+              if (pathName !== '/items') {
+                router.push('/items');
+              }
+            }}
+            vendors={vendors}
+            loading={itemLoading}
+          />
+        )}
+      </AnimatePresence>
+
+      <NewOrderModal
+        isOpen={showNewOrderModal}
+        onClose={() => setShowNewOrderModal(false)}
+        onSubmit={async (orderData: OrderCreateData) => {
+          console.log('orderData', orderData);
+          const result = await createOrder(orderData);
+          if (result.success) {
+            setShowNewOrderModal(false);
+          }
+          if (pathName !== '/orders') router.push('/orders');
+        }}
+        loading={orderLoading}
+        customers={customers}
+        items={items}
+      />
+
+      <NewVendorModal
+        isOpen={showNewVendorModal}
+        onClose={() => setShowNewVendorModal(false)}
+        onSubmit={createVendor}
+      />
     </div>
   );
 };
@@ -1182,15 +1253,18 @@ const QuickActionButton = ({
   icon: Icon,
   label,
   color,
+  onClick,
 }: {
   icon: React.ElementType;
   label: string;
   color: string;
+  onClick: () => void;
 }) => (
   <motion.button
     className={`w-full flex items-center gap-2 px-4 py-3 bg-${color}/10 border border-${color}/30 rounded-xl text-${color} hover:bg-${color} hover:text-white hover:neon-glow transition-all duration-300`}
     whileHover={{ scale: 1.02, x: 5 }}
     whileTap={{ scale: 0.98 }}
+    onClick={onClick}
   >
     <Icon className='w-5 h-5' />
     <span className='font-medium'>{label}</span>

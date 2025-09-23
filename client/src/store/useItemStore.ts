@@ -84,7 +84,7 @@ interface ItemUpdateData {
 
 const useItemStore = create<ItemState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       items: [],
       item: null,
       loading: false,
@@ -150,6 +150,7 @@ const useItemStore = create<ItemState>()(
             items: [item, ...state.items],
           }));
           set({ error: null });
+          showSuccessToast({ message: 'Item created successfully!' });
           return {
             success: true,
             item: item,

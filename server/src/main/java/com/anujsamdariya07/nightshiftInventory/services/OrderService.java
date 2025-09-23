@@ -1,16 +1,17 @@
 package com.anujsamdariya07.nightshiftInventory.services;
 
-import com.anujsamdariya07.nightshiftInventory.entity.Employee;
-import com.anujsamdariya07.nightshiftInventory.entity.Order;
-import com.anujsamdariya07.nightshiftInventory.entity.Vendor;
+import com.anujsamdariya07.nightshiftInventory.entity.*;
+import com.anujsamdariya07.nightshiftInventory.repository.CustomerRepository;
 import com.anujsamdariya07.nightshiftInventory.repository.OrderRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OrderService {
@@ -20,6 +21,8 @@ public class OrderService {
     private ItemService itemService;
     @Autowired
     private EmployeeService employeeService;
+    @Autowired
+    private CustomerRepository customerRepository;
 
     public List<Order> getOrdersByOrgId(ObjectId orgId) {
         return orderRepository.findAllByOrgId(orgId);
@@ -68,6 +71,20 @@ public class OrderService {
             itemService.deductByOrder(savedOrder.getItems(), savedOrder.getOrgId());
         }
 
+        CustomerOrder order = CustomerOrder.builder()
+                .orderId(savedOrder.getOrderId())
+                .orderDate(savedOrder.getOrderDate())
+                .status(savedOrder.getStatus())
+                .totalAmount(savedOrder.getTotalAmount())
+                .build();
+
+        Optional<Customer> customer = customerRepository.findByOrgIdAndCustomerId(orderRequest.getOrgId(), orderRequest.getCustomerId());
+        customer.ifPresent(value -> {
+            if (value.getOrders() == null) value.setOrders(new ArrayList<>());
+            value.getOrders().add(order);
+        });
+        customerRepository.save(customer.get());
+
         return savedOrder;
     }
 
@@ -114,7 +131,26 @@ public class OrderService {
             existingOrder.setDeadline(orderRequest.getDeadline());
         }
 
-        return orderRepository.save(existingOrder);
+        Order updatedOrder = orderRepository.save(existingOrder);
+
+        Optional<Customer> customerOpt = customerRepository.findByOrgIdAndCustomerId(
+                updatedOrder.getOrgId(), updatedOrder.getCustomerId());
+
+        customerOpt.ifPresent(customer -> {
+            if (customer.getOrders() != null) {
+                for (CustomerOrder co : customer.getOrders()) {
+                    if (co.getOrderId().equals(updatedOrder.getOrderId())) {
+                        co.setOrderDate(updatedOrder.getOrderDate());
+                        co.setStatus(updatedOrder.getStatus());
+                        co.setTotalAmount(updatedOrder.getTotalAmount());
+                        break;
+                    }
+                }
+                customerRepository.save(customer);
+            }
+        });
+
+        return updatedOrder;
     }
 
     public void deleteOrder(ObjectId id) {

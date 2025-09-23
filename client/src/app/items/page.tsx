@@ -755,7 +755,7 @@ function StatCard({
   );
 }
 
-function NewItemModal({
+export function NewItemModal({
   onClose,
   onSubmit,
   vendors,

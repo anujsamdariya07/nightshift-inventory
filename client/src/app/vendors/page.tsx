@@ -8,7 +8,7 @@ import useVendorStore, { type Vendor } from '@/store/useVendorStore';
 import { toast } from 'sonner';
 import { Loader } from 'lucide-react';
 import useAuthStore from '@/store/useAuthStore';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 const statusColors = {
   active: 'accent',
@@ -93,7 +93,6 @@ export default function VendorsPage() {
     if (!deleteTarget) return;
     const result = await deleteVendor(deleteTarget.id);
     if (result.success) {
-      toast.success('Vendor deleted successfully!');
       setDeleteTarget(null);
     }
   };
@@ -631,7 +630,7 @@ function StatCard({
   );
 }
 
-function NewVendorModal({
+export function NewVendorModal({
   isOpen,
   onClose,
   onSubmit,
@@ -651,6 +650,9 @@ function NewVendorModal({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const pathName = usePathname()
+  const router = useRouter()
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -658,7 +660,6 @@ function NewVendorModal({
     try {
       const result = await onSubmit(formData);
       if (result.success) {
-        toast.success('Vendor created successfully!');
         // Reset form
         setFormData({
           name: '',
@@ -669,6 +670,7 @@ function NewVendorModal({
           status: 'active',
           specialities: [] as string[],
         });
+        if (pathName !== '/vendors') router.push('/vendors')
         onClose();
       }
     } catch (error) {
@@ -917,7 +919,6 @@ function EditVendorModal({
     try {
       const result = await onSubmit(formData, vendor.id);
       if (result.success) {
-        toast.success('Vendor updated successfully!');
         onClose();
       }
     } catch (error) {

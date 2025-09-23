@@ -14,10 +14,11 @@ import java.util.Date;
 @AllArgsConstructor
 @Builder
 public class CustomerOrder {
+
     private String orderId;
 
     @Builder.Default
-    private String status = "pending";
+    private Order.OrderStatus status = Order.OrderStatus.PENDING;
 
     @Builder.Default
     private Date orderDate = new Date();

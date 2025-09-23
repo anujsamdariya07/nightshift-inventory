@@ -15,6 +15,8 @@ public interface CustomerRepository extends MongoRepository<Customer, ObjectId> 
 
     Optional<Customer> findByOrgIdAndId(ObjectId orgId, ObjectId id);
 
+    Optional<Customer> findByOrgIdAndCustomerId(ObjectId orgId, String customerId);
+
     void deleteByOrgIdAndId(ObjectId orgId, ObjectId id);
 
     boolean existsByPhone(String phone);
