@@ -11,8 +11,6 @@ import org.bson.types.ObjectId;
 @AllArgsConstructor
 @Builder
 public class RestockItem {
-    @JsonSerialize(using = ToStringSerializer.class)
-    private ObjectId id;
     private String itemId;
     private String itemName;
     private int quantity;

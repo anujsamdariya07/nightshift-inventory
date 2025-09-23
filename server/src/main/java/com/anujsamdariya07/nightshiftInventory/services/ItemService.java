@@ -1,11 +1,9 @@
 package com.anujsamdariya07.nightshiftInventory.services;
 
 import com.anujsamdariya07.nightshiftInventory.dto.ItemRequest;
-import com.anujsamdariya07.nightshiftInventory.entity.Item;
-import com.anujsamdariya07.nightshiftInventory.entity.Order;
-import com.anujsamdariya07.nightshiftInventory.entity.OrderItem;
-import com.anujsamdariya07.nightshiftInventory.entity.UpdateHistory;
+import com.anujsamdariya07.nightshiftInventory.entity.*;
 import com.anujsamdariya07.nightshiftInventory.repository.ItemRepository;
+import com.anujsamdariya07.nightshiftInventory.repository.VendorRepository;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +17,8 @@ import java.util.Optional;
 public class ItemService {
     @Autowired
     private ItemRepository itemRepository;
+    @Autowired
+    private VendorRepository vendorRepository;
 
     public List<Item> getItemsByOrgId(ObjectId orgId) {
         return itemRepository.findAllByOrgId(orgId);
@@ -79,6 +79,23 @@ public class ItemService {
         item.getUpdateHistory().add(updateHistory);
         item.setItemId(generateItemId(itemRequest.getOrgId()));
 
+        Optional<Vendor> vendor = vendorRepository.findVendorByOrgIdAndVendorId(itemRequest.getOrgId(), itemRequest.getVendorId());
+
+        RestockItem restockItem = RestockItem.builder()
+                .itemName(itemRequest.getName())
+                .cost(itemRequest.getCost())
+                .itemId(item.getItemId())
+                .quantity(itemRequest.getQuantity())
+                .build();
+
+        vendor.ifPresent(value -> {
+            if (value.getReplenishmentHistory() == null) {
+                value.setReplenishmentHistory(new ArrayList<>());
+            }
+            value.getReplenishmentHistory().add(restockItem);
+        });
+        vendorRepository.save(vendor.get());
+
         return itemRepository.save(item);
     }
 
@@ -111,6 +128,24 @@ public class ItemService {
             existingItem.setUpdateHistory(new ArrayList<>());
         }
         existingItem.getUpdateHistory().add(updateHistory);
+
+        Optional<Vendor> vendor = vendorRepository.findVendorByOrgIdAndVendorId(itemRequest.getOrgId(), itemRequest.getVendorId());
+
+        RestockItem restockItem = RestockItem.builder()
+                .quantity(itemRequest.getQuantity())
+                .itemId(existingItem.getItemId())
+                .itemName(existingItem.getName())
+                .cost(itemRequest.getCost())
+                .build();
+
+        vendor.ifPresent(value -> {
+            if (value.getReplenishmentHistory() == null) {
+                value.setReplenishmentHistory(new ArrayList<>());
+            }
+            value.getReplenishmentHistory().add(restockItem);
+        });
+
+        vendorRepository.save(vendor.get());
 
         return itemRepository.save(existingItem);
     }
@@ -188,6 +223,25 @@ public class ItemService {
                 .build();
         if (item.getUpdateHistory() == null) item.setUpdateHistory(new ArrayList<>());
         item.getUpdateHistory().add(updateHistory);
+
+        RestockItem restockItem = RestockItem.builder()
+                .cost(updateQuantityData.getCost())
+                .quantity(updateQuantityData.getQuantityUpdated())
+                .itemName(item.getName())
+                .itemId(item.getItemId())
+                .build();
+
+        Optional<Vendor> vendor = vendorRepository.findVendorByOrgIdAndVendorId(item.getOrgId(), updateQuantityData.getVendorId());
+        vendor.ifPresent(value -> {
+            if (value.getReplenishmentHistory() == null) {
+                value.setReplenishmentHistory(new ArrayList<>());
+            }
+            value.setTotalRestocks(value.getTotalRestocks()+1);
+            value.setTotalValue(value.getTotalValue() + updateQuantityData.getCost());
+            value.getReplenishmentHistory().add(restockItem);
+        });
+        vendorRepository.save(vendor.get());
+
         itemRepository.save(item);
         return updateHistory;
     }

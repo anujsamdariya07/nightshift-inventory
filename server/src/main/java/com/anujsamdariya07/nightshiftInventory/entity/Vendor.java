@@ -47,7 +47,7 @@ public class Vendor {
 
     private int totalRestocks;
 
-    private int totalValue;
+    private double totalValue;
 
     private ArrayList<RestockItem> replenishmentHistory;
 

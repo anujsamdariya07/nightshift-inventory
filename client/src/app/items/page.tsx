@@ -1317,6 +1317,18 @@ function ViewDetailsModal({
     (update: any) => update?.updateType === 'ORDER'
   ).length;
 
+  useEffect(() => {
+    const handlePress: any = (event: React.KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+
+    document.addEventListener('keydown', handlePress);
+
+    return () => {
+      document.removeEventListener('keydown', handlePress);
+    };
+  }, [onClose]);
+
   return (
     <motion.div
       className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 hide-scrollbar'
@@ -1336,9 +1348,10 @@ function ViewDetailsModal({
           <h2 className='text-3xl font-bold text-primary'>Item Details</h2>
           <button
             onClick={onClose}
-            className='text-muted-foreground hover:text-foreground transition-colors'
+            className='text-muted-foreground hover:text-foreground transition-colors flex items-center space-x-2'
           >
-            ✕
+            <span className='keyboard-key'>Esc</span>
+            <span>✕</span>
           </button>
         </div>
 
