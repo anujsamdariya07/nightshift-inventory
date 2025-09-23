@@ -12,6 +12,7 @@ import useEmployeeStore from '@/store/useEmployeeStore';
 import useItemStore from '@/store/useItemStore';
 import useOrderStore from '@/store/useOrderStore';
 import useVendorStore from '@/store/useVendorStore';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 
 const navItems = [
   { name: 'Orders', href: '/orders' },
@@ -115,20 +116,63 @@ export function Navbar() {
                 ))}
 
                 {/* Greeting + Logout */}
-                <div className='flex items-center space-x-3'>
-                  <span className='text-sm font-medium text-muted-foreground'>
-                    Hi,{' '}
-                    <span className='text-primary font-semibold'>
-                      {authUser.name}
-                    </span>
-                  </span>
-                  <button
-                    onClick={() => setShowLogoutModal(true)}
-                    className='px-4 py-2 text-sm font-semibold rounded-xl bg-primary text-background 
-                               hover:bg-primary/90 transition-colors duration-300 shadow-md'
-                  >
-                    Logout
-                  </button>
+
+                <div className="flex items-center border">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-accent transition-colors focus:outline-none">
+                        {/* Avatar Circle */}
+                        <div className="h-8 w-8 flex items-center justify-center rounded-full bg-primary text-background font-semibold shadow">
+                          {authUser.name.charAt(0).toUpperCase()}
+                        </div>
+                        {/* Greeting */}
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Hi,{" "}
+                          <span className="text-primary font-semibold">
+                            {authUser.name.split(" ")[0]}
+                          </span>
+                        </span>
+                      </button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent 
+                      align="end" 
+                      className="w-48 rounded-xl shadow-lg border p-2"
+                    >
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">
+                        Quick Links
+                      </DropdownMenuLabel>
+
+                      <DropdownMenuItem asChild>
+                        <Link 
+                          href="/contact" 
+                          className="w-full cursor-pointer px-3 py-2 rounded-md hover:bg-accent text-sm"
+                        >
+                          Contact
+                        </Link>
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem asChild>
+                        <Link 
+                          href="/workflow" 
+                          className="w-full cursor-pointer px-3 py-2 rounded-md hover:bg-accent text-sm"
+                        >
+                          Workflow
+                        </Link>
+                      </DropdownMenuItem>
+
+                      <DropdownMenuSeparator />
+
+                      <DropdownMenuItem asChild>
+                        <button
+                          onClick={() => setShowLogoutModal(true)}
+                          className="w-full px-3 py-2 text-sm font-semibold rounded-md bg-red-500 text-white hover:bg-red-600 transition-colors shadow"
+                        >
+                          Logout
+                        </button>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             )}

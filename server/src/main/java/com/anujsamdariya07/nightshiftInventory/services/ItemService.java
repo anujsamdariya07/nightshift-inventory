@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ItemService {
@@ -66,10 +67,11 @@ public class ItemService {
                 .build();
         UpdateHistory updateHistory = UpdateHistory.builder()
                 .vendorName(itemRequest.getVendorName())
+                .vendorId(itemRequest.getVendorId())
                 .quantityUpdated(itemRequest.getQuantity())
                 .cost(itemRequest.getCost())
                 .date(new Date())
-                .updateType("replenishment")
+                .updateType(UpdateHistory.UpdateTypes.REPLENISHMENT)
                 .build();
         if (item.getUpdateHistory() == null) {
             item.setUpdateHistory(new ArrayList<>());
@@ -96,10 +98,13 @@ public class ItemService {
 
         UpdateHistory updateHistory = UpdateHistory.builder()
                 .vendorName(itemRequest.getVendorName())
+                .vendorId(itemRequest.getVendorId())
+                .orderName(null)
+                .orderId(null)
                 .quantityUpdated(itemRequest.getQuantity())
                 .cost(itemRequest.getCost())
                 .date(new Date())
-                .updateType("replenishment")
+                .updateType(UpdateHistory.UpdateTypes.REPLENISHMENT)
                 .build();
 
         if (existingItem.getUpdateHistory() == null) {
@@ -126,7 +131,7 @@ public class ItemService {
             UpdateHistory updateHistory = UpdateHistory.builder()
                     .vendorName("Order")
                     .quantityUpdated(deducted)
-                    .updateType("order")
+                    .updateType(UpdateHistory.UpdateTypes.ORDER)
                     .date(new Date())
                     .build();
 
@@ -154,7 +159,7 @@ public class ItemService {
             UpdateHistory updateHistory = UpdateHistory.builder()
                     .vendorName("Order Revert")
                     .quantityUpdated(reverted)
-                    .updateType("revert")
+                    .updateType(UpdateHistory.UpdateTypes.ORDERREVERT)
                     .date(new Date())
                     .build();
 
@@ -166,5 +171,24 @@ public class ItemService {
 
             itemRepository.save(extractedItem);
         }
+    }
+
+    public UpdateHistory updateItemQuantityByVendor(ObjectId itemId, UpdateHistory updateQuantityData) {
+        Item item = itemRepository.findById(itemId).get();
+        item.setQuantity(item.getQuantity() + updateQuantityData.getQuantityUpdated());
+        UpdateHistory updateHistory = UpdateHistory.builder()
+                .orderName(null)
+                .orderId(null)
+                .vendorName(updateQuantityData.getVendorName())
+                .vendorId(updateQuantityData.getVendorId())
+                .quantityUpdated(updateQuantityData.getQuantityUpdated())
+                .cost(updateQuantityData.getCost())
+                .updateType(UpdateHistory.UpdateTypes.REPLENISHMENT)
+                .date(new Date())
+                .build();
+        if (item.getUpdateHistory() == null) item.setUpdateHistory(new ArrayList<>());
+        item.getUpdateHistory().add(updateHistory);
+        itemRepository.save(item);
+        return updateHistory;
     }
 }

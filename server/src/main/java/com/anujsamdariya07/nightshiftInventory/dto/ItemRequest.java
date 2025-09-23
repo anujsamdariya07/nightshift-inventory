@@ -15,5 +15,8 @@ public class ItemRequest {
     private int threshold;
     private String image;
     private String vendorName;
+    private String vendorId;
+    private String orderName;
+    private String orderId;
     private double cost;
 }

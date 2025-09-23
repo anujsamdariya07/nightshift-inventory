@@ -1,3 +1,4 @@
+import { showErrorToast, showSuccessToast } from '@/components/ToastComponent';
 import { axiosInstance } from '@/lib/axios';
 import { AxiosError } from 'axios';
 import { toast } from 'sonner';
@@ -5,18 +6,21 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface UpdateHistory {
-  vendorName: string;
+  vendorName?: string;
+  vendorId?: string;
+  orderName?: string;
+  orderId?: string;
   quantityUpdated: number;
   cost: number;
-  updateType: 'replenishment' | 'order';
-  date: Date;
+  updateType: 'REPLENISHMENT' | 'ORDER' | 'ORDERREVERT';
+  date?: Date;
 }
 
 export interface Item {
   id: string;
   orgId: string;
   name: string;
-  itemId: string,
+  itemId: string;
   quantity: number;
   threshold: number;
   lastDateOfUpdate: Date;
@@ -56,10 +60,7 @@ interface ItemState {
   deleteItem: (id: string) => Promise<{ success: boolean; error?: string }>;
   updateItemQuantity: (
     id: string,
-    quantityChange: number,
-    vendorName: string,
-    cost: number,
-    updateType: 'replenishment' | 'order'
+    updateQuantityData: UpdateHistory
   ) => Promise<{ success: boolean; item?: Item; error?: string }>;
   logout: () => Promise<void>;
 }
@@ -69,6 +70,8 @@ interface ItemCreateData {
   quantity: number;
   threshold: number;
   image?: string;
+  vendorName: string;
+  vendorId: string;
 }
 
 interface ItemUpdateData {
@@ -90,20 +93,26 @@ const useItemStore = create<ItemState>()(
       fetchItems: async () => {
         set({ loading: true, error: null });
         try {
+          console.log(1);
           const response = await axiosInstance.get('/items');
+          console.log(2);
           set({ items: response.data, error: null });
+          console.log(3);
           return { success: true, items: response.data };
         } catch (error) {
+          console.log(error);
           const err = error as AxiosError<{ message: string }>;
+          const msg = err.response?.data.message || 'Something went wrong!';
           set({
-            error: err.response?.data.message || 'Failed to fetch items!',
+            error: msg || 'Failed to fetch items!',
           });
 
-          toast.error('Error while fetching items!', {
-            description: err.response?.data.message || 'Something went wrong!',
+          showErrorToast({
+            message: 'Error while fetching items!',
+            description: msg,
           });
 
-          return { success: false, error: err.response?.data.message };
+          return { success: false, error: msg };
         } finally {
           set({ loading: false });
         }
@@ -117,14 +126,16 @@ const useItemStore = create<ItemState>()(
           return { success: true, item: response.data };
         } catch (error) {
           const err = error as AxiosError<{ message: string }>;
+          const msg =
+            err.response?.data.message || 'Failed to fetch the item by ID!';
           set({
-            error:
-              err.response?.data.message || 'Failed to fetch the item by ID!',
+            error: msg,
           });
-          toast.error('Error while fetching the item by ID!', {
-            description: err.response?.data.message || 'Something went wrong!',
+          showErrorToast({
+            message: 'Error while fetching the item by ID!',
+            description: msg,
           });
-          return { success: false, error: err.response?.data.message };
+          return { success: false, error: msg };
         } finally {
           set({ loading: false });
         }
@@ -146,13 +157,15 @@ const useItemStore = create<ItemState>()(
           };
         } catch (error) {
           const err = error as AxiosError<{ message: string }>;
+          const msg = err.response?.data.message || 'Failed to create item!';
           set({
-            error: err.response?.data.message || 'Failed to create item!',
+            error: msg,
           });
-          toast.error('Error while creating item!', {
-            description: err.response?.data.message || 'Something went wrong!',
+          showErrorToast({
+            message: 'Error while creating item!',
+            description: msg,
           });
-          return { success: false, error: err.response?.data.message };
+          return { success: false, error: msg };
         } finally {
           set({ loading: false });
         }
@@ -175,13 +188,15 @@ const useItemStore = create<ItemState>()(
           };
         } catch (error) {
           const err = error as AxiosError<{ message: string }>;
+          const msg = err.response?.data.message || 'Failed to update item!';
           set({
-            error: err.response?.data.message || 'Failed to update item!',
+            error: msg,
           });
-          toast.error('Error while updating item!', {
-            description: err.response?.data.message || 'Something went wrong!',
+          showErrorToast({
+            message: 'Error while updating item!',
+            description: msg,
           });
-          return { success: false, error: err.response?.data.message };
+          return { success: false, error: msg };
         } finally {
           set({ loading: false });
         }
@@ -195,17 +210,19 @@ const useItemStore = create<ItemState>()(
             items: state.items.filter((i) => i.id !== id),
           }));
           set({ error: null });
-          toast.success('Item deleted successfully!');
+          showSuccessToast({ message: 'Item deleted successfully!' });
           return { success: true };
         } catch (error) {
           const err = error as AxiosError<{ message: string }>;
+          const msg = err.response?.data.message || 'Failed to delete item!';
           set({
-            error: err.response?.data.message || 'Failed to delete item!',
+            error: msg,
           });
-          toast.error('Error while deleting item!', {
-            description: err.response?.data.message || 'Something went wrong!',
+          showErrorToast({
+            message: 'Error while deleting item!',
+            description: msg,
           });
-          return { success: false, error: err.response?.data.message };
+          return { success: false, error: msg };
         } finally {
           set({ loading: false });
         }
@@ -213,41 +230,37 @@ const useItemStore = create<ItemState>()(
 
       updateItemQuantity: async (
         id: string,
-        quantityChange: number,
-        vendorName: string,
-        cost: number,
-        updateType: 'replenishment' | 'order'
+        updateQuantityData: UpdateHistory
       ) => {
         set({ loading: true, error: null });
         try {
+          // console.log('Update Item Data', {id, quantityChange, vendorName, cost, updateType})
           const response = await axiosInstance.patch(`/items/${id}/quantity`, {
-            quantityChange,
-            vendorName,
-            cost,
-            updateType,
+            ...updateQuantityData,
+            updateType:
+              updateQuantityData.updateType.toUpperCase() as UpdateHistory['updateType'],
           });
           const item = response.data;
           set((state) => ({
-            item: state.item?.id === id ? item : state.item,
             items: state.items.map((i) => (i.id === id ? item : i)),
           }));
           set({ error: null });
-          toast.success(
-            `Item quantity ${
-              updateType === 'replenishment' ? 'replenished' : 'ordered'
-            } successfully!`
-          );
+          showSuccessToast({
+            message: `Item quantity replenished successfully!`,
+          });
           return { success: true, item: item };
         } catch (error) {
           const err = error as AxiosError<{ message: string }>;
+          const msg =
+            err.response?.data.message || 'Failed to update item quantity!';
           set({
-            error:
-              err.response?.data.message || 'Failed to update item quantity!',
+            error: msg,
           });
-          toast.error('Error while updating item quantity!', {
-            description: err.response?.data.message || 'Something went wrong!',
+          showErrorToast({
+            message: 'Error while updating item quantity!',
+            description: msg,
           });
-          return { success: false, error: err.response?.data.message };
+          return { success: false, error: msg };
         } finally {
           set({ loading: false });
         }

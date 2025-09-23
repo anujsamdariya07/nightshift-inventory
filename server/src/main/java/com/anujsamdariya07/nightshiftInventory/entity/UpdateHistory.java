@@ -14,14 +14,23 @@ import java.util.Date;
 @AllArgsConstructor
 @Builder
 public class UpdateHistory {
+    public enum UpdateTypes {
+        REPLENISHMENT, ORDER, ORDERREVERT
+    }
 
     private String vendorName;
+
+    private String vendorId;
+
+    private String orderName;
+
+    private String orderId;
 
     private int quantityUpdated;
 
     private double cost;
 
-    private String updateType;
+    private UpdateTypes updateType;
 
     @Builder.Default
     private Date date = new Date();

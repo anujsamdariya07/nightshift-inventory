@@ -8,7 +8,8 @@ import { Navbar } from '@/components/navbar';
 import useAuthStore from '@/store/useAuthStore';
 import useItemStore from '@/store/useItemStore';
 import { useRouter } from 'next/navigation';
-import { Loader } from 'lucide-react';
+import { Loader, Trash2, Eye } from 'lucide-react';
+import useVendorStore, { Vendor } from '@/store/useVendorStore';
 
 const stockStatusColors = {
   'in-stock': 'accent',
@@ -33,6 +34,7 @@ export default function ItemsPage() {
     updateItemQuantity,
     deleteItem,
   } = useItemStore();
+  const { vendors, loading: vendorLoading, fetchVendors } = useVendorStore();
   const [filteredItems, setFilteredItems] = useState(items);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,22 +44,34 @@ export default function ItemsPage() {
   const [showQuantityModal, setShowQuantityModal] = useState<{
     show: boolean;
     item: any;
-    type: 'replenishment' | 'order';
-  }>({ show: false, item: null, type: 'replenishment' });
+    type: 'REPLENISHMENT' | 'ORDER' | 'ORDERREVERT';
+  }>({ show: false, item: null, type: 'REPLENISHMENT' });
+  const [showDeleteModal, setShowDeleteModal] = useState<{
+    show: boolean;
+    item: any;
+  }>({ show: false, item: null });
+  const [showViewDetailsModal, setShowViewDetailsModal] = useState<{
+    show: boolean;
+    item: any;
+  }>({ show: false, item: null });
   const { authUser } = useAuthStore();
   const router = useRouter();
+
   // Fetch items on component mount
   useEffect(() => {
     fetchItems();
-  }, [fetchItems]);
+    fetchVendors();
+  }, [fetchItems, fetchVendors]);
+
   useEffect(() => {
     if (!authUser) router.push('/');
   }, []);
 
   // Helper function to get stock status
   const getStockStatus = (item: any) => {
+    if (!item || typeof item.quantity !== 'number') return 'out-of-stock';
     if (item.quantity === 0) return 'out-of-stock';
-    if (item.quantity <= item.threshold) return 'low-stock';
+    if (item.quantity <= (item.threshold || 0)) return 'low-stock';
     return 'in-stock';
   };
 
@@ -73,7 +87,7 @@ export default function ItemsPage() {
 
     if (searchTerm) {
       filtered = filtered.filter((item) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+        (item.name || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -87,7 +101,6 @@ export default function ItemsPage() {
         <main className='pt-24 pb-16'>
           <div className='container mx-auto px-4 flex items-center justify-center h-96'>
             <div className='text-center'>
-              {/* <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div> */}
               <div className='flex justify-center items-center mb-4'>
                 <Loader className='animate-spin h-12 w-12 text-primary' />
               </div>
@@ -223,7 +236,10 @@ export default function ItemsPage() {
                   onQuantityUpdate={(type) =>
                     setShowQuantityModal({ show: true, item, type })
                   }
-                  onDelete={deleteItem}
+                  onDelete={() => setShowDeleteModal({ show: true, item })}
+                  onViewDetails={() =>
+                    setShowViewDetailsModal({ show: true, item })
+                  }
                 />
               ))}
             </AnimatePresence>
@@ -266,6 +282,7 @@ export default function ItemsPage() {
                 setShowNewItemModal(false);
               }
             }}
+            vendors={vendors}
             loading={loading}
           />
         )}
@@ -277,30 +294,61 @@ export default function ItemsPage() {
           <QuantityUpdateModal
             item={showQuantityModal.item}
             type={showQuantityModal.type}
+            vendors={vendors}
             onClose={() =>
               setShowQuantityModal({
                 show: false,
                 item: null,
-                type: 'replenishment',
+                type: 'REPLENISHMENT',
               })
             }
             onSubmit={async (data) => {
               const result = await updateItemQuantity(
                 showQuantityModal.item.id,
-                data.quantityChange,
-                data.vendorName,
-                data.cost,
-                showQuantityModal.type
+                {
+                  vendorName: data.vendorName,
+                  vendorId: data.vendorId,
+                  cost: data.cost,
+                  quantityUpdated: data.quantityChange,
+                  updateType: 'REPLENISHMENT',
+                }
               );
               if (result?.success) {
                 setShowQuantityModal({
                   show: false,
                   item: null,
-                  type: 'replenishment',
+                  type: 'REPLENISHMENT',
                 });
               }
             }}
             loading={loading}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal.show && (
+          <DeleteConfirmationModal
+            item={showDeleteModal.item}
+            onClose={() => setShowDeleteModal({ show: false, item: null })}
+            onConfirm={async () => {
+              const result = await deleteItem(showDeleteModal.item.id);
+              if (result?.success) {
+                setShowDeleteModal({ show: false, item: null });
+              }
+            }}
+            loading={loading}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* View Details Modal */}
+      <AnimatePresence>
+        {showViewDetailsModal.show && (
+          <ViewDetailsModal
+            item={showViewDetailsModal.item}
+            onClose={() => setShowViewDetailsModal({ show: false, item: null })}
           />
         )}
       </AnimatePresence>
@@ -315,33 +363,36 @@ function ItemCard({
   onSelect,
   onQuantityUpdate,
   onDelete,
+  onViewDetails,
 }: {
   item: any;
   index: number;
   isSelected: boolean;
   onSelect: () => void;
-  onQuantityUpdate: (type: 'replenishment' | 'order') => void;
-  onDelete: (id: string) => void;
+  onQuantityUpdate: (type: 'REPLENISHMENT' | 'ORDER' | 'ORDERREVERT') => void;
+  onDelete: () => void;
+  onViewDetails: () => void;
 }) {
   const stockStatus =
-    item.quantity === 0
+    (item?.quantity || 0) === 0
       ? 'out-of-stock'
-      : item.quantity <= item.threshold
+      : (item?.quantity || 0) <= (item?.threshold || 0)
       ? 'low-stock'
       : 'in-stock';
 
-  // Calculate total cost from update history
-  const totalCost = item.updateHistory.reduce(
-    (sum: number, update: any) => sum + update.quantityUpdated * update.cost,
+  // Calculate total cost from update history with proper null checks
+  const totalCost = (item?.updateHistory || []).reduce(
+    (sum: number, update: any) =>
+      sum + (update?.quantityUpdated || 0) * (update?.cost || 0),
     0
   );
 
-  // Calculate last replenishment
-  const lastReplenishment = item.updateHistory
-    .filter((update: any) => update.updateType === 'replenishment')
+  // Calculate last replenishment with proper null checks
+  const lastReplenishment = (item?.updateHistory || [])
+    .filter((update: any) => update?.updateType === 'REPLENISHMENT')
     .sort(
       (a: any, b: any) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
+        new Date(b?.date || 0).getTime() - new Date(a?.date || 0).getTime()
     )[0];
 
   return (
@@ -363,19 +414,24 @@ function ItemCard({
         <div className='flex justify-between items-start mb-4'>
           <div className='flex-1'>
             <h3 className='text-lg font-bold text-foreground group-hover:text-primary transition-colors duration-300'>
-              {item.name}
+              {item?.name || 'Unknown Item'}
             </h3>
             <p className='text-sm text-muted-foreground'>
               Last Updated:{' '}
-              {new Date(item.lastDateOfUpdate).toLocaleDateString()}
+              {item?.lastDateOfUpdate
+                ? new Date(item.lastDateOfUpdate).toLocaleDateString()
+                : 'Never'}
             </p>
           </div>
           <div className='flex flex-col items-end gap-2'>
             <StockStatusBadge status={stockStatus} />
             <div className='w-20 h-20 rounded-lg overflow-hidden bg-muted/20'>
               <img
-                src={item.image}
-                alt={item.name}
+                src={
+                  item?.image ||
+                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRo6ZeL1Ntu-zwEcgRli39ynixVj9yeQtfjAw&s'
+                }
+                alt={item?.name || 'Item'}
                 className='w-full h-full object-cover'
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
@@ -400,13 +456,13 @@ function ItemCard({
                   : 'text-accent'
               }`}
             >
-              {item.quantity}
+              {item?.quantity || 0}
             </p>
           </div>
           <div>
             <p className='text-xs text-muted-foreground'>Threshold</p>
             <p className='text-xl font-bold text-muted-foreground'>
-              {item.threshold}
+              {item?.threshold || 0}
             </p>
           </div>
         </div>
@@ -416,10 +472,11 @@ function ItemCard({
           <div className='flex justify-between text-xs text-muted-foreground mb-1'>
             <span>Stock Level</span>
             <span>
-              {(
-                (item.quantity / Math.max(item.quantity, item.threshold * 2)) *
-                100
-              ).toFixed(0)}
+              {Math.round(
+                ((item?.quantity || 0) /
+                  Math.max(item?.quantity || 0, (item?.threshold || 1) * 2)) *
+                  100
+              )}
               %
             </span>
           </div>
@@ -435,8 +492,8 @@ function ItemCard({
               initial={{ width: 0 }}
               animate={{
                 width: `${Math.min(
-                  (item.quantity /
-                    Math.max(item.quantity, item.threshold * 2)) *
+                  ((item?.quantity || 0) /
+                    Math.max(item?.quantity || 0, (item?.threshold || 1) * 2)) *
                     100,
                   100
                 )}%`,
@@ -451,7 +508,7 @@ function ItemCard({
           <div>
             <span className='text-muted-foreground'>Total Updates: </span>
             <span className='text-foreground font-medium'>
-              {item.updateHistory.length}
+              {(item?.updateHistory || []).length}
             </span>
           </div>
           <div>
@@ -475,13 +532,13 @@ function ItemCard({
                 <h4 className='text-sm font-semibold text-foreground mb-3'>
                   Recent Updates
                 </h4>
-                {item.updateHistory.length > 0 ? (
+                {(item?.updateHistory || []).length > 0 ? (
                   <div className='space-y-2 mb-4'>
-                    {item.updateHistory
+                    {(item?.updateHistory || [])
                       .sort(
                         (a: any, b: any) =>
-                          new Date(b.date).getTime() -
-                          new Date(a.date).getTime()
+                          new Date(b?.date || 0).getTime() -
+                          new Date(a?.date || 0).getTime()
                       )
                       .slice(0, 3)
                       .map((update: any, idx: number) => (
@@ -491,27 +548,29 @@ function ItemCard({
                         >
                           <div>
                             <span className='text-foreground font-medium'>
-                              {update.vendorName}
+                              {update?.vendorId || 'N/A'}
+                              {': '}
+                              {update?.vendorName || 'Unknown'}
                             </span>
                             <span
                               className={`ml-2 px-2 py-1 rounded-full text-xs ${
-                                update.updateType === 'replenishment'
+                                update?.updateType === 'REPLENISHMENT'
                                   ? 'bg-green-500/20 text-green-500'
                                   : 'bg-blue-500/20 text-blue-500'
                               }`}
                             >
-                              {update.updateType}
+                              {update?.updateType || 'UNKNOWN'}
                             </span>
                           </div>
                           <div className='text-right'>
                             <p className='text-foreground font-medium'>
-                              {update.updateType === 'replenishment'
+                              {update?.updateType === 'REPLENISHMENT'
                                 ? '+'
                                 : '-'}
-                              {update.quantityUpdated}
+                              {update?.quantityUpdated || 0}
                             </p>
                             <p className='text-muted-foreground'>
-                              ₹{update.cost}/unit
+                              ₹{(update?.cost || 0).toFixed(2)}/unit
                             </p>
                           </div>
                         </div>
@@ -529,8 +588,10 @@ function ItemCard({
                       Last Replenishment:{' '}
                     </span>
                     <span className='text-foreground font-medium'>
-                      {new Date(lastReplenishment.date).toLocaleDateString()} by{' '}
-                      {lastReplenishment.vendorName}
+                      {lastReplenishment?.date
+                        ? new Date(lastReplenishment.date).toLocaleDateString()
+                        : 'N/A'}{' '}
+                      by {lastReplenishment?.vendorName || 'Unknown'}
                     </span>
                   </div>
                 )}
@@ -540,7 +601,7 @@ function ItemCard({
         </AnimatePresence>
 
         {/* Action Buttons */}
-        <div className='grid grid-cols-2 gap-2 mt-4'>
+        <div className='grid grid-cols-3 gap-2 mt-4'>
           <motion.button
             type='button'
             className='py-2 px-4 bg-green-500/10 text-green-500 rounded-lg text-sm font-medium hover:bg-green-500 hover:text-white hover:neon-glow transition-all duration-300'
@@ -548,22 +609,36 @@ function ItemCard({
             whileTap={{ scale: 0.98 }}
             onClick={(e) => {
               e.stopPropagation();
-              onQuantityUpdate('replenishment');
+              onQuantityUpdate('REPLENISHMENT');
             }}
           >
             Restock
           </motion.button>
           <motion.button
             type='button'
-            className='py-2 px-4 bg-blue-500/10 text-blue-500 rounded-lg text-sm font-medium hover:bg-blue-500 hover:text-white hover:neon-glow transition-all duration-300'
+            className='py-2 px-4 bg-blue-500/10 text-blue-500 rounded-lg text-sm font-medium hover:bg-blue-500 hover:text-white hover:neon-glow transition-all duration-300 flex items-center justify-center gap-1'
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={(e) => {
               e.stopPropagation();
-              onQuantityUpdate('order');
+              onViewDetails();
             }}
           >
-            Order Out
+            <Eye size={14} />
+            Details
+          </motion.button>
+          <motion.button
+            type='button'
+            className='py-2 px-4 bg-red-500/10 text-red-500 rounded-lg text-sm font-medium hover:bg-red-500 hover:text-white hover:neon-glow transition-all duration-300 flex items-center justify-center gap-1'
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          >
+            <Trash2 size={14} />
+            Delete
           </motion.button>
         </div>
       </div>
@@ -594,23 +669,28 @@ function StockStatusBadge({ status }: { status: string }) {
 function InventoryStats({ items }: { items: any[] }) {
   const stats = {
     total: items.length,
-    inStock: items.filter((item) => item.quantity > item.threshold).length,
-    lowStock: items.filter(
-      (item) => item.quantity <= item.threshold && item.quantity > 0
+    inStock: items.filter(
+      (item) => (item?.quantity || 0) > (item?.threshold || 0)
     ).length,
-    outOfStock: items.filter((item) => item.quantity === 0).length,
+    lowStock: items.filter(
+      (item) =>
+        (item?.quantity || 0) <= (item?.threshold || 0) &&
+        (item?.quantity || 0) > 0
+    ).length,
+    outOfStock: items.filter((item) => (item?.quantity || 0) === 0).length,
     totalValue: items.reduce((sum, item) => {
-      const itemValue = item.updateHistory.reduce(
+      const itemValue = (item?.updateHistory || []).reduce(
         (histSum: number, update: any) =>
-          histSum + update.quantityUpdated * update.cost,
+          histSum + (update?.quantityUpdated || 0) * (update?.cost || 0),
         0
       );
       return sum + itemValue;
     }, 0),
-    totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
+    totalQuantity: items.reduce((sum, item) => sum + (item?.quantity || 0), 0),
     avgThreshold:
       items.length > 0
-        ? items.reduce((sum, item) => sum + item.threshold, 0) / items.length
+        ? items.reduce((sum, item) => sum + (item?.threshold || 0), 0) /
+          items.length
         : 0,
   };
 
@@ -678,10 +758,12 @@ function StatCard({
 function NewItemModal({
   onClose,
   onSubmit,
+  vendors,
   loading,
 }: {
   onClose: () => void;
   onSubmit: (item: any) => void;
+  vendors: Vendor[];
   loading: boolean;
 }) {
   const [formData, setFormData] = useState({
@@ -689,6 +771,8 @@ function NewItemModal({
     quantity: 0,
     threshold: 10,
     image: '',
+    vendorId: '',
+    vendorName: '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -722,6 +806,7 @@ function NewItemModal({
         </div>
 
         <form onSubmit={handleSubmit} className='space-y-6'>
+          {/* Item Name */}
           <div>
             <label className='block text-sm font-medium text-foreground mb-2'>
               Item Name *
@@ -738,6 +823,36 @@ function NewItemModal({
             />
           </div>
 
+          {/* Vendor Dropdown */}
+          <div>
+            <label className='block text-sm font-medium text-foreground mb-2'>
+              Vendor/Supplier *
+            </label>
+            <select
+              required
+              value={formData.vendorId}
+              onChange={(e) => {
+                const selectedVendor = vendors.find(
+                  (v) => v.vendorId === e.target.value
+                );
+                setFormData((prev) => ({
+                  ...prev,
+                  vendorId: selectedVendor?.vendorId || '',
+                  vendorName: selectedVendor?.name || '',
+                }));
+              }}
+              className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
+            >
+              <option value=''>Select Vendor</option>
+              {vendors.map((vendor) => (
+                <option key={vendor.vendorId} value={vendor.vendorId}>
+                  {vendor.vendorId} - {vendor.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Quantity and Threshold */}
           <div className='grid grid-cols-2 gap-4'>
             <div>
               <label className='block text-sm font-medium text-foreground mb-2'>
@@ -780,6 +895,7 @@ function NewItemModal({
             </div>
           </div>
 
+          {/* Image URL */}
           <div>
             <label className='block text-sm font-medium text-foreground mb-2'>
               Image URL
@@ -795,6 +911,7 @@ function NewItemModal({
             />
           </div>
 
+          {/* Buttons */}
           <div className='flex gap-4 pt-4'>
             <motion.button
               type='button'
@@ -834,19 +951,23 @@ function QuantityUpdateModal({
   type,
   onClose,
   onSubmit,
+  vendors,
   loading,
 }: {
   item: any;
-  type: 'replenishment' | 'order';
+  type: 'REPLENISHMENT' | 'ORDER' | 'ORDERREVERT';
+  vendors: Vendor[];
   onClose: () => void;
   onSubmit: (data: {
-    quantityChange: number;
+    vendorId: string;
     vendorName: string;
+    quantityChange: number;
     cost: number;
   }) => void;
   loading: boolean;
 }) {
   const [formData, setFormData] = useState({
+    vendorId: '',
     quantityChange: 0,
     vendorName: '',
     cost: 0,
@@ -855,14 +976,26 @@ function QuantityUpdateModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const quantityChange =
-      type === 'replenishment'
-        ? formData.quantityChange
-        : -formData.quantityChange;
+      type === 'REPLENISHMENT'
+        ? formData.quantityChange || 0
+        : -(formData.quantityChange || 0);
     onSubmit({
       ...formData,
       quantityChange,
     });
   };
+
+  useEffect(() => {
+    const handlePress: any = (event: React.KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+
+    document.addEventListener('keydown', handlePress);
+
+    return () => {
+      document.removeEventListener('keydown', handlePress);
+    };
+  }, [onClose]);
 
   return (
     <motion.div
@@ -881,44 +1014,71 @@ function QuantityUpdateModal({
       >
         <div className='flex justify-between items-center mb-6'>
           <h2 className='text-2xl font-bold text-primary'>
-            {type === 'replenishment' ? 'Restock Item' : 'Order Out Item'}
+            {type === 'REPLENISHMENT' ? 'Restock Item' : 'Order Out Item'}
           </h2>
           <button
             onClick={onClose}
-            className='text-muted-foreground hover:text-foreground transition-colors'
+            className='text-muted-foreground hover:text-foreground transition-colors flex items-center space-x-2'
           >
-            ✕
+            <span className='keyboard-key'>Esc</span>
+            <span>✕</span>
           </button>
         </div>
 
         <div className='mb-6 p-4 bg-background/50 rounded-lg'>
-          <h3 className='font-semibold text-foreground'>{item.name}</h3>
+          <h3 className='font-semibold text-foreground'>
+            {item?.name || 'Unknown Item'}
+          </h3>
           <p className='text-sm text-muted-foreground'>
-            Current Stock: {item.quantity}
+            Current Stock: {item?.quantity || 0}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className='space-y-6'>
           <div>
             <label className='block text-sm font-medium text-foreground mb-2'>
-              {type === 'replenishment'
-                ? 'Vendor/Supplier Name *'
+              {type === 'REPLENISHMENT'
+                ? 'Vendor/Supplier *'
                 : 'Customer/Order Reference *'}
             </label>
-            <input
-              type='text'
-              required
-              value={formData.vendorName}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, vendorName: e.target.value }))
-              }
-              className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
-              placeholder={
-                type === 'replenishment'
-                  ? 'Enter vendor name'
-                  : 'Enter customer/order reference'
-              }
-            />
+            {type === 'REPLENISHMENT' ? (
+              <select
+                required
+                value={formData.vendorId}
+                onChange={(e) => {
+                  const selectedVendor = vendors.find(
+                    (v) => v.vendorId === e.target.value
+                  );
+                  setFormData((prev) => ({
+                    ...prev,
+                    vendorId: selectedVendor?.vendorId || '',
+                    vendorName: selectedVendor?.name || '',
+                  }));
+                }}
+                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
+              >
+                <option value=''>Select Vendor</option>
+                {vendors.map((vendor) => (
+                  <option key={vendor.vendorId} value={vendor.vendorId}>
+                    {vendor.vendorId} - {vendor.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type='text'
+                required
+                value={formData.vendorName}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    vendorName: e.target.value,
+                  }))
+                }
+                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
+                placeholder='Enter customer/order reference'
+              />
+            )}
           </div>
 
           <div className='grid grid-cols-2 gap-4'>
@@ -930,7 +1090,7 @@ function QuantityUpdateModal({
                 type='number'
                 required
                 min='1'
-                max={type === 'order' ? item.quantity : undefined}
+                max={type === 'ORDER' ? item?.quantity || 0 : undefined}
                 value={formData.quantityChange}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -965,25 +1125,29 @@ function QuantityUpdateModal({
             </div>
           </div>
 
-          {type === 'order' && formData.quantityChange > item.quantity && (
-            <div className='text-sm text-destructive'>
-              Cannot order more than available stock ({item.quantity})
-            </div>
-          )}
+          {type === 'ORDER' &&
+            formData.quantityChange > (item?.quantity || 0) && (
+              <div className='text-sm text-destructive'>
+                Cannot order more than available stock ({item?.quantity || 0})
+              </div>
+            )}
 
           <div className='bg-background/50 rounded-lg p-4'>
             <div className='flex justify-between text-sm'>
               <span>Total Cost:</span>
               <span className='font-semibold'>
-                ₹{(formData.quantityChange * formData.cost).toFixed(2)}
+                ₹
+                {(
+                  (formData.quantityChange || 0) * (formData.cost || 0)
+                ).toFixed(2)}
               </span>
             </div>
             <div className='flex justify-between text-sm mt-1'>
               <span>New Stock Level:</span>
               <span className='font-semibold'>
-                {type === 'replenishment'
-                  ? item.quantity + formData.quantityChange
-                  : item.quantity - formData.quantityChange}
+                {type === 'REPLENISHMENT'
+                  ? (item?.quantity || 0) + (formData.quantityChange || 0)
+                  : (item?.quantity || 0) - (formData.quantityChange || 0)}
               </span>
             </div>
           </div>
@@ -1002,7 +1166,7 @@ function QuantityUpdateModal({
             <motion.button
               type='submit'
               className={`flex-1 py-3 px-6 rounded-lg hover:neon-glow transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
-                type === 'replenishment'
+                type === 'REPLENISHMENT'
                   ? 'bg-green-500 text-white hover:bg-green-600'
                   : 'bg-blue-500 text-white hover:bg-blue-600'
               }`}
@@ -1010,7 +1174,8 @@ function QuantityUpdateModal({
               whileTap={{ scale: loading ? 1 : 0.98 }}
               disabled={
                 loading ||
-                (type === 'order' && formData.quantityChange > item.quantity)
+                (type === 'ORDER' &&
+                  formData.quantityChange > (item?.quantity || 0))
               }
             >
               {loading ? (
@@ -1018,7 +1183,7 @@ function QuantityUpdateModal({
                   <Loader className='animate-spin h-4 w-4 text-white' />
                   Processing...
                 </div>
-              ) : type === 'replenishment' ? (
+              ) : type === 'REPLENISHMENT' ? (
                 'Restock'
               ) : (
                 'Order Out'
@@ -1026,6 +1191,347 @@ function QuantityUpdateModal({
             </motion.button>
           </div>
         </form>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function DeleteConfirmationModal({
+  item,
+  onClose,
+  onConfirm,
+  loading,
+}: {
+  item: any;
+  onClose: () => void;
+  onConfirm: () => void;
+  loading: boolean;
+}) {
+  return (
+    <motion.div
+      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50'
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.div
+        className='bg-card border border-border rounded-2xl p-8 w-full max-w-md'
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className='text-center'>
+          <div className='mb-6'>
+            <div className='mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4'>
+              <Trash2 className='w-8 h-8 text-red-600' />
+            </div>
+            <h2 className='text-2xl font-bold text-foreground mb-2'>
+              Delete Item
+            </h2>
+            <p className='text-muted-foreground'>
+              Are you sure you want to delete "{item?.name || 'this item'}"?
+            </p>
+            <p className='text-sm text-red-500 mt-2'>
+              This action cannot be undone and will permanently delete all
+              history for this item.
+            </p>
+          </div>
+
+          <div className='bg-background/50 rounded-lg p-4 mb-6'>
+            <div className='text-sm space-y-1'>
+              <div className='flex justify-between'>
+                <span>Current Stock:</span>
+                <span className='font-medium'>{item?.quantity || 0}</span>
+              </div>
+              <div className='flex justify-between'>
+                <span>Total Updates:</span>
+                <span className='font-medium'>
+                  {(item?.updateHistory || []).length}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className='flex gap-4'>
+            <motion.button
+              type='button'
+              onClick={onClose}
+              className='flex-1 py-3 px-6 border border-border text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground transition-all duration-300'
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              disabled={loading}
+            >
+              Cancel
+            </motion.button>
+            <motion.button
+              type='button'
+              onClick={onConfirm}
+              className='flex-1 py-3 px-6 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed'
+              whileHover={{ scale: loading ? 1 : 1.02 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
+              disabled={loading}
+            >
+              {loading ? (
+                <div className='flex items-center justify-center gap-2'>
+                  <Loader className='animate-spin h-4 w-4' />
+                  Deleting...
+                </div>
+              ) : (
+                'Delete Item'
+              )}
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function ViewDetailsModal({
+  item,
+  onClose,
+}: {
+  item: any;
+  onClose: () => void;
+}) {
+  const stockStatus =
+    (item?.quantity || 0) === 0
+      ? 'out-of-stock'
+      : (item?.quantity || 0) <= (item?.threshold || 0)
+      ? 'low-stock'
+      : 'in-stock';
+
+  const totalCost = (item?.updateHistory || []).reduce(
+    (sum: number, update: any) =>
+      sum + (update?.quantityUpdated || 0) * (update?.cost || 0),
+    0
+  );
+
+  const totalReplenishments = (item?.updateHistory || []).filter(
+    (update: any) => update?.updateType === 'REPLENISHMENT'
+  ).length;
+
+  const totalOrders = (item?.updateHistory || []).filter(
+    (update: any) => update?.updateType === 'ORDER'
+  ).length;
+
+  return (
+    <motion.div
+      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 hide-scrollbar'
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.div
+        className='bg-card border border-border rounded-2xl p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto'
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className='flex justify-between items-center mb-6'>
+          <h2 className='text-3xl font-bold text-primary'>Item Details</h2>
+          <button
+            onClick={onClose}
+            className='text-muted-foreground hover:text-foreground transition-colors'
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8'>
+          {/* Item Image and Basic Info */}
+          <div className='lg:col-span-1'>
+            <div className='bg-background/50 rounded-lg p-6'>
+              <div className='w-full h-48 rounded-lg overflow-hidden bg-muted/20 mb-4'>
+                <img
+                  src={
+                    item?.image ||
+                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRo6ZeL1Ntu-zwEcgRli39ynixVj9yeQtfjAw&s'
+                  }
+                  alt={item?.name || 'Item'}
+                  className='w-full h-full object-cover'
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src =
+                      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRo6ZeL1Ntu-zwEcgRli39ynixVj9yeQtfjAw&s';
+                  }}
+                />
+              </div>
+              <h3 className='text-xl font-bold text-foreground mb-2'>
+                {item?.name || 'Unknown Item'}
+              </h3>
+              <StockStatusBadge status={stockStatus} />
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div className='lg:col-span-2'>
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+              <div className='bg-background/50 rounded-lg p-4 text-center'>
+                <div className='text-2xl font-bold text-accent mb-1'>
+                  {item?.quantity || 0}
+                </div>
+                <div className='text-xs text-muted-foreground'>
+                  Current Stock
+                </div>
+              </div>
+              <div className='bg-background/50 rounded-lg p-4 text-center'>
+                <div className='text-2xl font-bold text-muted-foreground mb-1'>
+                  {item?.threshold || 0}
+                </div>
+                <div className='text-xs text-muted-foreground'>Threshold</div>
+              </div>
+              <div className='bg-background/50 rounded-lg p-4 text-center'>
+                <div className='text-2xl font-bold text-primary mb-1'>
+                  ₹{totalCost.toFixed(0)}
+                </div>
+                <div className='text-xs text-muted-foreground'>Total Value</div>
+              </div>
+              <div className='bg-background/50 rounded-lg p-4 text-center'>
+                <div className='text-2xl font-bold text-secondary mb-1'>
+                  {(item?.updateHistory || []).length}
+                </div>
+                <div className='text-xs text-muted-foreground'>
+                  Total Updates
+                </div>
+              </div>
+              <div className='bg-background/50 rounded-lg p-4 text-center'>
+                <div className='text-2xl font-bold text-green-500 mb-1'>
+                  {totalReplenishments}
+                </div>
+                <div className='text-xs text-muted-foreground'>
+                  Replenishments
+                </div>
+              </div>
+              <div className='bg-background/50 rounded-lg p-4 text-center'>
+                <div className='text-2xl font-bold text-blue-500 mb-1'>
+                  {totalOrders}
+                </div>
+                <div className='text-xs text-muted-foreground'>Orders Out</div>
+              </div>
+              <div className='bg-background/50 rounded-lg p-4 text-center'>
+                <div className='text-2xl font-bold text-muted-foreground mb-1'>
+                  {item?.lastDateOfUpdate
+                    ? new Date(item.lastDateOfUpdate).toLocaleDateString()
+                    : 'Never'}
+                </div>
+                <div className='text-xs text-muted-foreground'>
+                  Last Updated
+                </div>
+              </div>
+              <div className='bg-background/50 rounded-lg p-4 text-center'>
+                <div className='text-2xl font-bold text-chart-2 mb-1'>
+                  {Math.round(
+                    ((item?.quantity || 0) /
+                      Math.max(
+                        item?.quantity || 0,
+                        (item?.threshold || 1) * 2
+                      )) *
+                      100
+                  )}
+                  %
+                </div>
+                <div className='text-xs text-muted-foreground'>Stock Level</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Update History */}
+        <div className='bg-background/30 rounded-lg p-6'>
+          <h3 className='text-xl font-bold text-foreground mb-4'>
+            Complete Update History
+          </h3>
+
+          {(item?.updateHistory || []).length > 0 ? (
+            <div className='space-y-3 max-h-96 overflow-y-auto'>
+              {(item?.updateHistory || [])
+                .sort(
+                  (a: any, b: any) =>
+                    new Date(b?.date || 0).getTime() -
+                    new Date(a?.date || 0).getTime()
+                )
+                .map((update: any, idx: number) => (
+                  <motion.div
+                    key={idx}
+                    className='flex justify-between items-center p-4 bg-card/50 rounded-lg border border-border hover:border-primary/30 transition-all duration-300'
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                  >
+                    <div className='flex items-center gap-4'>
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          update?.updateType === 'REPLENISHMENT'
+                            ? 'bg-green-500'
+                            : 'bg-blue-500'
+                        }`}
+                      />
+                      <div>
+                        <div className='flex items-center gap-2 mb-1'>
+                          <span className='font-medium text-foreground'>
+                            {update?.vendorId || 'N/A'}:{' '}
+                            {update?.vendorName || 'Unknown'}
+                          </span>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              update?.updateType === 'REPLENISHMENT'
+                                ? 'bg-green-500/20 text-green-500'
+                                : 'bg-blue-500/20 text-blue-500'
+                            }`}
+                          >
+                            {update?.updateType || 'UNKNOWN'}
+                          </span>
+                        </div>
+                        <div className='text-sm text-muted-foreground'>
+                          {update?.date
+                            ? new Date(update.date).toLocaleString()
+                            : 'No date'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className='text-right'>
+                      <div className='font-bold text-foreground'>
+                        {update?.updateType === 'REPLENISHMENT' ? '+' : '-'}
+                        {update?.quantityUpdated || 0}
+                      </div>
+                      <div className='text-sm text-muted-foreground'>
+                        ₹{(update?.cost || 0).toFixed(2)}/unit
+                      </div>
+                      <div className='text-sm font-medium text-primary'>
+                        Total: ₹
+                        {(
+                          (update?.quantityUpdated || 0) * (update?.cost || 0)
+                        ).toFixed(2)}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+            </div>
+          ) : (
+            <div className='text-center py-8'>
+              <div className='text-4xl mb-2'>📊</div>
+              <p className='text-muted-foreground'>
+                No update history available
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className='flex justify-end mt-6'>
+          <motion.button
+            onClick={onClose}
+            className='px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:neon-glow transition-all duration-300'
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Close
+          </motion.button>
+        </div>
       </motion.div>
     </motion.div>
   );

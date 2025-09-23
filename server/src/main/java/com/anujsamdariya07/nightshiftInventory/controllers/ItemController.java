@@ -4,6 +4,7 @@ import com.anujsamdariya07.nightshiftInventory.dto.ItemRequest;
 import com.anujsamdariya07.nightshiftInventory.entity.Employee;
 import com.anujsamdariya07.nightshiftInventory.entity.Item;
 import com.anujsamdariya07.nightshiftInventory.entity.Organization;
+import com.anujsamdariya07.nightshiftInventory.entity.UpdateHistory;
 import com.anujsamdariya07.nightshiftInventory.services.EmployeeService;
 import com.anujsamdariya07.nightshiftInventory.services.ItemService;
 import com.anujsamdariya07.nightshiftInventory.services.OrganizationService;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/items")
 public class ItemController {
@@ -29,7 +30,9 @@ public class ItemController {
 
     @GetMapping
     public ResponseEntity<?> getItemsByOrgId(HttpServletRequest request) {
+        System.out.println("Get Items By OrgId");
         Employee currentUser = employeeService.getCurrentUser(request);
+        System.out.println("Current User ID: " + currentUser.getEmployeeId());
         ObjectId orgId = currentUser.getOrgId();
         return ResponseEntity.status(HttpStatus.OK).body(itemService.getItemsByOrgId(orgId));
     }
@@ -72,5 +75,11 @@ public class ItemController {
     public ResponseEntity<?> deleteItem(@PathVariable String id) {
         itemService.deleteItem(new ObjectId(id));
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @PatchMapping("/{id}/quantity")
+    public ResponseEntity<?> updateItemQuantity(@PathVariable String id, @RequestBody UpdateHistory updateHistory) {
+        UpdateHistory savedUpdateHistory = itemService.updateItemQuantityByVendor(new ObjectId(id), updateHistory);
+        return ResponseEntity.status(HttpStatus.OK).body(savedUpdateHistory);
     }
 }
