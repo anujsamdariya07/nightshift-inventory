@@ -83,6 +83,8 @@ export default function EmployeesPage() {
   }, [fetchEmployees]);
   useEffect(() => {
     if (!authUser) router.push('/');
+    else if (authUser && authUser.mustChangePassword)
+      router.push('/change-password');
   }, []);
   // Update filtered employees when filters or search term changes
   useEffect(() => {

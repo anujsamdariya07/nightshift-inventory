@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
@@ -176,5 +178,13 @@ public class AuthController {
 
         response.addHeader("Set-Cookie", deleteCookie.toString());
         return ResponseEntity.ok(Map.of("message", "Logged out successfully."));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest changePasswordRequest, HttpServletRequest request) {
+        System.out.println("Inside auth controller, password: " + changePasswordRequest.getPassword());
+        String decodedPassword = URLDecoder.decode(changePasswordRequest.getPassword(), StandardCharsets.UTF_8);
+        employeeService.changePassword(request, decodedPassword);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

@@ -77,6 +77,8 @@ export default function OrdersPage() {
   }, []);
   useEffect(() => {
     if (!authLoading && !authUser) router.push('/');
+    else if (authUser && authUser.mustChangePassword)
+      router.push('/change-password');
   }, []);
 
   useEffect(() => {

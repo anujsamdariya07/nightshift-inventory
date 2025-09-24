@@ -65,6 +65,8 @@ export default function ItemsPage() {
 
   useEffect(() => {
     if (!authUser) router.push('/');
+    else if (authUser && authUser.mustChangePassword)
+      router.push('/change-password');
   }, []);
 
   // Helper function to get stock status

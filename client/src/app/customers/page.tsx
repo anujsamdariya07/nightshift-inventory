@@ -40,6 +40,8 @@ export default function CustomersPage() {
 
   useEffect(() => {
     if (!authUser) router.push('/');
+    else if (authUser && authUser.mustChangePassword)
+      router.push('/change-password');
   }, []);
 
   // Update filtered customers when customers, filter, or search term changes

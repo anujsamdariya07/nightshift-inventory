@@ -1,5 +1,5 @@
 import { axiosInstance } from '@/lib/axios';
-import { AxiosError } from 'axios';
+import { Axios, AxiosError } from 'axios';
 import { toast } from 'sonner';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -47,8 +47,25 @@ interface AuthState {
   login: (credentials: {
     email: string;
     password: string;
-  }) => Promise<{ success: boolean; message?: string; error?: string }>;
+  }) => Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    authUser?: Employee;
+  }>;
   logout: () => Promise<void>;
+  changePassword: ({
+    password,
+    confirmPassword,
+  }: {
+    password: string;
+    confirmPassword: string;
+  }) => Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    authUser?: Employee;
+  }>;
 }
 
 interface OrgData {
@@ -155,7 +172,11 @@ const useAuthStore = create<AuthState>()(
 
           showSuccessToast({ message: response.data.message });
 
-          return { success: true, message: response.data.message };
+          return {
+            success: true,
+            message: response.data.message,
+            authUser: response.data.employee,
+          };
         } catch (error) {
           const err = error as AxiosError<{ message: string }>;
           set({
@@ -188,6 +209,42 @@ const useAuthStore = create<AuthState>()(
             message: 'Error logging out!',
             description: err.response?.data?.message || 'Something went wrong!',
           });
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      changePassword: async ({ password, confirmPassword }) => {
+        set({ loading: true, error: null });
+        try {
+          if (password !== confirmPassword) {
+            set({ error: 'The passwords must match!' });
+            showErrorToast({
+              message: 'The passwords must match!',
+              description: 'The passwords are not matching!',
+            });
+            return {
+              success: false,
+              message: 'The passwords are not matching!',
+            };
+          }
+
+          await axiosInstance.post('/auth/change-password', {
+            password,
+            confirmPassword,
+          });
+          set({ error: null });
+          return { success: true, message: 'Password changed successfully!' };
+        } catch (error) {
+          const err = error as AxiosError<{ message: string }>;
+          const msg =
+            err.response?.data.message || 'Failed to change password!';
+          showErrorToast({
+            message: 'Error while changing password!',
+            description: msg,
+          });
+          set({ error: msg });
+          return { success: false, message: msg };
         } finally {
           set({ loading: false });
         }

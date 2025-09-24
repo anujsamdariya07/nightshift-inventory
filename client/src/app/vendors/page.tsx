@@ -53,6 +53,8 @@ export default function VendorsPage() {
   }, [fetchVendors]);
   useEffect(() => {
     if (!authUser) router.push('/');
+    else if (authUser && authUser.mustChangePassword)
+      router.push('/change-password');
   }, []);
 
   // Filter vendors based on search and filter criteria
@@ -650,8 +652,8 @@ export function NewVendorModal({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const pathName = usePathname()
-  const router = useRouter()
+  const pathName = usePathname();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -670,7 +672,7 @@ export function NewVendorModal({
           status: 'active',
           specialities: [] as string[],
         });
-        if (pathName !== '/vendors') router.push('/vendors')
+        if (pathName !== '/vendors') router.push('/vendors');
         onClose();
       }
     } catch (error) {

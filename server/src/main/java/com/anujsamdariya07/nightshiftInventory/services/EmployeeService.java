@@ -11,6 +11,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -24,7 +26,7 @@ public class EmployeeService {
 
     public Employee getCurrentUser(HttpServletRequest request) {
         String userId = CookieUtil.getCookieValue(request, "loggedInUser");
-        System.out.println(userId);
+//        System.out.println(userId);
 
         if (userId == null || userId.isEmpty()) {
             throw new RuntimeException("User not logged in!");
@@ -47,7 +49,7 @@ public class EmployeeService {
 //        }
 //        return employeeById.get();
         Optional<Employee> employee = employeeRepository.findById(id);
-        System.out.println("employee: " + employee.isPresent());
+//        System.out.println("employee: " + employee.isPresent());
         return employee.get();
     }
 
@@ -84,6 +86,7 @@ public class EmployeeService {
 
     public Employee saveNewEmployee(Employee employee) {
         try {
+            System.out.println("Save New Employee!");
             employee.setPassword(passwordEncoder.encode("pwd"));
             employee.setRole(Employee.Role.WORKER);
             employee.setEmployeeId(generateEmployeeId(employee.getOrgId()));
@@ -103,7 +106,7 @@ public class EmployeeService {
         System.out.println("Email: " + email + ", Password: " + password);
 
         Optional<Employee> employeeByEmail = employeeRepository.findByEmail(email);
-        System.out.println("employeeByEmail: " + employeeByEmail);
+        System.out.println("employeeByEmail: " + employeeByEmail.get());
         if (employeeByEmail.isPresent()) {
             Employee employee = employeeByEmail.get();
 
@@ -156,5 +159,16 @@ public class EmployeeService {
 
     public void deleteEmployeeById(ObjectId id) {
         employeeRepository.deleteById(id);
+    }
+
+    public void changePassword(HttpServletRequest request, String password) {
+        String decodedPassword = URLDecoder.decode(password, StandardCharsets.UTF_8);
+        System.out.println("Inside employee service, password: " + decodedPassword);
+        Employee currentUser = getCurrentUser(request);
+        System.out.println("Current User's ID: " + currentUser.getEmployeeId());
+        System.out.println("New Password: " + decodedPassword);
+        currentUser.setPassword(passwordEncoder.encode(decodedPassword));
+        currentUser.setMustChangePassword(false);
+        employeeRepository.save(currentUser);
     }
 }
