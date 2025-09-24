@@ -61,7 +61,7 @@ const InventoryDashboard = () => {
         attendance: 95,
         hireDate: '2017-06-12',
         yearsOfService: 8,
-        manager: null,
+        manager: '',
         skills: ['Inventory Management', 'Leadership'],
         messages: [],
       },
@@ -84,7 +84,7 @@ const InventoryDashboard = () => {
         attendance: 89,
         hireDate: '2022-02-10',
         yearsOfService: 3,
-        manager: null,
+        manager: '',
         skills: ['Data Entry', 'Stock Auditing'],
         messages: [],
       },
@@ -107,7 +107,7 @@ const InventoryDashboard = () => {
         attendance: 92,
         hireDate: '2023-07-15',
         yearsOfService: 2,
-        manager: null,
+        manager: '',
         skills: ['Logistics', 'Packing'],
         messages: [],
       },
@@ -130,7 +130,7 @@ const InventoryDashboard = () => {
         attendance: 70,
         hireDate: '2019-05-01',
         yearsOfService: 6,
-        manager: null,
+        manager: '',
         skills: ['Quality Assurance', 'Auditing'],
         messages: [],
       },
@@ -698,7 +698,7 @@ const InventoryDashboard = () => {
               transition={{ duration: 0.6 }}
             >
               <h1 className='text-4xl md:text-5xl font-bold font-mono text-primary neon-text'>
-                Dashboard
+                {authUser?.orgName}
               </h1>
               <p className='text-lg text-muted-foreground mt-1'>
                 Overview of your inventory management system
@@ -910,65 +910,68 @@ const InventoryDashboard = () => {
               </motion.div>
 
               {/* Low Stock Items */}
-              <motion.div
-                className='bg-card/30 backdrop-blur-sm border border-border rounded-2xl p-6'
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-              >
-                <div className='flex items-center justify-between mb-6'>
-                  <div className='flex items-center gap-2'>
-                    <Package className='w-5 h-5 text-chart-2' />
-                    <h3 className='text-xl font-bold text-foreground'>
-                      Items Requiring Attention
-                    </h3>
+              {lowStockItems.length > 0 && (
+                <motion.div
+                  className='bg-card/30 backdrop-blur-sm border border-border rounded-2xl p-6'
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}
+                >
+                  (
+                  <div className='flex items-center justify-between mb-6'>
+                    <div className='flex items-center gap-2'>
+                      <Package className='w-5 h-5 text-chart-2' />
+                      <h3 className='text-xl font-bold text-foreground'>
+                        Items Requiring Attention
+                      </h3>
+                    </div>
                   </div>
-                </div>
-
-                <div className='grid gap-4'>
-                  {lowStockItems.slice(0, 4).map((item, index) => (
-                    <motion.div
-                      key={item.id}
-                      className='flex items-center justify-between p-4 bg-background/50 rounded-xl'
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.7 + index * 0.1 }}
-                    >
-                      <div className='flex-1'>
-                        <p className='font-medium text-foreground'>
-                          {item.name}
-                        </p>
-                      </div>
-                      <div className='text-right'>
-                        <p
-                          className={`font-bold ${
-                            item.quantity === 0
-                              ? 'text-destructive'
-                              : 'text-chart-2'
-                          }`}
-                        >
-                          {item.quantity} / {item.threshold}
-                        </p>
-                        <div className='w-20 h-2 bg-muted/20 rounded-full mt-1'>
-                          <div
-                            className={`h-full rounded-full ${
-                              item.quantity === 0
-                                ? 'bg-destructive'
-                                : 'bg-chart-2'
-                            }`}
-                            style={{
-                              width: `${Math.max(
-                                (item.quantity / item.threshold) * 100,
-                                5
-                              )}%`,
-                            }}
-                          />
+                  )
+                  <div className='grid gap-4'>
+                    {lowStockItems.slice(0, 4).map((item, index) => (
+                      <motion.div
+                        key={item.id}
+                        className='flex items-center justify-between p-4 bg-background/50 rounded-xl'
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.7 + index * 0.1 }}
+                      >
+                        <div className='flex-1'>
+                          <p className='font-medium text-foreground'>
+                            {item.name}
+                          </p>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
+                        <div className='text-right'>
+                          <p
+                            className={`font-bold ${
+                              item.quantity === 0
+                                ? 'text-destructive'
+                                : 'text-chart-2'
+                            }`}
+                          >
+                            {item.quantity} / {item.threshold}
+                          </p>
+                          <div className='w-20 h-2 bg-muted/20 rounded-full mt-1'>
+                            <div
+                              className={`h-full rounded-full ${
+                                item.quantity === 0
+                                  ? 'bg-destructive'
+                                  : 'bg-chart-2'
+                              }`}
+                              style={{
+                                width: `${Math.max(
+                                  (item.quantity / item.threshold) * 100,
+                                  5
+                                )}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
             </div>
 
             {/* Right Column - Quick Actions & Summary */}

@@ -37,6 +37,8 @@ public class Employee {
     @JsonSerialize(using = ToStringSerializer.class)
     private ObjectId orgId;
 
+    private String orgName;
+
     private String employeeId;
 
     private String name;
@@ -82,8 +84,9 @@ public class Employee {
         ).getYears();
     }
 
-    @DBRef
-    private Employee manager;
+    private String manager;
+
+    private String managerId;
 
     private ArrayList<String> skills;
 

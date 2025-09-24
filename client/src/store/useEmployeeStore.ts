@@ -26,6 +26,7 @@ export interface Message {
 export interface Employee {
   id: string;
   orgId: string;
+  orgName?: string;
   employeeId: string;
   name: string;
   email: string;
@@ -42,7 +43,8 @@ export interface Employee {
   attendance: number;
   hireDate: string;
   yearsOfService: number;
-  manager: Employee | null;
+  manager?: string;
+  managerId?: string;
   skills: string[];
   messages: Message[];
 }
@@ -55,6 +57,9 @@ export interface EmployeeCreateData {
   location?: string;
   experience?: number;
   salary?: number;
+  role: 'ADMIN' | 'WORKER' | 'MANAGER'
+  manager?: string;
+  managerId?: string;
   status?: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
   mustChangePassword?: boolean;
   skills?: string[];

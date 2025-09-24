@@ -46,8 +46,11 @@ public class EmployeeController {
         employee.setOrgId(orgId);
         Employee savedNewEmployee = employeeService.saveNewEmployee(employee);
         Optional<Organization> organization = organizationService.findOrgById(orgId);
-        organization.ifPresent(value -> value.getEmployeeDetails().add(savedNewEmployee));
+        Employee finalSavedNewEmployee = savedNewEmployee;
+        organization.ifPresent(value -> value.getEmployeeDetails().add(finalSavedNewEmployee));
         organizationService.saveOrganization(organization.get());
+        savedNewEmployee.setOrgName(organization.get().getName());
+        savedNewEmployee = employeeService.saveNewEmployee(savedNewEmployee);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(savedNewEmployee);
     }
