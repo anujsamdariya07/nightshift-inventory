@@ -19,7 +19,6 @@ import {
   Bell,
   X,
 } from 'lucide-react';
-import Link from 'next/link';
 import useOrderStore, { Order, OrderCreateData } from '@/store/useOrderStore';
 import useEmployeeStore, { Employee } from '@/store/useEmployeeStore';
 import useItemStore, { Item } from '@/store/useItemStore';
@@ -28,9 +27,9 @@ import useCustomerStore, { Customer } from '@/store/useCustomerStore';
 import { Navbar } from '@/components/navbar';
 import useAuthStore from '@/store/useAuthStore';
 import { usePathname, useRouter } from 'next/navigation';
-import { NewItemModal } from '../items/page';
-import { NewOrderModal } from '../orders/page';
-import { NewVendorModal } from '../vendors/page';
+import { NewVendorModal } from '@/components/NewVendorModal';
+import { NewOrderModal } from '@/components/NewOrderModal';
+import { NewItemModal } from '@/components/NewItemModal';
 
 const InventoryDashboard = () => {
   // Sample data - matches your existing structure
