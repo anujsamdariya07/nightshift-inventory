@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  server:
+    image: anujsamdariya07/nightshift-server:latest
+    container_name: nightshift-server
+    ports:
+      - "8080:8080"
+
+  client:
+    image: anujsamdariya07/nightshift-client:latest
+    container_name: nightshift-client
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
