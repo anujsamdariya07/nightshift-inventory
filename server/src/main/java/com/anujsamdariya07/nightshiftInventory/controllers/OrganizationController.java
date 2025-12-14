@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "https://nightshift-inventory-client.onrender.com/")
 @RestController
 @RequestMapping("/api/organizations")
 public class OrganizationController {
