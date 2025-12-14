@@ -1,7 +1,7 @@
 # eclipse-temurin - high performance java runtime
 # 17-jdk - jdk17
 # alpine - meaning that the application will run in alpine linux which is good for creating very small docker images
-FROM eclipse-temurin:17-jdk-alpine AS build
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
