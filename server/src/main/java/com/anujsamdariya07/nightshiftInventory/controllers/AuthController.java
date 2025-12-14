@@ -23,7 +23,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 
-@CrossOrigin(origins = "https://nightshift-inventory-client.onrender.com/", allowCredentials = "true")
+@CrossOrigin(origins = "https://nightshift-inventory-client.onrender.com", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "https://nightshift-inventory-client.onrender.com/")
+@CrossOrigin(origins = "https://nightshift-inventory-client.onrender.com")
 @RestController
 @RequestMapping("/api/performance-reviews")
 public class PerformanceReviewController {
