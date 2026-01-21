@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { Vendor } from "@/store/useVendorStore";
-import { motion } from "framer-motion";
-import { Loader } from "lucide-react";
-import { useState } from "react";
+import { Vendor } from '@/store/useVendorStore';
+import { motion } from 'framer-motion';
+import { Loader } from 'lucide-react';
+import { useState } from 'react';
 
 export function NewItemModal({
   onClose,

@@ -38,7 +38,7 @@ export default function LoginPage() {
       setTimeout(() => setShowToast(false), 3000);
       setFormData({ email: '', password: '' });
 
-      if (res.authUser?.mustChangePassword) router.push('/change-password')
+      if (res.authUser?.mustChangePassword) router.push('/change-password');
       else router.push('/dashboard');
     } else {
       setError(res.error || 'Login failed. Please try again.');

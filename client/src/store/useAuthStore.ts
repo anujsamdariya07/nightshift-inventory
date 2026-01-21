@@ -42,12 +42,9 @@ interface AuthState {
   setAuthUser: (user: Employee | null) => void;
   checkAuth: () => Promise<void>;
   signUp: (
-    orgData: OrgData
+    orgData: OrgData,
   ) => Promise<{ success: boolean; message?: string; error?: string }>;
-  login: (credentials: {
-    email: string;
-    password: string;
-  }) => Promise<{
+  login: (credentials: { email: string; password: string }) => Promise<{
     success: boolean;
     message?: string;
     error?: string;
@@ -100,7 +97,7 @@ const useAuthStore = create<AuthState>()(
             '/auth/current',
             {
               withCredentials: true,
-            }
+            },
           );
           console.log(1);
           console.log('FINE');
@@ -199,7 +196,7 @@ const useAuthStore = create<AuthState>()(
           await axiosInstance.post(
             '/auth/logout',
             {},
-            { withCredentials: true }
+            { withCredentials: true },
           );
           set({ authUser: null, organization: null });
           showSuccessToast({ message: 'Logged out successfully!' });
@@ -256,8 +253,8 @@ const useAuthStore = create<AuthState>()(
         authUser: state.authUser,
         organization: state.organization,
       }),
-    }
-  )
+    },
+  ),
 );
 
 export default useAuthStore;

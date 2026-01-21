@@ -57,7 +57,7 @@ export interface EmployeeCreateData {
   location?: string;
   experience?: number;
   salary?: number;
-  role: 'ADMIN' | 'WORKER' | 'MANAGER'
+  role: 'ADMIN' | 'WORKER' | 'MANAGER';
   manager?: string;
   managerId?: string;
   status?: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';

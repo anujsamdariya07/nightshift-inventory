@@ -196,9 +196,24 @@ export default function ContactPage() {
                 </h3>
                 <div className='flex gap-4'>
                   {[
-                    { name: 'Twitter', icon: Twitter, color: 'primary', href: 'https://x.com/anujsamdariya07' },
-                    { name: 'LinkedIn', icon: Linkedin, color: 'secondary', href: 'https://www.linkedin.com/in/anuj-samdariya-569162254/' },
-                    { name: 'GitHub', icon: Github, color: 'accent', href: 'https://github.com/anujsamdariya07/' },
+                    {
+                      name: 'Twitter',
+                      icon: Twitter,
+                      color: 'primary',
+                      href: 'https://x.com/anujsamdariya07',
+                    },
+                    {
+                      name: 'LinkedIn',
+                      icon: Linkedin,
+                      color: 'secondary',
+                      href: 'https://www.linkedin.com/in/anuj-samdariya-569162254/',
+                    },
+                    {
+                      name: 'GitHub',
+                      icon: Github,
+                      color: 'accent',
+                      href: 'https://github.com/anujsamdariya07/',
+                    },
                   ].map((social) => (
                     <motion.a
                       key={social.name}
@@ -208,7 +223,7 @@ export default function ContactPage() {
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <social.icon/>
+                      <social.icon />
                     </motion.a>
                   ))}
                 </div>

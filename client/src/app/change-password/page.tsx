@@ -49,7 +49,7 @@ export default function ChangePasswordPage() {
       setMessage(res.message || 'Password changed successfully!');
       setTimeout(() => setShowToast(false), 3000);
       setFormData({ password: '', confirmPassword: '' });
-      
+
       // Redirect to dashboard after successful password change
       setTimeout(() => {
         router.push('/dashboard');
@@ -68,7 +68,7 @@ export default function ChangePasswordPage() {
     if (!authUser) {
       router.push('/login');
     } else if (authUser && !authUser.mustChangePassword) {
-      router.push('/dashboard')
+      router.push('/dashboard');
     }
   }, [authUser]);
 
@@ -194,7 +194,9 @@ export default function ChangePasswordPage() {
 
               <motion.button
                 type='submit'
-                disabled={loading || formData.password !== formData.confirmPassword}
+                disabled={
+                  loading || formData.password !== formData.confirmPassword
+                }
                 className={`w-full py-3 rounded-lg font-semibold transition-all duration-300
                   ${
                     loading || formData.password !== formData.confirmPassword

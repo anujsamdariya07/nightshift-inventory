@@ -1,9 +1,9 @@
-import { Customer } from "@/store/useCustomerStore";
-import { Item } from "@/store/useItemStore";
-import { Order, OrderCreateData, OrderItem } from "@/store/useOrderStore";
-import { AnimatePresence, motion } from "framer-motion";
-import { Loader } from "lucide-react";
-import { useState } from "react";
+import { Customer } from '@/store/useCustomerStore';
+import { Item } from '@/store/useItemStore';
+import { Order, OrderCreateData, OrderItem } from '@/store/useOrderStore';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Loader } from 'lucide-react';
+import { useState } from 'react';
 
 export function NewOrderModal({
   isOpen,

@@ -633,7 +633,6 @@ function StatCard({
   );
 }
 
-
 function EditVendorModal({
   isOpen,
   vendor,
