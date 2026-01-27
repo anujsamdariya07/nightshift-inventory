@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-@CrossOrigin(origins = "https://nightshift-inventory-client.onrender.com")
+@CrossOrigin(origins = {"http://localhost:3000", "https://nightshift-inventory-client.onrender.com"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {

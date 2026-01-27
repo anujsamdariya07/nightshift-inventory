@@ -23,7 +23,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 
-@CrossOrigin(origins = "https://nightshift-inventory-client.onrender.com", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:3000", "https://nightshift-inventory-client.onrender.com"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -81,6 +81,7 @@ public class AuthController {
                             .orgId(organization.getId())
                             .employeeId("ADMIN-" + System.currentTimeMillis())
                             .name(request.getOrgName() + " Admin")
+                            .orgName(request.getOrgName())
                             .email(request.getOrgEmail())
                             .password(request.getAdminPassword())
                             .mustChangePassword(true)
@@ -95,6 +96,7 @@ public class AuthController {
                             .salary(new BigDecimal("0.00"))
                             .skills(new ArrayList<>())
                             .performance(new ArrayList<>())
+                            .messages(new ArrayList<>())
                             .build()
             );
 
@@ -122,21 +124,27 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request) {
+        System.out.println("Starting login process!");
+        System.out.println("Getting email and password!");
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
 
         if (email == null || password == null) {
+            System.out.println("Either of email or password is null!");
             return new ResponseEntity<>("Email or password not provided!", HttpStatus.NO_CONTENT);
         }
 
+        System.out.println("Calling Service Function!");
         Optional<Employee> employee = employeeService.loginEmployee(
                 email,
                 password
         );
 
         if (employee.isPresent()) {
+            System.out.println("Employee is present!");
             Employee e = employee.get();
 
+            System.out.println("Generating response cookie!");
             ResponseCookie userCookie = ResponseCookie.from("loggedInUser", e.getId().toHexString())
                     .httpOnly(true)
                     .secure(true) // true in production with https
@@ -145,6 +153,7 @@ public class AuthController {
                     .maxAge(24 * 60 * 60)
                     .build();
 
+            System.out.println("Adding response cookie to header!");
             response.addHeader(HttpHeaders.SET_COOKIE, userCookie.toString());
 
             // Sanitize the response (don't return password)
@@ -156,6 +165,7 @@ public class AuthController {
 //                    e.getRole()
 //            ));
 //            Employee currentUser = employeeService.getCurrentUser(request);
+
             Optional<Organization> organization = organizationService.findOrgById(employee.get().getOrgId());
             LoginResponse loginResponse = new LoginResponse(organization.get(), employee.get(), "Logged in successfully!");
             return ResponseEntity.status(HttpStatus.OK).body(loginResponse);

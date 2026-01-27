@@ -130,13 +130,13 @@ export function Navbar() {
                       <button className='flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-accent transition-colors focus:outline-none'>
                         {/* Avatar Circle */}
                         <div className='h-8 w-8 flex items-center justify-center rounded-full bg-primary text-background font-semibold shadow'>
-                          {authUser.name.charAt(0).toUpperCase()}
+                          {authUser && authUser?.name.charAt(0).toUpperCase()}
                         </div>
                         {/* Greeting */}
                         <span className='text-sm font-medium text-muted-foreground'>
                           Hi,{' '}
                           <span className='text-primary font-semibold'>
-                            {authUser.name.split(' ')[0]}
+                            {authUser?.name.split(' ')[0]}
                           </span>
                         </span>
                       </button>

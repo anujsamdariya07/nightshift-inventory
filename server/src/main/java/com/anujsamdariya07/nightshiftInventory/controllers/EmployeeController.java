@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-@CrossOrigin(origins = "https://nightshift-inventory-client.onrender.com")
+@CrossOrigin(origins = {"http://localhost:3000", "https://nightshift-inventory-client.onrender.com"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/employees")
 public class EmployeeController {
@@ -42,8 +42,10 @@ public class EmployeeController {
     public ResponseEntity<?> createEmployee(@RequestBody Employee employee, HttpServletRequest request) {
         Employee currentUser = employeeService.getCurrentUser(request);
         ObjectId orgId = currentUser.getOrgId();
+        String orgName = currentUser.getOrgName();
         employee.setId(null);
         employee.setOrgId(orgId);
+        employee.setOrgName(orgName);
         Employee savedNewEmployee = employeeService.saveNewEmployee(employee);
         Optional<Organization> organization = organizationService.findOrgById(orgId);
         Employee finalSavedNewEmployee = savedNewEmployee;

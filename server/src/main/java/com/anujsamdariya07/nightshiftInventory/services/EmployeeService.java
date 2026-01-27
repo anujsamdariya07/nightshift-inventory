@@ -101,6 +101,7 @@ public class EmployeeService {
     }
 
     public Optional<Employee> loginEmployee(String email, String password) {
+        System.out.println("Starting login employee service!");
         if (email == null || password == null) return Optional.empty();
 
         System.out.println("Email: " + email + ", Password: " + password);
