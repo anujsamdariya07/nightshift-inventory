@@ -13,7 +13,6 @@ import { Navbar } from '@/components/navbar';
 import { Loader } from 'lucide-react';
 import useAuthStore from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
 import { NewEmployeeModal } from '@/components/NewEmployeeModal';
 
 const statusColors = {
@@ -47,6 +46,7 @@ export default function EmployeesPage() {
     error,
     fetchEmployees,
     createEmployee,
+    updateEmployee,
     deleteEmployee,
   } = useEmployeeStore();
 
@@ -57,13 +57,17 @@ export default function EmployeesPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [showNewEmployeeModal, setShowNewEmployeeModal] = useState(false);
-  const { authUser } = useAuthStore();
+  const { authUser, checkAuth } = useAuthStore();
   const router = useRouter();
   // Inside EmployeesPage component
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(
     null
   );
+  const [showEditEmployeeModal, setShowEditEmployeeModal] = useState(false);
+  const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
+  const [showViewDetailsModal, setShowViewDetailsModal] = useState(false);
+  const [employeeToView, setEmployeeToView] = useState<Employee | null>(null);
 
   const handleDeleteClick = (employee: Employee) => {
     setEmployeeToDelete(employee);
@@ -82,8 +86,9 @@ export default function EmployeesPage() {
   useEffect(() => {
     fetchEmployees();
   }, [fetchEmployees]);
+
   useEffect(() => {
-    if (!authUser) router.push('/');
+    if (!authUser) router.push('/login');
     else if (authUser && authUser.mustChangePassword)
       router.push('/change-password');
   }, []);
@@ -218,11 +223,10 @@ export default function EmployeesPage() {
                         activeFilter === option.value ? 'default' : 'outline'
                       }
                       size='sm'
-                      className={`text-sm transition-all duration-300 hover-scale ${
-                        activeFilter === option.value
-                          ? 'neon-glow'
-                          : 'hover:border-primary/50'
-                      }`}
+                      className={`text-sm transition-all duration-300 hover-scale ${activeFilter === option.value
+                        ? 'neon-glow'
+                        : 'hover:border-primary/50'
+                        }`}
                       onClick={() => setActiveFilter(option.value)}
                     >
                       {option.label}
@@ -242,11 +246,10 @@ export default function EmployeesPage() {
                           : 'outline'
                       }
                       size='sm'
-                      className={`text-sm transition-all duration-300 hover-scale ${
-                        departmentFilter === option.value
-                          ? 'neon-glow'
-                          : 'hover:border-primary/50'
-                      }`}
+                      className={`text-sm transition-all duration-300 hover-scale ${departmentFilter === option.value
+                        ? 'neon-glow'
+                        : 'hover:border-primary/50'
+                        }`}
                       onClick={() => setDepartmentFilter(option.value)}
                     >
                       {option.label}
@@ -264,6 +267,7 @@ export default function EmployeesPage() {
             {filteredEmployees.map((employee, index) => (
               <EmployeeCard
                 key={employee.id}
+                authUser={authUser}
                 employee={employee}
                 index={index}
                 isSelected={selectedEmployee === employee.id}
@@ -273,6 +277,12 @@ export default function EmployeesPage() {
                   )
                 }
                 onDelete={() => handleDeleteClick(employee)}
+                onViewDetails={() => {
+                  setEmployeeToView(employee);
+                  setShowViewDetailsModal(true);
+                }}
+                setEmployeeToEdit={setEmployeeToEdit}
+                setShowEditEmployeeModal={setShowEditEmployeeModal}
               />
             ))}
           </div>
@@ -285,8 +295,8 @@ export default function EmployeesPage() {
               </h3>
               <p className='text-muted-foreground'>
                 {searchTerm ||
-                activeFilter !== 'all' ||
-                departmentFilter !== 'all'
+                  activeFilter !== 'all' ||
+                  departmentFilter !== 'all'
                   ? 'Try adjusting your search or filter criteria'
                   : 'Start by adding your first employee'}
               </p>
@@ -311,6 +321,23 @@ export default function EmployeesPage() {
         />
       )}
 
+      {/* Edit Employee Modal */}
+      {showEditEmployeeModal && employeeToEdit && (
+        <EditEmployeeModal
+          employee={employeeToEdit}
+          loading={loading}
+          onClose={() => {
+            setShowEditEmployeeModal(false);
+            setEmployeeToEdit(null);
+          }}
+          onSubmit={async (updatedEmployee) => {
+            await updateEmployee(employeeToEdit.id, updatedEmployee);
+            setShowEditEmployeeModal(false);
+            setEmployeeToEdit(null);
+          }}
+        />
+      )}
+
       {/* Delete modal */}
       {showDeleteModal && (
         <DeleteConfirmModal
@@ -320,22 +347,41 @@ export default function EmployeesPage() {
           loading={loading}
         />
       )}
+
+      {/* View Employee Details Modal */}
+      {showViewDetailsModal && employeeToView && (
+        <ViewEmployeeDetailsModal
+          employee={employeeToView}
+          onClose={() => {
+            setShowViewDetailsModal(false);
+            setEmployeeToView(null);
+          }}
+        />
+      )}
     </div>
   );
 }
 
 function EmployeeCard({
+  authUser,
+  setEmployeeToEdit,
+  setShowEditEmployeeModal,
   employee,
   index,
   isSelected,
   onSelect,
   onDelete,
+  onViewDetails,
 }: {
+  authUser: Employee | null;
   employee: Employee;
   index: number;
   isSelected: boolean;
   onSelect: () => void;
   onDelete: () => void;
+  onViewDetails: () => void;
+  setEmployeeToEdit: (employee: Employee) => void;
+  setShowEditEmployeeModal: (show: boolean) => void;
 }) {
   const statusColor =
     statusColors[employee.status as keyof typeof statusColors] || 'muted';
@@ -344,13 +390,13 @@ function EmployeeCard({
     employee.yearsOfService ||
     Math.floor(
       (new Date().getTime() - new Date(employee.hireDate).getTime()) /
-        (1000 * 3600 * 24 * 365)
+      (1000 * 3600 * 24 * 365)
     );
 
   const avgRating =
     employee.performance?.length > 0
       ? employee.performance.reduce((sum, review) => sum + review.rating, 0) /
-        employee.performance.length
+      employee.performance.length
       : 0;
 
   return (
@@ -507,9 +553,14 @@ function EmployeeCard({
 
             <div className='flex gap-4 mt-6'>
               <Button
-                variant='outline'
-                size='sm'
-                className='hover:border-primary hover:text-primary'
+                variant="outline"
+                size="sm"
+                className="hover:border-primary hover:text-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEmployeeToEdit(employee);
+                  setShowEditEmployeeModal(true);
+                }}
               >
                 Edit Employee
               </Button>
@@ -517,8 +568,12 @@ function EmployeeCard({
                 variant='outline'
                 size='sm'
                 className='hover:border-accent hover:text-accent'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewDetails();
+                }}
               >
-                View Profile
+                View Details
               </Button>
               <Button
                 variant='outline'
@@ -527,17 +582,21 @@ function EmployeeCard({
               >
                 Performance Review
               </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                className='hover:border-destructive hover:text-destructive'
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete();
-                }}
-              >
-                Delete
-              </Button>
+              {
+                authUser?.role !== employee.role && (
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='hover:border-destructive hover:text-destructive'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete();
+                    }}
+                  >
+                    Delete
+                  </Button>
+                )
+              }
             </div>
           </div>
         )}
@@ -559,13 +618,13 @@ function EmployeeStats({ employees }: { employees: Employee[] }) {
     avgPerformance:
       employees.length > 0
         ? employees.reduce((sum, emp) => {
-            const empAvg =
-              emp.performance?.length > 0
-                ? emp.performance.reduce((s, r) => s + r.rating, 0) /
-                  emp.performance.length
-                : 0;
-            return sum + empAvg;
-          }, 0) / employees.length
+          const empAvg =
+            emp.performance?.length > 0
+              ? emp.performance.reduce((s, r) => s + r.rating, 0) /
+              emp.performance.length
+              : 0;
+          return sum + empAvg;
+        }, 0) / employees.length
         : 0,
   };
 
@@ -640,6 +699,123 @@ function StatCard({
   );
 }
 
+function EditEmployeeModal({
+  employee,
+  onClose,
+  onSubmit,
+  loading,
+}: {
+  employee: Employee;
+  onClose: () => void;
+  onSubmit: (data: Partial<Employee>) => Promise<void>;
+  loading: boolean;
+}) {
+  const [formData, setFormData] = useState({
+    name: employee.name,
+    email: employee.email,
+    role: employee.role,
+    department: employee.department,
+    phone: employee.phone,
+    location: employee.location,
+    salary: employee.salary,
+    status: employee.status,
+    experience: employee.experience,
+    skills: employee.skills.join(", "),
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async () => {
+    await onSubmit({
+      ...formData,
+      salary: Number(formData.salary),
+      experience: Number(formData.experience),
+      skills: formData.skills
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    });
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+      onClick={onClose}
+    >
+      <Card
+        className="w-full max-w-2xl p-6 bg-card border border-border animate-slide-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-2xl font-bold text-primary mb-6">
+          Edit Employee
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InputField label="Name" name="name" value={formData.name} onChange={handleChange} />
+          <InputField label="Email" name="email" value={formData.email} onChange={handleChange} />
+
+          <SelectField
+            label="Role"
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            options={["ADMIN", "MANAGER", "WORKER"]}
+          />
+
+          <InputField label="Department" name="department" value={formData.department} onChange={handleChange} />
+          <InputField label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
+          <InputField label="Location" name="location" value={formData.location} onChange={handleChange} />
+
+          <InputField label="Salary" name="salary" type="number" value={formData.salary} onChange={handleChange} />
+          <InputField label="Experience (years)" name="experience" type="number" value={formData.experience} onChange={handleChange} />
+
+          <SelectField
+            label="Status"
+            name="status"
+            value={formData.status}
+            onChange={handleChange}
+            options={["ACTIVE", "INACTIVE", "SUSPENDED"]}
+          />
+        </div>
+
+        <div className="mt-4">
+          <label className="text-sm text-muted-foreground">Skills (comma separated)</label>
+          <input
+            name="skills"
+            value={formData.skills}
+            onChange={handleChange}
+            className="w-full mt-1 px-3 py-2 bg-input border border-border rounded-lg"
+          />
+        </div>
+
+        <div className="flex gap-4 mt-6">
+          <Button variant="outline" onClick={onClose} className="flex-1">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="flex-1 bg-primary text-primary-foreground"
+          >
+            {loading ? (
+              <>
+                <Loader className='h-4 w-4 animate-spin' />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 function DeleteConfirmModal({
   onClose,
   onConfirm,
@@ -699,3 +875,319 @@ function DeleteConfirmModal({
     </div>
   );
 }
+
+function ViewEmployeeDetailsModal({
+  employee,
+  onClose,
+}: {
+  employee: Employee;
+  onClose: () => void;
+}) {
+  const statusColor =
+    statusColors[employee.status as keyof typeof statusColors] || 'muted';
+
+  const yearsOfService =
+    employee.yearsOfService ||
+    Math.floor(
+      (new Date().getTime() - new Date(employee.hireDate).getTime()) /
+      (1000 * 3600 * 24 * 365)
+    );
+
+  const avgRating =
+    employee.performance?.length > 0
+      ? employee.performance.reduce((sum, review) => sum + review.rating, 0) /
+      employee.performance.length
+      : 0;
+
+  useEffect(() => {
+    const handlePress = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+
+    document.addEventListener('keydown', handlePress);
+
+    return () => {
+      document.removeEventListener('keydown', handlePress);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 hide-scrollbar'
+      onClick={onClose}
+    >
+      <Card
+        className='bg-card border border-border rounded-2xl p-8 w-full max-w-5xl max-h-[90vh] overflow-y-auto'
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className='flex justify-between items-center mb-6'>
+          <h2 className='text-2xl font-bold text-primary'>Employee Details</h2>
+          <button
+            onClick={onClose}
+            className='text-muted-foreground hover:text-foreground transition-colors text-2xl'
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8'>
+          {/* Left Column - Profile */}
+          <div className='lg:col-span-1 space-y-6'>
+            <div className='bg-background/30 rounded-lg p-6 text-center'>
+              <Avatar className='h-24 w-24 border-4 border-primary/20 mx-auto mb-4'>
+                <AvatarFallback className='text-2xl font-bold bg-primary/10 text-primary'>
+                  {employee.name
+                    .split(' ')
+                    .map((n) => n[0])
+                    .join('')
+                    .toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <h3 className='text-xl font-bold text-foreground mb-2'>
+                {employee.name}
+              </h3>
+              <p className='text-sm text-muted-foreground mb-2'>
+                {employee.role}
+              </p>
+              <Badge
+                variant='outline'
+                className={`bg-${statusColor}/20 text-${statusColor} border-${statusColor}/30`}
+              >
+                {employee.status}
+              </Badge>
+            </div>
+
+            <div className='bg-background/30 rounded-lg p-6'>
+              <h4 className='text-sm font-semibold text-foreground mb-4'>
+                Quick Stats
+              </h4>
+              <div className='space-y-3'>
+                <div className='flex justify-between items-center'>
+                  <span className='text-xs text-muted-foreground'>
+                    Employee ID
+                  </span>
+                  <span className='text-sm font-medium text-foreground'>
+                    {employee.employeeId}
+                  </span>
+                </div>
+                <div className='flex justify-between items-center'>
+                  <span className='text-xs text-muted-foreground'>
+                    Years of Service
+                  </span>
+                  <span className='text-sm font-medium text-foreground'>
+                    {yearsOfService} years
+                  </span>
+                </div>
+                <div className='flex justify-between items-center'>
+                  <span className='text-xs text-muted-foreground'>
+                    Avg Rating
+                  </span>
+                  <span className='text-sm font-medium text-foreground'>
+                    {avgRating > 0 ? `${avgRating.toFixed(1)} / 5` : 'N/A'}
+                  </span>
+                </div>
+                <div className='flex justify-between items-center'>
+                  <span className='text-xs text-muted-foreground'>
+                    Experience
+                  </span>
+                  <span className='text-sm font-medium text-foreground'>
+                    {employee.experience} years
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Details */}
+          <div className='lg:col-span-2 space-y-6'>
+            <div className='bg-background/30 rounded-lg p-6'>
+              <h4 className='text-sm font-semibold text-foreground mb-4'>
+                Contact Information
+              </h4>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div>
+                  <p className='text-xs text-muted-foreground mb-1'>Email</p>
+                  <p className='text-sm text-foreground'>{employee.email}</p>
+                </div>
+                <div>
+                  <p className='text-xs text-muted-foreground mb-1'>Phone</p>
+                  <p className='text-sm text-foreground'>
+                    {employee.phone || 'Not provided'}
+                  </p>
+                </div>
+                <div>
+                  <p className='text-xs text-muted-foreground mb-1'>
+                    Location
+                  </p>
+                  <p className='text-sm text-foreground'>
+                    {employee.location || 'Not provided'}
+                  </p>
+                </div>
+                <div>
+                  <p className='text-xs text-muted-foreground mb-1'>
+                    Department
+                  </p>
+                  <p className='text-sm text-foreground'>
+                    {employee.department}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className='bg-background/30 rounded-lg p-6'>
+              <h4 className='text-sm font-semibold text-foreground mb-4'>
+                Employment Details
+              </h4>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div>
+                  <p className='text-xs text-muted-foreground mb-1'>
+                    Hire Date
+                  </p>
+                  <p className='text-sm text-foreground'>
+                    {new Date(employee.hireDate).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <p className='text-xs text-muted-foreground mb-1'>Salary</p>
+                  <p className='text-sm text-foreground'>
+                    ₹{employee.salary.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className='text-xs text-muted-foreground mb-1'>Manager</p>
+                  <p className='text-sm text-foreground'>
+                    {employee.manager || 'Not assigned'}
+                  </p>
+                </div>
+                <div>
+                  <p className='text-xs text-muted-foreground mb-1'>
+                    Manager ID
+                  </p>
+                  <p className='text-sm text-foreground'>
+                    {employee.managerId || 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className='bg-background/30 rounded-lg p-6'>
+              <h4 className='text-sm font-semibold text-foreground mb-4'>
+                Skills & Expertise
+              </h4>
+              <div className='flex flex-wrap gap-2'>
+                {employee.skills?.length > 0 ? (
+                  employee.skills.map((skill, idx) => (
+                    <Badge
+                      key={idx}
+                      variant='secondary'
+                      className='bg-secondary/20 text-secondary border border-secondary/30'
+                    >
+                      {skill}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className='text-sm text-muted-foreground'>
+                    No skills listed
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Performance Reviews */}
+        {employee.performance && employee.performance.length > 0 && (
+          <div className='bg-background/30 rounded-lg p-6'>
+            <h4 className='text-sm font-semibold text-foreground mb-4'>
+              Performance History
+            </h4>
+            <div className='space-y-3 max-h-60 overflow-y-auto'>
+              {employee.performance.map((review, idx) => (
+                <div
+                  key={idx}
+                  className='bg-background/50 rounded-lg p-4 border border-border'
+                >
+                  <div className='flex justify-between items-start mb-2'>
+                    <div>
+                      <p className='text-sm font-medium text-foreground'>
+                        Performance Review {idx + 1}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        {new Date(review.reviewDate).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                    <Badge
+                      variant='outline'
+                      className={`${review.rating >= 4
+                          ? 'bg-green-500/20 text-green-500 border-green-500/30'
+                          : review.rating >= 3
+                            ? 'bg-blue-500/20 text-blue-500 border-blue-500/30'
+                            : 'bg-orange-500/20 text-orange-500 border-orange-500/30'
+                        }`}
+                    >
+                      {review.rating} / 5
+                    </Badge>
+                  </div>
+                  {review.comments && (
+                    <p className='text-xs text-muted-foreground'>
+                      {review.comments}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className='flex justify-end mt-6'>
+          <Button
+            variant='outline'
+            onClick={onClose}
+            className='px-6 border-border hover:bg-muted'
+          >
+            Close
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function InputField({ label, ...props }: any) {
+  return (
+    <div>
+      <label className="text-sm text-muted-foreground">{label}</label>
+      <input
+        {...props}
+        className="w-full mt-1 px-3 py-2 bg-input border border-border rounded-lg"
+      />
+    </div>
+  );
+}
+
+function SelectField({ label, options, ...props }: any) {
+  return (
+    <div>
+      <label className="text-sm text-muted-foreground">{label}</label>
+      <select
+        {...props}
+        className="w-full mt-1 px-3 py-2 bg-input border border-border rounded-lg"
+      >
+        {options.map((opt: string) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+

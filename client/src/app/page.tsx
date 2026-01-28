@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import useAuthStore from '@/store/useAuthStore';
+import { useRouter } from 'next/navigation';
 
 function useTypingAnimation(text: string, speed = 100) {
   const [displayText, setDisplayText] = useState('');
@@ -71,7 +72,7 @@ export default function HomePage() {
   );
   const [showTagline, setShowTagline] = useState(false);
   const [showStats, setShowStats] = useState(false);
-
+  const router = useRouter();
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
 
   useEffect(() => {
@@ -85,14 +86,12 @@ export default function HomePage() {
       clearTimeout(statsTimer);
     };
   }, [checkAuth]);
-
+  
   useEffect(() => {
-    console.log('authuser', authUser);
+    if (!authUser) router.push('/login');
+    else if (authUser && authUser.mustChangePassword)
+      router.push('/change-password');
   }, [authUser]);
-
-  // useEffect(() => {
-  //   checkAuth()
-  // }, [])
 
   if (isCheckingAuth) {
     return (

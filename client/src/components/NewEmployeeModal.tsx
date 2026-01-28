@@ -27,15 +27,20 @@ export function NewEmployeeModal({
     location: '',
     experience: 0,
     status: 'ACTIVE',
-    skills: [],
+    skills: [] as string[],
     role: 'WORKER',
     manager: '',
     managerId: '',
   });
+  const [skillsInput, setSkillsInput] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    const skills = skillsInput
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    onSubmit({ ...formData, skills });
     // Reset form after submit
     setFormData({
       name: '',
@@ -51,6 +56,7 @@ export function NewEmployeeModal({
       manager: '',
       managerId: '',
     });
+    setSkillsInput('');
   };
 
   return (
@@ -324,6 +330,28 @@ export function NewEmployeeModal({
                       placeholder='5'
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Skills */}
+              <div className='space-y-4'>
+                <h3 className='text-lg font-semibold text-foreground'>
+                  Skills
+                </h3>
+                <div>
+                  <label className='block text-sm font-medium text-foreground mb-2'>
+                    Skills (comma separated)
+                  </label>
+                  <input
+                    type='text'
+                    value={skillsInput}
+                    onChange={(e) => setSkillsInput(e.target.value)}
+                    className='w-full px-4 py-3 bg-input border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20'
+                    placeholder='Type your skills here seperated by commas'
+                  />
+                  <p className='text-xs text-muted-foreground mt-1'>
+                    Enter skills separated by commas
+                  </p>
                 </div>
               </div>
 
