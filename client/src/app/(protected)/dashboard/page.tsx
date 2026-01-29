@@ -658,11 +658,7 @@ const InventoryDashboard = () => {
   const visibleLowStockItems = lowStockItems.filter(
     (item) => !dismissedAlerts.has(item.id)
   );
-  useEffect(() => {
-    if (!authUser) router.push('/');
-    else if (authUser && authUser.mustChangePassword)
-      router.push('/change-password');
-  }, []);
+  
   useEffect(() => {
     const findFn = async () => {
       await findOrders();

@@ -86,12 +86,6 @@ export default function HomePage() {
       clearTimeout(statsTimer);
     };
   }, [checkAuth]);
-  
-  useEffect(() => {
-    if (!authUser) router.push('/login');
-    else if (authUser && authUser.mustChangePassword)
-      router.push('/change-password');
-  }, [authUser]);
 
   if (isCheckingAuth) {
     return (

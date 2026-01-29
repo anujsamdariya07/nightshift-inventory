@@ -52,11 +52,6 @@ export default function VendorsPage() {
     };
     loadVendors();
   }, [fetchVendors]);
-  useEffect(() => {
-    if (!authUser) router.push('/');
-    else if (authUser && authUser.mustChangePassword)
-      router.push('/change-password');
-  }, []);
 
   // Filter vendors based on search and filter criteria
   useEffect(() => {

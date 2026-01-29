@@ -92,6 +92,7 @@ const useAuthStore = create<AuthState>()(
       setAuthUser: (user) => set({ authUser: user }),
 
       checkAuth: async () => {
+        set({ isCheckingAuth: true });
         try {
           const res = await axiosInstance.get<CheckAuthResponse>(
             '/auth/current',
@@ -99,11 +100,8 @@ const useAuthStore = create<AuthState>()(
               withCredentials: true,
             },
           );
-          console.log(1);
-          console.log('FINE');
           set({ authUser: res.data.employee });
         } catch (error) {
-          console.log('ERROR');
           console.error('Error in checkAuth', error);
           showErrorToast({
             message: 'Error in checking user!',

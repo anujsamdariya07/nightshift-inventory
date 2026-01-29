@@ -64,12 +64,6 @@ export default function ItemsPage() {
     fetchVendors();
   }, [fetchItems, fetchVendors]);
 
-  useEffect(() => {
-    if (!authUser) router.push('/');
-    else if (authUser && authUser.mustChangePassword)
-      router.push('/change-password');
-  }, []);
-
   // Helper function to get stock status
   const getStockStatus = (item: any) => {
     if (!item || typeof item.quantity !== 'number') return 'out-of-stock';
