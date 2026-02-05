@@ -53,6 +53,10 @@ public class EmployeeService {
         return employee.get();
     }
 
+    public Employee getEmployeeByEmployeeId(ObjectId orgId, String employeeId) {
+        return employeeRepository.findByOrgIdAndEmployeeId(orgId, employeeId);
+    }
+
     private String generateEmployeeId(ObjectId orgId) {
         List<Employee> employees = employeeRepository.findByOrgId(orgId);
 
@@ -150,10 +154,8 @@ public class EmployeeService {
                 !passwordEncoder.matches(updateEmployeeData.getPassword(), existingEmployee.getPassword())) {
             existingEmployee.setPassword(passwordEncoder.encode(updateEmployeeData.getPassword()));
         }
-        if (updateEmployeeData.getPassword() != null &&
-                passwordEncoder.matches(updateEmployeeData.getPassword(), existingEmployee.getPassword())) {
-            throw new RuntimeException("You have the entered the same password!");
-        }
+
+        System.out.println("All clear!");
 
         return employeeRepository.save(existingEmployee);
     }

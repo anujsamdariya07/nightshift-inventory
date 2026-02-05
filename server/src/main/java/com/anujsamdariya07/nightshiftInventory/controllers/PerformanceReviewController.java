@@ -1,66 +1,101 @@
 package com.anujsamdariya07.nightshiftInventory.controllers;
 
+import com.anujsamdariya07.nightshiftInventory.dto.ReviewResponse;
+import com.anujsamdariya07.nightshiftInventory.entity.Employee;
 import com.anujsamdariya07.nightshiftInventory.entity.PerformanceReview;
+import com.anujsamdariya07.nightshiftInventory.services.EmployeeService;
 import com.anujsamdariya07.nightshiftInventory.services.PerformanceReviewService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Iterator;
 
 @CrossOrigin(origins = {"http://localhost:3000", "https://nightshift-inventory-client.onrender.com"}, allowCredentials = "true")
 @RestController
-@RequestMapping("/api/performance-reviews")
+@RequestMapping("/api/reviews")
 public class PerformanceReviewController {
-
     @Autowired
     private PerformanceReviewService performanceReviewService;
+    @Autowired
+    private EmployeeService employeeService;
 
-    @PostMapping("/{employeeId}/reviewer/{reviewerId}")
-    public ResponseEntity<?> addReview(
-            @PathVariable String employeeId,
-            @PathVariable String reviewerId,
-            @RequestBody PerformanceReview reviewData
-    ) {
-        PerformanceReview savedReview = performanceReviewService.addReview(
-                new ObjectId(employeeId),
-                new ObjectId(reviewerId),
-                reviewData
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedReview);
+    @PostMapping
+    public ResponseEntity<?> addReview(HttpServletRequest request, @RequestBody PerformanceReview performanceReviewData) {
+        System.out.println("Adding Review");
+
+        System.out.println("Getting the reviewer and reviewee");
+        Employee currentUser = employeeService.getCurrentUser(request);
+        Employee employee = employeeService.getEmployeeByEmployeeId(currentUser.getOrgId(), performanceReviewData.getEmployeeId());
+
+        if (!currentUser.getEmployeeId().equals(employee.getManagerId()) && !currentUser.getRole().equals(Employee.Role.ADMIN)) {
+            System.out.println("Access Denied!");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ReviewResponse("Access Denied!", null));
+        }
+
+        performanceReviewData.setReviewerId(currentUser.getEmployeeId());
+
+        PerformanceReview savedPerformance = performanceReviewService.addReview(performanceReviewData);
+
+        employee.getPerformance().add(savedPerformance);
+
+        employeeService.updateEmployee(employee.getId(), employee);
+
+        System.out.println("Done!");
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ReviewResponse("Review Created!", savedPerformance));
     }
 
-    @GetMapping("/employee/{employeeId}")
-    public ResponseEntity<List<PerformanceReview>> getReviewsByEmployee(@PathVariable String employeeId) {
-        return ResponseEntity.ok(
-                performanceReviewService.getReviewsByEmployeeId(new ObjectId(employeeId))
-        );
+    //    TODO: Make a generalized output format for returning reviews with a string message
+    @GetMapping("/received/{employeeId}")
+    public ResponseEntity<?> getReviewsReceived(@PathVariable String employeeId) {
+        return ResponseEntity.status(HttpStatus.OK).body(performanceReviewService.getReviewsReceived(employeeId));
     }
 
-    @GetMapping("/reviewer/{reviewerId}")
-    public ResponseEntity<List<PerformanceReview>> getReviewsByReviewer(@PathVariable String reviewerId) {
-        return ResponseEntity.ok(
-                performanceReviewService.getReviewsByReviewerId(new ObjectId(reviewerId))
-        );
+    @GetMapping("/given/{reviewerId}")
+    public ResponseEntity<?> getReviewsGiven(@PathVariable String reviewerId) {
+        return ResponseEntity.status(HttpStatus.OK).body(performanceReviewService.getReviewsGiven(reviewerId));
     }
 
     @PutMapping("/{reviewId}")
-    public ResponseEntity<PerformanceReview> updateReview(
-            @PathVariable String reviewId,
-            @RequestBody PerformanceReview reviewData
-    ) {
-        PerformanceReview updatedReview = performanceReviewService.updateReview(
-                new ObjectId(reviewId),
-                reviewData
-        );
-        return ResponseEntity.ok(updatedReview);
+    public ResponseEntity<?> updateReview(HttpServletRequest request, @PathVariable String reviewId, @RequestBody PerformanceReview performanceReviewData) {
+        Employee currentUser = employeeService.getCurrentUser(request);
+        Employee employee = employeeService.getEmployeeByEmployeeId(currentUser.getOrgId(), performanceReviewData.getEmployeeId());
+
+        if (!currentUser.getEmployeeId().equals(employee.getManagerId()) && !currentUser.getRole().equals(Employee.Role.ADMIN)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ReviewResponse("Access denied!", null));
+        }
+
+        PerformanceReview updatedReview = performanceReviewService.updateReview(new ObjectId(reviewId), performanceReviewData);
+
+        employee.getPerformance().removeIf(review -> review.getId().equals(new ObjectId(reviewId)));
+
+        employee.getPerformance().add(updatedReview);
+
+        employeeService.updateEmployee(employee.getId(), employee);
+
+        return ResponseEntity.status(HttpStatus.OK).body(new ReviewResponse("Review updated successfully!", updatedReview));
     }
 
-    @DeleteMapping("/{reviewId}")
-    public ResponseEntity<?> deleteReview(@PathVariable String reviewId) {
-        performanceReviewService.deleteReview(new ObjectId(reviewId));
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteReview(HttpServletRequest request, @PathVariable String id) {
+        Employee currentUser = employeeService.getCurrentUser(request);
+        PerformanceReview performanceReview = performanceReviewService.getReviewById(new ObjectId(id));
+        Employee employee = employeeService.getEmployeeByEmployeeId(currentUser.getOrgId(), performanceReview.getEmployeeId());
+
+        if (!currentUser.getEmployeeId().equals(employee.getManagerId()) && !currentUser.getRole().equals(Employee.Role.ADMIN)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ReviewResponse("Access denied!", null));
+        }
+
+        employee.getPerformance().removeIf(review -> review.getId().equals(new ObjectId(id)));
+
+        employeeService.updateEmployee(employee.getId(), employee);
+
+        performanceReviewService.deleteReview(new ObjectId(id));
+
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

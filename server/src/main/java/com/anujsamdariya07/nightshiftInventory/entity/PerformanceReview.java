@@ -17,19 +17,20 @@ import java.util.Date;
 @AllArgsConstructor
 @Builder
 public class PerformanceReview {
+    public enum Rating {
+        I, II, III, IV, V
+    }
 
     @Id
     @JsonSerialize(using = ToStringSerializer.class)
     private ObjectId id;
 
-    @DBRef
-    private Employee employee;
+    private String employeeId;
 
-    @DBRef
-    private Employee reviewer;
+    private String reviewerId;
 
     // 1 to 5 rating
-    private Integer rating;
+    private Rating rating = Rating.I;
 
     private String comments;
 

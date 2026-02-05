@@ -37,7 +37,7 @@ public class Employee {
     @JsonSerialize(using = ToStringSerializer.class)
     private ObjectId orgId;
 
-    private String orgName;
+    private String orgName; 
 
     private String employeeId;
 

@@ -13,6 +13,8 @@ public interface EmployeeRepository
         extends MongoRepository<Employee, ObjectId> {
     public List<Employee> findByOrgId(ObjectId orgId);
 
+    public Employee findByOrgIdAndEmployeeId(ObjectId orgId, String employeeId);
+
     public boolean existsByEmailAndOrgId(String email, ObjectId orgId);
 
     public boolean existsByPhone(String phone);
