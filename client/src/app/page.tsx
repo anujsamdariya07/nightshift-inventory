@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import useAuthStore from '@/store/useAuthStore';
-import { useRouter } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 
 function useTypingAnimation(text: string, speed = 100) {
   const [displayText, setDisplayText] = useState('');
@@ -167,8 +167,8 @@ export default function HomePage() {
               }}
               transition={{ duration: 0.8, delay: 0.3 }}
             >
-              <Link href={'/dashboard'}>
                 <motion.button
+                onClick={authUser? redirect('/dashboard'): redirect('/login')}
                   className='relative px-10 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg overflow-hidden professional-hover shadow-lg'
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -181,7 +181,6 @@ export default function HomePage() {
                     transition={{ duration: 0.6 }}
                   />
                 </motion.button>
-              </Link>
 
               <motion.button
                 className='relative px-10 py-4 border-2 border-secondary text-secondary rounded-lg font-semibold text-lg professional-hover hover:bg-secondary hover:text-secondary-foreground shadow-lg'

@@ -3,15 +3,7 @@ import { axiosInstance } from '@/lib/axios';
 import { AxiosError } from 'axios';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-export interface PerformanceReview {
-  id: string;
-  employee: Employee;
-  reviewer: Employee;
-  rating: number; // 1 to 5
-  comments: string;
-  reviewDate: string;
-}
+import { PerformanceReview } from './usePerformanceReviewStore';
 
 export interface Message {
   id: string;

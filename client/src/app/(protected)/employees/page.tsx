@@ -14,11 +14,28 @@ import { Loader } from 'lucide-react';
 import useAuthStore from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import { NewEmployeeModal } from '@/components/NewEmployeeModal';
+import usePerformanceReviewStore, {
+  PerformanceReview,
+  Rating,
+} from '@/store/usePerformanceReviewStore';
 
 const statusColors = {
   ACTIVE: 'accent',
   INACTIVE: 'destructive',
   SUSPENDED: 'chart-2',
+};
+
+// Helper function to convert Rating enum to numeric value
+const ratingToNumber = (rating: Rating | string | number): number => {
+  if (typeof rating === 'number') return rating;
+  const ratingMap: Record<string, number> = {
+    [Rating.I]: 1,
+    [Rating.II]: 2,
+    [Rating.III]: 3,
+    [Rating.IV]: 4,
+    [Rating.V]: 5,
+  };
+  return ratingMap[rating as string] || 0;
 };
 
 const filterOptions = [
@@ -68,6 +85,10 @@ export default function EmployeesPage() {
   const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
   const [showViewDetailsModal, setShowViewDetailsModal] = useState(false);
   const [employeeToView, setEmployeeToView] = useState<Employee | null>(null);
+  const [showPerformanceReviewModal, setShowPerformanceReviewModal] =
+    useState(false);
+  const [employeeForReview, setEmployeeForReview] =
+    useState<Employee | null>(null);
 
   const handleDeleteClick = (employee: Employee) => {
     setEmployeeToDelete(employee);
@@ -283,6 +304,8 @@ export default function EmployeesPage() {
                 }}
                 setEmployeeToEdit={setEmployeeToEdit}
                 setShowEditEmployeeModal={setShowEditEmployeeModal}
+                setEmployeeForReview={setEmployeeForReview}
+                setShowPerformanceReviewModal={setShowPerformanceReviewModal}
               />
             ))}
           </div>
@@ -358,6 +381,21 @@ export default function EmployeesPage() {
           }}
         />
       )}
+
+      {/* Performance Review Modal */}
+      {showPerformanceReviewModal && employeeForReview && (
+        <PerformanceReviewModal
+          employee={employeeForReview}
+          currentUser={authUser}
+          onClose={() => {
+            setShowPerformanceReviewModal(false);
+            setEmployeeForReview(null);
+          }}
+          onReviewAdded={() => {
+            fetchEmployees();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -366,6 +404,8 @@ function EmployeeCard({
   authUser,
   setEmployeeToEdit,
   setShowEditEmployeeModal,
+  setEmployeeForReview,
+  setShowPerformanceReviewModal,
   employee,
   index,
   isSelected,
@@ -382,6 +422,8 @@ function EmployeeCard({
   onViewDetails: () => void;
   setEmployeeToEdit: (employee: Employee) => void;
   setShowEditEmployeeModal: (show: boolean) => void;
+  setEmployeeForReview: (employee: Employee) => void;
+  setShowPerformanceReviewModal: (show: boolean) => void;
 }) {
   const statusColor =
     statusColors[employee.status as keyof typeof statusColors] || 'muted';
@@ -395,7 +437,7 @@ function EmployeeCard({
 
   const avgRating =
     employee.performance?.length > 0
-      ? employee.performance.reduce((sum, review) => sum + review.rating, 0) /
+      ? employee.performance.reduce((sum, review) => sum + ratingToNumber(review.rating), 0) /
       employee.performance.length
       : 0;
 
@@ -579,6 +621,11 @@ function EmployeeCard({
                 variant='outline'
                 size='sm'
                 className='hover:border-chart-2 hover:text-chart-2'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEmployeeForReview(employee);
+                  setShowPerformanceReviewModal(true);
+                }}
               >
                 Performance Review
               </Button>
@@ -620,7 +667,7 @@ function EmployeeStats({ employees }: { employees: Employee[] }) {
         ? employees.reduce((sum, emp) => {
           const empAvg =
             emp.performance?.length > 0
-              ? emp.performance.reduce((s, r) => s + r.rating, 0) /
+              ? emp.performance.reduce((s, r) => s + ratingToNumber(r.rating), 0) /
               emp.performance.length
               : 0;
           return sum + empAvg;
@@ -895,7 +942,7 @@ function ViewEmployeeDetailsModal({
 
   const avgRating =
     employee.performance?.length > 0
-      ? employee.performance.reduce((sum, review) => sum + review.rating, 0) /
+      ? employee.performance.reduce((sum, review) => sum + ratingToNumber(review.rating), 0) /
       employee.performance.length
       : 0;
 
@@ -1126,9 +1173,9 @@ function ViewEmployeeDetailsModal({
                     </div>
                     <Badge
                       variant='outline'
-                      className={`${review.rating >= 4
+                      className={`${ratingToNumber(review.rating) >= 4
                           ? 'bg-green-500/20 text-green-500 border-green-500/30'
-                          : review.rating >= 3
+                          : ratingToNumber(review.rating) >= 3
                             ? 'bg-blue-500/20 text-blue-500 border-blue-500/30'
                             : 'bg-orange-500/20 text-orange-500 border-orange-500/30'
                         }`}
@@ -1187,6 +1234,359 @@ function SelectField({ label, options, ...props }: any) {
           </option>
         ))}
       </select>
+    </div>
+  );
+}
+
+function PerformanceReviewModal({
+  employee,
+  currentUser,
+  onClose,
+  onReviewAdded,
+}: {
+  employee: Employee;
+  currentUser: Employee | null;
+  onClose: () => void;
+  onReviewAdded: () => void;
+}) {
+  const { addReview, updateReview, deleteReview, getReviewsReceived, loading } =
+    usePerformanceReviewStore();
+  const [reviews, setReviews] = useState<PerformanceReview[]>(
+    (employee.performance as PerformanceReview[]) || []
+  );
+  const [showAddReview, setShowAddReview] = useState(false);
+  const [editingReview, setEditingReview] = useState<PerformanceReview | null>(
+    null
+  );
+  const [formData, setFormData] = useState<{
+    rating: Rating;
+    comments: string;
+  }>({
+    rating: Rating.III,
+    comments: '',
+  });
+
+  // Check if current user can add/edit reviews for this employee
+  const canManageReviews =
+    currentUser &&
+    (currentUser.role === 'ADMIN' ||
+      currentUser.employeeId === employee.managerId);
+
+  const canEditReview = (review: PerformanceReview) => {
+    return currentUser && review.reviewerId === currentUser.employeeId;
+  };
+
+  useEffect(() => {
+    const handlePress = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (showAddReview || editingReview) {
+          setShowAddReview(false);
+          setEditingReview(null);
+        } else {
+          onClose();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handlePress);
+    return () => document.removeEventListener('keydown', handlePress);
+  }, [onClose, showAddReview, editingReview]);
+
+  // Fetch latest reviews
+  useEffect(() => {
+    if (employee.employeeId) {
+      getReviewsReceived(employee.employeeId).then((result) => {
+        if (result.success) {
+          setReviews(employee.performance || []);
+        }
+      });
+    }
+  }, [employee.employeeId, getReviewsReceived]);
+
+  const handleAddReview = () => {
+    setShowAddReview(true);
+    setEditingReview(null);
+    setFormData({ rating: Rating.III, comments: '' });
+  };
+
+  const handleEditReview = (review: PerformanceReview) => {
+    setEditingReview(review);
+    setShowAddReview(false);
+    setFormData({ rating: review.rating, comments: review.comments });
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.comments.trim()) {
+      return;
+    }
+
+    if (editingReview) {
+      // Update existing review
+      const result = await updateReview(editingReview.id, {
+        employeeId: employee.employeeId,
+        rating: formData.rating,
+        comments: formData.comments,
+      });
+
+      if (result.success) {
+        setEditingReview(null);
+        onReviewAdded();
+        // Refresh reviews
+        const updatedReviews = reviews.map((r) =>
+          r.id === editingReview.id
+            ? { ...r, rating: formData.rating, comments: formData.comments }
+            : r
+        );
+        setReviews(updatedReviews);
+      }
+    } else {
+      // Add new review
+      const result = await addReview({
+        employeeId: employee.employeeId,
+        rating: formData.rating,
+        comments: formData.comments,
+      });
+
+      if (result.success) {
+        setShowAddReview(false);
+        onReviewAdded();
+      }
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (confirm('Are you sure you want to delete this review?')) {
+      const result = await deleteReview(reviewId);
+      if (result.success) {
+        setReviews(reviews.filter((r) => r.id !== reviewId));
+        onReviewAdded();
+      }
+    }
+  };
+
+  const getRatingLabel = (rating: Rating) => {
+    const labels = {
+      [Rating.I]: 'Poor',
+      [Rating.II]: 'Below Average',
+      [Rating.III]: 'Average',
+      [Rating.IV]: 'Good',
+      [Rating.V]: 'Excellent',
+    };
+    return labels[rating];
+  };
+
+  const getRatingColor = (rating: Rating) => {
+    const colors = {
+      [Rating.I]: 'text-destructive',
+      [Rating.II]: 'text-orange-500',
+      [Rating.III]: 'text-yellow-500',
+      [Rating.IV]: 'text-chart-2',
+      [Rating.V]: 'text-accent',
+    };
+    return colors[rating];
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in"
+      onClick={onClose}
+    >
+      <Card
+        className="bg-card border border-border rounded-2xl p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-primary">
+              Performance Reviews
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {employee.name} ({employee.employeeId})
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground transition-colors text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Add Review Button */}
+        {canManageReviews && !showAddReview && !editingReview && (
+          <div className="mb-6">
+            <Button
+              onClick={handleAddReview}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              disabled={loading}
+            >
+              Add New Review
+            </Button>
+          </div>
+        )}
+
+        {/* Add/Edit Review Form */}
+        {(showAddReview || editingReview) && (
+          <Card className="bg-background/50 p-6 mb-6 border border-primary/20 animate-fade-in">
+            <h3 className="text-lg font-semibold text-foreground mb-4">
+              {editingReview ? 'Edit Review' : 'Add New Review'}
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-muted-foreground block mb-2">
+                  Rating
+                </label>
+                <select
+                  value={formData.rating}
+                  onChange={(e) =>
+                    setFormData({ ...formData, rating: e.target.value as Rating })
+                  }
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg"
+                >
+                  {Object.values(Rating).map((rating) => (
+                    <option key={rating} value={rating}>
+                      {rating} - {getRatingLabel(rating)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground block mb-2">
+                  Comments
+                </label>
+                <textarea
+                  value={formData.comments}
+                  onChange={(e) =>
+                    setFormData({ ...formData, comments: e.target.value })
+                  }
+                  placeholder="Enter your review comments..."
+                  rows={4}
+                  className="w-full px-3 py-2 bg-input border border-border rounded-lg resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleSubmit}
+                  disabled={loading || !formData.comments.trim()}
+                  className="bg-primary text-primary-foreground"
+                >
+                  {loading ? (
+                    <>
+                      <Loader className="h-4 w-4 animate-spin mr-2" />
+                      Saving...
+                    </>
+                  ) : editingReview ? (
+                    'Update Review'
+                  ) : (
+                    'Submit Review'
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddReview(false);
+                    setEditingReview(null);
+                  }}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Reviews List */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            Review History ({reviews.length})
+          </h3>
+
+          {reviews.length === 0 ? (
+            <div className="text-center py-12 bg-background/30 rounded-lg">
+              <div className="text-4xl mb-2">📋</div>
+              <p className="text-muted-foreground">
+                No performance reviews yet
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {reviews.map((review) => (
+                <Card
+                  key={review.id}
+                  className="bg-background/30 p-5 border border-border hover:border-primary/30 transition-all"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        className={`px-3 py-1 font-bold text-lg ${getRatingColor(
+                          review.rating
+                        )}`}
+                        variant="outline"
+                      >
+                        {review.rating}
+                      </Badge>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {getRatingLabel(review.rating)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Reviewed by: {review.reviewerId}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(review.reviewDate).toLocaleDateString()}
+                      </span>
+                      {canEditReview(review) && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditReview(review)}
+                            disabled={loading}
+                            className="hover:border-primary hover:text-primary"
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteReview(review.id)}
+                            disabled={loading}
+                            className="hover:border-destructive hover:text-destructive"
+                          >
+                            Delete
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {review.comments}
+                  </p>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="px-6 border-border hover:bg-muted"
+          >
+            Close
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 }
