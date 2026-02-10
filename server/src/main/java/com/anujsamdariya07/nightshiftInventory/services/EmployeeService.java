@@ -100,6 +100,10 @@ public class EmployeeService {
         }
     }
 
+    public Employee saveEmployee(Employee employee) {
+        return employeeRepository.save(employee);
+    }
+
     public boolean employeeExistsByEmailAndOrgId(String email, ObjectId orgId) {
         return employeeRepository.existsByEmailAndOrgId(email, orgId);
     }

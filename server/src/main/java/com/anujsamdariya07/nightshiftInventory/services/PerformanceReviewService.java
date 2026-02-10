@@ -38,14 +38,18 @@ public class PerformanceReviewService {
 
     //    Update a review
     public PerformanceReview updateReview(ObjectId id, PerformanceReview performanceReviewData) {
+        System.out.println("Update Employee Service!");
         PerformanceReview reviewById = performanceReviewRepository.findById(id).orElseThrow(() -> new RuntimeException("Review not found!"));
 
-        if (!performanceReviewData.getComments().equals(reviewById.getComments()))
+        if (!performanceReviewData.getComments().equals(reviewById.getComments())) {
+            System.out.println("Update Comments!");
             reviewById.setComments(performanceReviewData.getComments());
+        }
 
-        if (!performanceReviewData.getRating().equals(reviewById.getRating()))
+        if (!performanceReviewData.getRating().equals(reviewById.getRating())) {
+            System.out.println("Update Rating!");
             reviewById.setRating(performanceReviewData.getRating());
-
+        }
         reviewById.setReviewDate(new Date());
 
         return performanceReviewRepository.save(reviewById);

@@ -62,19 +62,28 @@ public class PerformanceReviewController {
 
     @PutMapping("/{reviewId}")
     public ResponseEntity<?> updateReview(HttpServletRequest request, @PathVariable String reviewId, @RequestBody PerformanceReview performanceReviewData) {
+        System.out.println("Updating Review...");
+
+        System.out.println("Getting current user!");
         Employee currentUser = employeeService.getCurrentUser(request);
+        System.out.println("Getting employee by ID: " + performanceReviewData.getEmployeeId());
         Employee employee = employeeService.getEmployeeByEmployeeId(currentUser.getOrgId(), performanceReviewData.getEmployeeId());
 
         if (!currentUser.getEmployeeId().equals(employee.getManagerId()) && !currentUser.getRole().equals(Employee.Role.ADMIN)) {
+            System.out.println("Access Denied!");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ReviewResponse("Access denied!", null));
         }
 
+        System.out.println("Updating Review Service...");
         PerformanceReview updatedReview = performanceReviewService.updateReview(new ObjectId(reviewId), performanceReviewData);
 
+        System.out.println("Removing the old performance from employee!");
         employee.getPerformance().removeIf(review -> review.getId().equals(new ObjectId(reviewId)));
 
+        System.out.println("Adding new performance to employee!");
         employee.getPerformance().add(updatedReview);
 
+        System.out.println("Finally updating employee!");
         employeeService.updateEmployee(employee.getId(), employee);
 
         return ResponseEntity.status(HttpStatus.OK).body(new ReviewResponse("Review updated successfully!", updatedReview));
