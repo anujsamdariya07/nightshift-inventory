@@ -68,7 +68,7 @@ const stats = [
 export default function HomePage() {
   const typedText = useTypingAnimation(
     'NightShift Inventory Management System',
-    80
+    80,
   );
   const [showTagline, setShowTagline] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -167,20 +167,20 @@ export default function HomePage() {
               }}
               transition={{ duration: 0.8, delay: 0.3 }}
             >
-                <motion.button
-                onClick={authUser? redirect('/dashboard'): redirect('/login')}
-                  className='relative px-10 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg overflow-hidden professional-hover shadow-lg'
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <span className='relative z-10'>Get Started</span>
-                  <motion.div
-                    className='absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20'
-                    initial={{ x: '-100%' }}
-                    whileHover={{ x: '100%' }}
-                    transition={{ duration: 0.6 }}
-                  />
-                </motion.button>
+              <motion.button
+                onClick={authUser ? redirect('/dashboard') : redirect('/login')}
+                className='relative px-10 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg overflow-hidden professional-hover shadow-lg'
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <span className='relative z-10'>Get Started</span>
+                <motion.div
+                  className='absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20'
+                  initial={{ x: '-100%' }}
+                  whileHover={{ x: '100%' }}
+                  transition={{ duration: 0.6 }}
+                />
+              </motion.button>
 
               <motion.button
                 className='relative px-10 py-4 border-2 border-secondary text-secondary rounded-lg font-semibold text-lg professional-hover hover:bg-secondary hover:text-secondary-foreground shadow-lg'

@@ -79,7 +79,7 @@ export default function EmployeesPage() {
   // Inside EmployeesPage component
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(
-    null
+    null,
   );
   const [showEditEmployeeModal, setShowEditEmployeeModal] = useState(false);
   const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
@@ -87,8 +87,9 @@ export default function EmployeesPage() {
   const [employeeToView, setEmployeeToView] = useState<Employee | null>(null);
   const [showPerformanceReviewModal, setShowPerformanceReviewModal] =
     useState(false);
-  const [employeeForReview, setEmployeeForReview] =
-    useState<Employee | null>(null);
+  const [employeeForReview, setEmployeeForReview] = useState<Employee | null>(
+    null,
+  );
 
   const handleDeleteClick = (employee: Employee) => {
     setEmployeeToDelete(employee);
@@ -119,13 +120,13 @@ export default function EmployeesPage() {
 
     if (activeFilter !== 'all') {
       filtered = filtered.filter(
-        (employee) => employee.status === activeFilter
+        (employee) => employee.status === activeFilter,
       );
     }
 
     if (departmentFilter !== 'all') {
       filtered = filtered.filter(
-        (employee) => employee.department === departmentFilter
+        (employee) => employee.department === departmentFilter,
       );
     }
 
@@ -139,7 +140,7 @@ export default function EmployeesPage() {
           employee.employeeId
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          employee.email.toLowerCase().includes(searchTerm.toLowerCase())
+          employee.email.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -244,10 +245,11 @@ export default function EmployeesPage() {
                         activeFilter === option.value ? 'default' : 'outline'
                       }
                       size='sm'
-                      className={`text-sm transition-all duration-300 hover-scale ${activeFilter === option.value
-                        ? 'neon-glow'
-                        : 'hover:border-primary/50'
-                        }`}
+                      className={`text-sm transition-all duration-300 hover-scale ${
+                        activeFilter === option.value
+                          ? 'neon-glow'
+                          : 'hover:border-primary/50'
+                      }`}
                       onClick={() => setActiveFilter(option.value)}
                     >
                       {option.label}
@@ -267,10 +269,11 @@ export default function EmployeesPage() {
                           : 'outline'
                       }
                       size='sm'
-                      className={`text-sm transition-all duration-300 hover-scale ${departmentFilter === option.value
-                        ? 'neon-glow'
-                        : 'hover:border-primary/50'
-                        }`}
+                      className={`text-sm transition-all duration-300 hover-scale ${
+                        departmentFilter === option.value
+                          ? 'neon-glow'
+                          : 'hover:border-primary/50'
+                      }`}
                       onClick={() => setDepartmentFilter(option.value)}
                     >
                       {option.label}
@@ -294,7 +297,7 @@ export default function EmployeesPage() {
                 isSelected={selectedEmployee === employee.id}
                 onSelect={() =>
                   setSelectedEmployee(
-                    selectedEmployee === employee.id ? null : employee.id
+                    selectedEmployee === employee.id ? null : employee.id,
                   )
                 }
                 onDelete={() => handleDeleteClick(employee)}
@@ -318,8 +321,8 @@ export default function EmployeesPage() {
               </h3>
               <p className='text-muted-foreground'>
                 {searchTerm ||
-                  activeFilter !== 'all' ||
-                  departmentFilter !== 'all'
+                activeFilter !== 'all' ||
+                departmentFilter !== 'all'
                   ? 'Try adjusting your search or filter criteria'
                   : 'Start by adding your first employee'}
               </p>
@@ -432,13 +435,15 @@ function EmployeeCard({
     employee.yearsOfService ||
     Math.floor(
       (new Date().getTime() - new Date(employee.hireDate).getTime()) /
-      (1000 * 3600 * 24 * 365)
+        (1000 * 3600 * 24 * 365),
     );
 
   const avgRating =
     employee.performance?.length > 0
-      ? employee.performance.reduce((sum, review) => sum + ratingToNumber(review.rating), 0) /
-      employee.performance.length
+      ? employee.performance.reduce(
+          (sum, review) => sum + ratingToNumber(review.rating),
+          0,
+        ) / employee.performance.length
       : 0;
 
   return (
@@ -595,9 +600,9 @@ function EmployeeCard({
 
             <div className='flex gap-4 mt-6'>
               <Button
-                variant="outline"
-                size="sm"
-                className="hover:border-primary hover:text-primary"
+                variant='outline'
+                size='sm'
+                className='hover:border-primary hover:text-primary'
                 onClick={(e) => {
                   e.stopPropagation();
                   setEmployeeToEdit(employee);
@@ -629,21 +634,19 @@ function EmployeeCard({
               >
                 Performance Review
               </Button>
-              {
-                authUser?.role !== employee.role && (
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    className='hover:border-destructive hover:text-destructive'
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete();
-                    }}
-                  >
-                    Delete
-                  </Button>
-                )
-              }
+              {authUser?.role !== employee.role && (
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='hover:border-destructive hover:text-destructive'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                >
+                  Delete
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -665,13 +668,15 @@ function EmployeeStats({ employees }: { employees: Employee[] }) {
     avgPerformance:
       employees.length > 0
         ? employees.reduce((sum, emp) => {
-          const empAvg =
-            emp.performance?.length > 0
-              ? emp.performance.reduce((s, r) => s + ratingToNumber(r.rating), 0) /
-              emp.performance.length
-              : 0;
-          return sum + empAvg;
-        }, 0) / employees.length
+            const empAvg =
+              emp.performance?.length > 0
+                ? emp.performance.reduce(
+                    (s, r) => s + ratingToNumber(r.rating),
+                    0,
+                  ) / emp.performance.length
+                : 0;
+            return sum + empAvg;
+          }, 0) / employees.length
         : 0,
   };
 
@@ -680,7 +685,7 @@ function EmployeeStats({ employees }: { employees: Employee[] }) {
       acc[emp.department] = (acc[emp.department] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
 
   return (
@@ -767,7 +772,7 @@ function EditEmployeeModal({
     salary: employee.salary,
     status: employee.status,
     experience: employee.experience,
-    skills: employee.skills.join(", "),
+    skills: employee.skills.join(', '),
   });
 
   const handleChange = (
@@ -782,7 +787,7 @@ function EditEmployeeModal({
       salary: Number(formData.salary),
       experience: Number(formData.experience),
       skills: formData.skills
-        .split(",")
+        .split(',')
         .map((s) => s.trim())
         .filter(Boolean),
     });
@@ -790,63 +795,100 @@ function EditEmployeeModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50'
       onClick={onClose}
     >
       <Card
-        className="w-full max-w-2xl p-6 bg-card border border-border animate-slide-up"
+        className='w-full max-w-2xl p-6 bg-card border border-border animate-slide-up'
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-2xl font-bold text-primary mb-6">
-          Edit Employee
-        </h2>
+        <h2 className='text-2xl font-bold text-primary mb-6'>Edit Employee</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InputField label="Name" name="name" value={formData.name} onChange={handleChange} />
-          <InputField label="Email" name="email" value={formData.email} onChange={handleChange} />
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <InputField
+            label='Name'
+            name='name'
+            value={formData.name}
+            onChange={handleChange}
+          />
+          <InputField
+            label='Email'
+            name='email'
+            value={formData.email}
+            onChange={handleChange}
+          />
 
           <SelectField
-            label="Role"
-            name="role"
+            label='Role'
+            name='role'
             value={formData.role}
             onChange={handleChange}
-            options={["ADMIN", "MANAGER", "WORKER"]}
+            options={['ADMIN', 'MANAGER', 'WORKER']}
           />
 
-          <InputField label="Department" name="department" value={formData.department} onChange={handleChange} />
-          <InputField label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
-          <InputField label="Location" name="location" value={formData.location} onChange={handleChange} />
+          <InputField
+            label='Department'
+            name='department'
+            value={formData.department}
+            onChange={handleChange}
+          />
+          <InputField
+            label='Phone'
+            name='phone'
+            value={formData.phone}
+            onChange={handleChange}
+          />
+          <InputField
+            label='Location'
+            name='location'
+            value={formData.location}
+            onChange={handleChange}
+          />
 
-          <InputField label="Salary" name="salary" type="number" value={formData.salary} onChange={handleChange} />
-          <InputField label="Experience (years)" name="experience" type="number" value={formData.experience} onChange={handleChange} />
+          <InputField
+            label='Salary'
+            name='salary'
+            type='number'
+            value={formData.salary}
+            onChange={handleChange}
+          />
+          <InputField
+            label='Experience (years)'
+            name='experience'
+            type='number'
+            value={formData.experience}
+            onChange={handleChange}
+          />
 
           <SelectField
-            label="Status"
-            name="status"
+            label='Status'
+            name='status'
             value={formData.status}
             onChange={handleChange}
-            options={["ACTIVE", "INACTIVE", "SUSPENDED"]}
+            options={['ACTIVE', 'INACTIVE', 'SUSPENDED']}
           />
         </div>
 
-        <div className="mt-4">
-          <label className="text-sm text-muted-foreground">Skills (comma separated)</label>
+        <div className='mt-4'>
+          <label className='text-sm text-muted-foreground'>
+            Skills (comma separated)
+          </label>
           <input
-            name="skills"
+            name='skills'
             value={formData.skills}
             onChange={handleChange}
-            className="w-full mt-1 px-3 py-2 bg-input border border-border rounded-lg"
+            className='w-full mt-1 px-3 py-2 bg-input border border-border rounded-lg'
           />
         </div>
 
-        <div className="flex gap-4 mt-6">
-          <Button variant="outline" onClick={onClose} className="flex-1">
+        <div className='flex gap-4 mt-6'>
+          <Button variant='outline' onClick={onClose} className='flex-1'>
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={loading}
-            className="flex-1 bg-primary text-primary-foreground"
+            className='flex-1 bg-primary text-primary-foreground'
           >
             {loading ? (
               <>
@@ -937,13 +979,15 @@ function ViewEmployeeDetailsModal({
     employee.yearsOfService ||
     Math.floor(
       (new Date().getTime() - new Date(employee.hireDate).getTime()) /
-      (1000 * 3600 * 24 * 365)
+        (1000 * 3600 * 24 * 365),
     );
 
   const avgRating =
     employee.performance?.length > 0
-      ? employee.performance.reduce((sum, review) => sum + ratingToNumber(review.rating), 0) /
-      employee.performance.length
+      ? employee.performance.reduce(
+          (sum, review) => sum + ratingToNumber(review.rating),
+          0,
+        ) / employee.performance.length
       : 0;
 
   useEffect(() => {
@@ -1063,9 +1107,7 @@ function ViewEmployeeDetailsModal({
                   </p>
                 </div>
                 <div>
-                  <p className='text-xs text-muted-foreground mb-1'>
-                    Location
-                  </p>
+                  <p className='text-xs text-muted-foreground mb-1'>Location</p>
                   <p className='text-sm text-foreground'>
                     {employee.location || 'Not provided'}
                   </p>
@@ -1164,21 +1206,25 @@ function ViewEmployeeDetailsModal({
                         Performance Review {idx + 1}
                       </p>
                       <p className='text-xs text-muted-foreground'>
-                        {new Date(review.reviewDate).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
+                        {new Date(review.reviewDate).toLocaleDateString(
+                          'en-US',
+                          {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          },
+                        )}
                       </p>
                     </div>
                     <Badge
                       variant='outline'
-                      className={`${ratingToNumber(review.rating) >= 4
+                      className={`${
+                        ratingToNumber(review.rating) >= 4
                           ? 'bg-green-500/20 text-green-500 border-green-500/30'
                           : ratingToNumber(review.rating) >= 3
                             ? 'bg-blue-500/20 text-blue-500 border-blue-500/30'
                             : 'bg-orange-500/20 text-orange-500 border-orange-500/30'
-                        }`}
+                      }`}
                     >
                       {review.rating} / 5
                     </Badge>
@@ -1211,10 +1257,10 @@ function ViewEmployeeDetailsModal({
 function InputField({ label, ...props }: any) {
   return (
     <div>
-      <label className="text-sm text-muted-foreground">{label}</label>
+      <label className='text-sm text-muted-foreground'>{label}</label>
       <input
         {...props}
-        className="w-full mt-1 px-3 py-2 bg-input border border-border rounded-lg"
+        className='w-full mt-1 px-3 py-2 bg-input border border-border rounded-lg'
       />
     </div>
   );
@@ -1223,10 +1269,10 @@ function InputField({ label, ...props }: any) {
 function SelectField({ label, options, ...props }: any) {
   return (
     <div>
-      <label className="text-sm text-muted-foreground">{label}</label>
+      <label className='text-sm text-muted-foreground'>{label}</label>
       <select
         {...props}
-        className="w-full mt-1 px-3 py-2 bg-input border border-border rounded-lg"
+        className='w-full mt-1 px-3 py-2 bg-input border border-border rounded-lg'
       >
         {options.map((opt: string) => (
           <option key={opt} value={opt}>
@@ -1249,15 +1295,22 @@ function PerformanceReviewModal({
   onClose: () => void;
   onReviewAdded: () => void;
 }) {
-  const { addReview, updateReview, deleteReview, getReviewsReceived, loading } =
-    usePerformanceReviewStore();
-  const [reviews, setReviews] = useState<PerformanceReview[]>(
-    (employee.performance as PerformanceReview[]) || []
-  );
+  const {
+    reviewsReceived,
+    addReview,
+    updateReview,
+    deleteReview,
+    getReviewsReceived,
+    loading,
+  } = usePerformanceReviewStore();
+
   const [showAddReview, setShowAddReview] = useState(false);
   const [editingReview, setEditingReview] = useState<PerformanceReview | null>(
-    null
+    null,
   );
+  const [reviewToDelete, setReviewToDelete] =
+    useState<PerformanceReview | null>(null);
+
   const [formData, setFormData] = useState<{
     rating: Rating;
     comments: string;
@@ -1266,16 +1319,16 @@ function PerformanceReviewModal({
     comments: '',
   });
 
-  // Check if current user can add/edit reviews for this employee
+  // Permission checks
   const canManageReviews =
     currentUser &&
     (currentUser.role === 'ADMIN' ||
       currentUser.employeeId === employee.managerId);
 
-  const canEditReview = (review: PerformanceReview) => {
-    return currentUser && review.reviewerId === currentUser.employeeId;
-  };
+  const canEditReview = (review: PerformanceReview) =>
+    currentUser && review.reviewerId === currentUser.employeeId;
 
+  // Escape key handling
   useEffect(() => {
     const handlePress = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -1295,11 +1348,7 @@ function PerformanceReviewModal({
   // Fetch latest reviews
   useEffect(() => {
     if (employee.employeeId) {
-      getReviewsReceived(employee.employeeId).then((result) => {
-        if (result.success) {
-          setReviews(employee.performance || []);
-        }
-      });
+      getReviewsReceived(employee.employeeId);
     }
   }, [employee.employeeId, getReviewsReceived]);
 
@@ -1309,104 +1358,91 @@ function PerformanceReviewModal({
     setFormData({ rating: Rating.III, comments: '' });
   };
 
-  const handleEditReview = (review: PerformanceReview) => {
-    setEditingReview(review);
-    setShowAddReview(false);
-    setFormData({ rating: review.rating, comments: review.comments });
-  };
+  const handleCreateReview = async (data: {
+    rating: Rating;
+    comments: string;
+  }) => {
+    const result = await addReview({
+      employeeId: employee.employeeId,
+      rating: data.rating,
+      comments: data.comments,
+    });
 
-  const handleSubmit = async () => {
-    if (!formData.comments.trim()) {
-      return;
-    }
-
-    if (editingReview) {
-      // Update existing review
-      const result = await updateReview(editingReview.id, {
-        employeeId: employee.employeeId,
-        rating: formData.rating,
-        comments: formData.comments,
-      });
-
-      if (result.success) {
-        setEditingReview(null);
-        onReviewAdded();
-        // Refresh reviews
-        const updatedReviews = reviews.map((r) =>
-          r.id === editingReview.id
-            ? { ...r, rating: formData.rating, comments: formData.comments }
-            : r
-        );
-        setReviews(updatedReviews);
-      }
-    } else {
-      // Add new review
-      const result = await addReview({
-        employeeId: employee.employeeId,
-        rating: formData.rating,
-        comments: formData.comments,
-      });
-
-      if (result.success) {
-        setShowAddReview(false);
-        onReviewAdded();
-      }
+    if (result.success) {
+      setShowAddReview(false);
+      onReviewAdded();
     }
   };
 
-  const handleDeleteReview = async (reviewId: string) => {
-    if (confirm('Are you sure you want to delete this review?')) {
-      const result = await deleteReview(reviewId);
-      if (result.success) {
-        setReviews(reviews.filter((r) => r.id !== reviewId));
-        onReviewAdded();
-      }
+  const handleUpdateReview = async (data: {
+    rating: Rating;
+    comments: string;
+  }) => {
+    if (!editingReview) return;
+
+    const result = await updateReview(editingReview.id, {
+      employeeId: employee.employeeId,
+      rating: data.rating,
+      comments: data.comments,
+    });
+
+    if (result.success) {
+      setEditingReview(null);
+      onReviewAdded();
     }
   };
 
-  const getRatingLabel = (rating: Rating) => {
-    const labels = {
+  const handleConfirmDelete = async () => {
+    if (!reviewToDelete) return;
+
+    const result = await deleteReview(reviewToDelete.id);
+
+    if (result.success) {
+      setReviewToDelete(null);
+      onReviewAdded();
+    }
+  };
+
+  const getRatingLabel = (rating: Rating) =>
+    ({
       [Rating.I]: 'Poor',
       [Rating.II]: 'Below Average',
       [Rating.III]: 'Average',
       [Rating.IV]: 'Good',
       [Rating.V]: 'Excellent',
-    };
-    return labels[rating];
-  };
+    })[rating];
 
-  const getRatingColor = (rating: Rating) => {
-    const colors = {
+  const getRatingColor = (rating: Rating) =>
+    ({
       [Rating.I]: 'text-destructive',
       [Rating.II]: 'text-orange-500',
       [Rating.III]: 'text-yellow-500',
       [Rating.IV]: 'text-chart-2',
       [Rating.V]: 'text-accent',
-    };
-    return colors[rating];
-  };
+    })[rating];
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in"
+      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in'
       onClick={onClose}
     >
       <Card
-        className="bg-card border border-border rounded-2xl p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+        className='bg-card border border-border rounded-2xl p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto'
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center mb-6">
+        {/* Header */}
+        <div className='flex justify-between items-center mb-6'>
           <div>
-            <h2 className="text-2xl font-bold text-primary">
+            <h2 className='text-2xl font-bold text-primary'>
               Performance Reviews
             </h2>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className='text-sm text-muted-foreground mt-1'>
               {employee.name} ({employee.employeeId})
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors text-2xl"
+            className='text-muted-foreground hover:text-foreground text-2xl'
           >
             ✕
           </button>
@@ -1414,152 +1450,70 @@ function PerformanceReviewModal({
 
         {/* Add Review Button */}
         {canManageReviews && !showAddReview && !editingReview && (
-          <div className="mb-6">
-            <Button
-              onClick={handleAddReview}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-              disabled={loading}
-            >
+          <div className='mb-6'>
+            <Button onClick={handleAddReview} disabled={loading}>
               Add New Review
             </Button>
           </div>
         )}
 
-        {/* Add/Edit Review Form */}
-        {(showAddReview || editingReview) && (
-          <Card className="bg-background/50 p-6 mb-6 border border-primary/20 animate-fade-in">
-            <h3 className="text-lg font-semibold text-foreground mb-4">
-              {editingReview ? 'Edit Review' : 'Add New Review'}
-            </h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm text-muted-foreground block mb-2">
-                  Rating
-                </label>
-                <select
-                  value={formData.rating}
-                  onChange={(e) =>
-                    setFormData({ ...formData, rating: e.target.value as Rating })
-                  }
-                  className="w-full px-3 py-2 bg-input border border-border rounded-lg"
-                >
-                  {Object.values(Rating).map((rating) => (
-                    <option key={rating} value={rating}>
-                      {rating} - {getRatingLabel(rating)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-sm text-muted-foreground block mb-2">
-                  Comments
-                </label>
-                <textarea
-                  value={formData.comments}
-                  onChange={(e) =>
-                    setFormData({ ...formData, comments: e.target.value })
-                  }
-                  placeholder="Enter your review comments..."
-                  rows={4}
-                  className="w-full px-3 py-2 bg-input border border-border rounded-lg resize-none"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  onClick={handleSubmit}
-                  disabled={loading || !formData.comments.trim()}
-                  className="bg-primary text-primary-foreground"
-                >
-                  {loading ? (
-                    <>
-                      <Loader className="h-4 w-4 animate-spin mr-2" />
-                      Saving...
-                    </>
-                  ) : editingReview ? (
-                    'Update Review'
-                  ) : (
-                    'Submit Review'
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowAddReview(false);
-                    setEditingReview(null);
-                  }}
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </Card>
-        )}
-
         {/* Reviews List */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-foreground mb-4">
-            Review History ({reviews.length})
+        <div className='space-y-4'>
+          <h3 className='text-lg font-semibold'>
+            Review History ({reviewsReceived.length})
           </h3>
 
-          {reviews.length === 0 ? (
-            <div className="text-center py-12 bg-background/30 rounded-lg">
-              <div className="text-4xl mb-2">📋</div>
-              <p className="text-muted-foreground">
+          {reviewsReceived.length === 0 ? (
+            <div className='text-center py-12 bg-background/30 rounded-lg'>
+              <div className='text-4xl mb-2'>📋</div>
+              <p className='text-muted-foreground'>
                 No performance reviews yet
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {reviews.map((review) => (
-                <Card
-                  key={review.id}
-                  className="bg-background/30 p-5 border border-border hover:border-primary/30 transition-all"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-3">
+            <div className='space-y-3'>
+              {reviewsReceived.map((review) => (
+                <Card key={review.id} className='p-5'>
+                  <div className='flex justify-between items-start mb-3'>
+                    <div className='flex items-center gap-3'>
                       <Badge
                         className={`px-3 py-1 font-bold text-lg ${getRatingColor(
-                          review.rating
+                          review.rating,
                         )}`}
-                        variant="outline"
+                        variant='outline'
                       >
                         {review.rating}
                       </Badge>
                       <div>
-                        <p className="text-sm font-medium text-foreground">
+                        <p className='text-sm font-medium'>
                           {getRatingLabel(review.rating)}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className='text-xs text-muted-foreground'>
                           Reviewed by: {review.reviewerId}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
+                    <div className='flex items-center gap-2'>
+                      <span className='text-xs text-muted-foreground'>
                         {new Date(review.reviewDate).toLocaleDateString()}
                       </span>
+
                       {canEditReview(review) && (
                         <>
                           <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditReview(review)}
-                            disabled={loading}
-                            className="hover:border-primary hover:text-primary"
+                            className='hover:text-gray-300'
+                            size='sm'
+                            variant='outline'
+                            onClick={() => setEditingReview(review)}
                           >
                             Edit
                           </Button>
                           <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteReview(review.id)}
-                            disabled={loading}
-                            className="hover:border-destructive hover:text-destructive"
+                            className='hover:text-gray-300'
+                            size='sm'
+                            variant='outline'
+                            onClick={() => setReviewToDelete(review)}
                           >
                             Delete
                           </Button>
@@ -1568,7 +1522,7 @@ function PerformanceReviewModal({
                     </div>
                   </div>
 
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className='text-sm text-muted-foreground'>
                     {review.comments}
                   </p>
                 </Card>
@@ -1577,17 +1531,282 @@ function PerformanceReviewModal({
           )}
         </div>
 
-        <div className="flex justify-end mt-6">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="px-6 border-border hover:bg-muted"
-          >
+        <div className='flex justify-end mt-6'>
+          <Button variant='outline' onClick={onClose}>
             Close
           </Button>
+        </div>
+      </Card>
+
+      {showAddReview && (
+        <AddReviewModal
+          employeeId={employee.employeeId}
+          onClose={() => setShowAddReview(false)}
+          onSubmit={handleCreateReview}
+          loading={loading}
+        />
+      )}
+
+      {editingReview && (
+        <EditReviewModal
+          review={editingReview}
+          employeeId={employee.employeeId}
+          onClose={() => setEditingReview(null)}
+          onUpdate={handleUpdateReview}
+          loading={loading}
+        />
+      )}
+
+      {reviewToDelete && (
+        <ReviewDeleteConfirmModal
+          onClose={() => setReviewToDelete(null)}
+          onConfirm={handleConfirmDelete}
+          loading={loading}
+        />
+      )}
+    </div>
+  );
+}
+
+function AddReviewModal({
+  employeeId,
+  onClose,
+  onSubmit,
+  loading,
+}: {
+  employeeId: string;
+  onClose: () => void;
+  onSubmit: (data: { rating: Rating; comments: string }) => void;
+  loading: boolean;
+}) {
+  const [rating, setRating] = useState<Rating>(Rating.III);
+  const [comments, setComments] = useState('');
+
+  const getRatingLabel = (rating: Rating) =>
+    ({
+      [Rating.I]: 'Poor',
+      [Rating.II]: 'Below Average',
+      [Rating.III]: 'Average',
+      [Rating.IV]: 'Good',
+      [Rating.V]: 'Excellent',
+    })[rating];
+
+  return (
+    <div
+      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-fade-in'
+      onClick={onClose}
+    >
+      <Card
+        className='bg-card border border-border p-6 w-full max-w-lg animate-slide-up'
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className='text-xl font-bold text-primary mb-4'>Add New Review</h2>
+
+        <div className='space-y-4'>
+          <div>
+            <label className='text-sm block mb-2'>Rating</label>
+            <select
+              value={rating}
+              onChange={(e) => setRating(e.target.value as Rating)}
+              className='w-full px-3 py-2 bg-input border rounded-lg'
+            >
+              {Object.values(Rating).map((r) => (
+                <option key={r} value={r}>
+                  {r} - {getRatingLabel(r)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className='text-sm block mb-2'>Comments</label>
+            <textarea
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              rows={4}
+              className='w-full px-3 py-2 bg-input border rounded-lg resize-none'
+            />
+          </div>
+
+          <div className='flex gap-4 mt-4'>
+            <Button
+              variant='outline'
+              onClick={onClose}
+              className='flex-1'
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              onClick={() =>
+                onSubmit({
+                  rating,
+                  comments,
+                })
+              }
+              className='flex-1'
+              disabled={loading || !comments.trim()}
+            >
+              {loading ? 'Saving...' : 'Submit Review'}
+            </Button>
+          </div>
         </div>
       </Card>
     </div>
   );
 }
 
+function EditReviewModal({
+  review,
+  employeeId,
+  onClose,
+  onUpdate,
+  loading,
+}: {
+  review: PerformanceReview;
+  employeeId: string;
+  onClose: () => void;
+  onUpdate: (data: { rating: Rating; comments: string }) => void;
+  loading: boolean;
+}) {
+  const [rating, setRating] = useState<Rating>(review.rating);
+  const [comments, setComments] = useState(review.comments);
+
+  const getRatingLabel = (rating: Rating) =>
+    ({
+      [Rating.I]: 'Poor',
+      [Rating.II]: 'Below Average',
+      [Rating.III]: 'Average',
+      [Rating.IV]: 'Good',
+      [Rating.V]: 'Excellent',
+    })[rating];
+
+  return (
+    <div
+      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-fade-in'
+      onClick={onClose}
+    >
+      <Card
+        className='bg-card border border-border p-6 w-full max-w-lg animate-slide-up'
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className='text-xl font-bold text-primary mb-4'>Edit Review</h2>
+
+        <div className='space-y-4'>
+          {/* Rating */}
+          <div>
+            <label className='text-sm block mb-2'>Rating</label>
+            <select
+              value={rating}
+              onChange={(e) => setRating(e.target.value as Rating)}
+              className='w-full px-3 py-2 bg-input border rounded-lg'
+            >
+              {Object.values(Rating).map((r) => (
+                <option key={r} value={r}>
+                  {r} - {getRatingLabel(r)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Comments */}
+          <div>
+            <label className='text-sm block mb-2'>Comments</label>
+            <textarea
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              rows={4}
+              className='w-full px-3 py-2 bg-input border rounded-lg resize-none'
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className='flex gap-4 mt-4'>
+            <Button
+              variant='outline'
+              onClick={onClose}
+              className='flex-1'
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              onClick={() =>
+                onUpdate({
+                  rating,
+                  comments,
+                })
+              }
+              className='flex-1'
+              disabled={loading || !comments.trim()}
+            >
+              {loading ? 'Updating...' : 'Update Review'}
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function ReviewDeleteConfirmModal({
+  onClose,
+  onConfirm,
+  loading,
+}: {
+  onClose: () => void;
+  onConfirm: () => void;
+  loading: boolean;
+}) {
+  return (
+    <div
+      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-fade-in'
+      onClick={onClose}
+    >
+      <Card
+        className='bg-card border border-border p-6 w-full max-w-md animate-slide-up'
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className='text-xl font-bold text-destructive mb-4'>
+          Confirm Deletion
+        </h2>
+
+        <p className='text-muted-foreground mb-6'>
+          Are you sure you want to delete this review?
+          <br />
+          <span className='text-destructive font-semibold'>
+            This action cannot be undone.
+          </span>
+        </p>
+
+        <div className='flex gap-4'>
+          <Button
+            variant='outline'
+            onClick={onClose}
+            className='flex-1 hover:text-gray-300'
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={onConfirm}
+            className='flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/80 flex items-center justify-center gap-2'
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader className='h-4 w-4 animate-spin' />
+                Deleting...
+              </>
+            ) : (
+              'Delete'
+            )}
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
