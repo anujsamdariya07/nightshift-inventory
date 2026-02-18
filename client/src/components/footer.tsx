@@ -14,7 +14,7 @@ const socialLinks = [
   { name: 'Twitter', href: 'https://x.com/anujsamdariya07', icon: Twitter },
   {
     name: 'LinkedIn',
-    href: 'https://www.linkedin.com/in/anuj-samdariya-569162254/',
+    href: 'https://www.linkedin.com/in/anujsamdariya07/',
     icon: Linkedin,
   },
   { name: 'GitHub', href: 'https://github.com/anujsamdariya07/', icon: Github },
@@ -84,7 +84,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className='border-t border-border mt-8 pt-8 flex flex-col md:flex-row justify-between items-center'>
           <p className='text-muted-foreground text-sm'>
-            © 2025 NightShift. All rights reserved.
+            © 2026 NightShift. All rights reserved.
           </p>
           <div className='flex space-x-6 mt-4 md:mt-0'>
             <Link

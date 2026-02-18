@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Invoice</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 15px;
+      color: #222;
+    }
+
+    .invoice-container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 36px;
+      letter-spacing: 2px;
+      margin: 0;
+    }
+
+    .org-name {
+      font-size: 18px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .section {
+      margin-bottom: 25px;
+    }
+
+    .flex-row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .meta p {
+      margin: 4px 0;
+      font-size: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    table thead {
+      border-bottom: 2px solid #000;
+    }
+
+    table th {
+      text-align: left;
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    table td {
+      padding: 8px;
+      font-size: 14px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .totals {
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    .totals td {
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    .totals .grand-total {
+      font-weight: bold;
+      font-size: 16px;
+      border-top: 2px solid #000;
+    }
+
+    .notes {
+      margin-top: 30px;
+      font-size: 14px;
+    }
+
+    .footer {
+      margin-top: 40px;
+      text-align: right;
+      font-weight: bold;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="invoice-container">
+
+    <!-- Header -->
+    <div class="header">
+      <h1>INVOICE</h1>
+      <div class="org-name">{{organizationName}}</div>
+    </div>
+
+    <!-- Metadata Section -->
+    <div class="section flex-row">
+      <div class="meta">
+        <p><strong>Customer ID:</strong> {{customerId}}</p>
+        <p><strong>Customer Name:</strong> {{customerName}}</p>
+        <p><strong>Employee ID:</strong> {{employeeId}}</p>
+        <p><strong>Issued By:</strong> {{employeeName}}</p>
+      </div>
+
+      <div class="meta">
+        <p><strong>Order ID:</strong> {{orderId}}</p>
+        <p><strong>Order Date:</strong> {{orderDate}}</p>
+        <p><strong>Deadline:</strong> {{deadline}}</p>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <table>
+      <thead>
+        <tr>
+          <th>Item ID</th>
+          <th>Item Name</th>
+          <th class="text-right">Qty</th>
+          <th class="text-right">Cost/Unit</th>
+          <th class="text-right">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{items}}
+      </tbody>
+    </table>
+
+    <!-- Total -->
+    <table class="totals">
+      <tr class="grand-total">
+        <td></td>
+        <td class="text-right">Total Amount:</td>
+        <td class="text-right">{{totalAmount}}</td>
+      </tr>
+    </table>
+
+    <!-- Optional Notes -->
+    {{notesSection}}
+
+    <div class="footer">
+      THANK YOU FOR YOUR BUSINESS
+    </div>
+
+  </div>
+</body>
+
+</html>

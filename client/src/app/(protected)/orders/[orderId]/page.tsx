@@ -13,6 +13,7 @@ import {
   DollarSign,
   Clock,
   FileText,
+  Download,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -35,6 +36,7 @@ export default function OrderDetailPage() {
   const { authUser } = useAuthStore();
   const [order, setOrder] = useState<Order | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
 
   useEffect(() => {
     if (!authUser) {
@@ -69,6 +71,68 @@ export default function OrderDetailPage() {
       if (updatedOrder) {
         setOrder({ ...updatedOrder, status });
       }
+    }
+  };
+
+  const handleDownloadInvoice = async () => {
+    setDownloadingInvoice(true);
+
+    if (!order || !authUser) return;
+
+    try {
+      const invoiceData = {
+        organizationName: authUser.orgName || 'Organization Name',
+        customerId: order.customerId,
+        customerName: order.customerName,
+        employeeId: order.employeeId,
+        employeeName: order.employeeName,
+        orderId: order.orderId,
+        orderDate: new Date(order.orderDate).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        deadline: new Date(order.deadline).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        items: order.items.map((item) => ({
+          itemId: item.itemId,
+          itemName: item.itemName,
+          quantity: item.quantity,
+          costPerUnit: item.priceAtOrder,
+        })),
+        additionalNotes: order.notes || '',
+      };
+
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(invoiceData),
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice-${order.orderId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        console.error('Failed to generate invoice');
+        alert('Failed to generate invoice. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      alert('Error downloading invoice. Please try again.');
+    } finally {
+      setDownloadingInvoice(false);
     }
   };
 
@@ -157,10 +221,20 @@ export default function OrderDetailPage() {
                   Update Status
                 </Button>
                 <Button
-                  onClick={() => setShowUpdateModal(true)}
+                  onClick={handleDownloadInvoice}
                   className='bg-primary text-primary-foreground hover:neon-glow'
                 >
-                  Download Invoice
+                  {downloadingInvoice ? (
+                    <span className='flex items-center'>
+                      <Loader className='w-4 h-4 mr-2 animate-spin' />
+                      Downloading...
+                    </span>
+                  ) : (
+                    <>
+                      <Download className='w-4 h-4 mr-2' />
+                      Download Invoice
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
