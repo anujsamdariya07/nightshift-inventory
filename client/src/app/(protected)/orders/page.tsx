@@ -96,8 +96,8 @@ export default function OrdersPage() {
           order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (order.items &&
             order.items.some((item) =>
-              item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
-            ))
+              item.itemName.toLowerCase().includes(searchTerm.toLowerCase()),
+            )),
       );
     }
 
@@ -327,16 +327,18 @@ function OrderCard({
   onDelete: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const router = useRouter();
 
   return (
     <motion.div
-      className='bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 hover:border-primary/50 transition-all duration-300 group relative'
+      className='bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 hover:border-primary/50 transition-all duration-300 group relative cursor-pointer'
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -50, scale: 0.9 }}
       transition={{ duration: 0.6, delay: index * 0.1 }}
       whileHover={{ scale: 1.02, y: -5 }}
       layout
+      onClick={() => router.push(`/orders/${order.orderId}`)}
     >
       {/* Order Header */}
       <div className='flex justify-between items-start mb-4'>
@@ -411,7 +413,10 @@ function OrderCard({
       {order.items && order.items.length > 2 && (
         <motion.button
           className='w-full py-2 text-sm text-primary hover:text-primary/80 transition-colors duration-300'
-          onClick={() => setExpanded(!expanded)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded(!expanded);
+          }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -423,7 +428,10 @@ function OrderCard({
       <div className='flex gap-2 mt-4'>
         <motion.button
           className='flex-1 py-2 px-4 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-primary-foreground transition-all duration-300'
-          onClick={() => onUpdateStatus(order)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onUpdateStatus(order);
+          }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
