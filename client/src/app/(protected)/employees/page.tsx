@@ -394,8 +394,18 @@ export default function EmployeesPage() {
             setShowPerformanceReviewModal(false);
             setEmployeeForReview(null);
           }}
-          onReviewAdded={() => {
-            fetchEmployees();
+          onReviewAdded={async () => {
+            // Fetch updated employees data
+            const result = await fetchEmployees();
+            // Update the modal's employee with fresh data from the result
+            if (result.success && result.data) {
+              const updatedEmployee = result.data.find(
+                (emp) => emp.id === employeeForReview.id,
+              );
+              if (updatedEmployee) {
+                setEmployeeForReview(updatedEmployee);
+              }
+            }
           }}
         />
       )}
@@ -494,11 +504,9 @@ function EmployeeCard({
               <p className='text-sm text-muted-foreground'>Performance</p>
               <div className='flex items-center gap-1'>
                 <span className='text-lg font-bold text-accent'>
-                  {avgRating ? avgRating.toFixed(1) : 'N/A'}
+                  {avgRating.toFixed(1)}
                 </span>
-                {avgRating > 0 && (
-                  <span className='text-sm text-muted-foreground'>/5.0</span>
-                )}
+                <span className='text-sm text-muted-foreground'>/5.0</span>
               </div>
             </div>
 
@@ -1074,7 +1082,7 @@ function ViewEmployeeDetailsModal({
                     Avg Rating
                   </span>
                   <span className='text-sm font-medium text-foreground'>
-                    {avgRating > 0 ? `${avgRating.toFixed(1)} / 5` : 'N/A'}
+                    {avgRating.toFixed(1)} / 5
                   </span>
                 </div>
                 <div className='flex justify-between items-center'>
@@ -1370,6 +1378,9 @@ function PerformanceReviewModal({
 
     if (result.success) {
       setShowAddReview(false);
+      // Refresh the reviews list in the modal
+      await getReviewsReceived(employee.employeeId);
+      // Refresh the employees list to update performance ratings
       onReviewAdded();
     }
   };
@@ -1388,6 +1399,9 @@ function PerformanceReviewModal({
 
     if (result.success) {
       setEditingReview(null);
+      // Refresh the reviews list in the modal
+      await getReviewsReceived(employee.employeeId);
+      // Refresh the employees list to update performance ratings
       onReviewAdded();
     }
   };
@@ -1399,6 +1413,9 @@ function PerformanceReviewModal({
 
     if (result.success) {
       setReviewToDelete(null);
+      // Refresh the reviews list in the modal
+      await getReviewsReceived(employee.employeeId);
+      // Refresh the employees list to update performance ratings
       onReviewAdded();
     }
   };

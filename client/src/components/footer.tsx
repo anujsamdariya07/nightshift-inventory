@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Github, Linkedin, Twitter } from 'lucide-react';
+import { redirect } from 'next/navigation';
 const quickLinks = [
   { name: 'Home', href: '/' },
   { name: 'Features', href: '/features' },
@@ -45,12 +46,12 @@ export function Footer() {
             <ul className='space-y-2'>
               {quickLinks.map((link) => (
                 <li key={link.name}>
-                  <Link
-                    href={link.href}
+                  <div
+                    onClick={() => redirect(link.href)}
                     className='text-muted-foreground hover:text-primary transition-colors duration-300 hover:neon-text'
                   >
                     {link.name}
-                  </Link>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -87,18 +88,18 @@ export function Footer() {
             © 2026 NightShift. All rights reserved.
           </p>
           <div className='flex space-x-6 mt-4 md:mt-0'>
-            <Link
-              href='#'
+            <div
+              onClick={() => redirect('#')}
               className='text-muted-foreground hover:text-primary text-sm transition-colors'
             >
               Privacy Policy
-            </Link>
-            <Link
-              href='#'
+            </div>
+            <div
+              onClick={() => redirect('#')}
               className='text-muted-foreground hover:text-primary text-sm transition-colors'
             >
               Terms of Service
-            </Link>
+            </div>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { redirect, usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Loader, Menu, X, LogOut, Loader2 } from 'lucide-react';
@@ -86,21 +86,21 @@ export function Navbar() {
         <div className='container mx-auto px-4'>
           <div className='flex items-center justify-between'>
             {/* Logo */}
-            <Link href='/' className='flex items-center space-x-2'>
+            <div onClick={() => redirect('/')} className='flex items-center space-x-2'>
               <motion.div
                 className='text-2xl font-bold font-mono text-primary hover:text-primary/80 transition-colors'
                 whileHover={{ scale: 1.05 }}
               >
                 NightShift Inventory
               </motion.div>
-            </Link>
+            </div>
 
             {authUser && (
               <div className='hidden md:flex items-center space-x-6'>
                 {navItems.map((item) => (
-                  <Link
+                  <div
                     key={item.name}
-                    href={item.href}
+                    onClick={() => redirect(item.href)}
                     className={cn(
                       'relative px-3 py-2 text-sm font-medium transition-all duration-300',
                       'hover:text-primary',
@@ -119,7 +119,7 @@ export function Navbar() {
                         transition={{ duration: 0.3 }}
                       />
                     )}
-                  </Link>
+                  </div>
                 ))}
 
                 {/* Greeting + Logout */}
@@ -151,21 +151,21 @@ export function Navbar() {
                       </DropdownMenuLabel>
 
                       <DropdownMenuItem asChild>
-                        <Link
-                          href='/contact'
+                        <div
+                          onClick={() => redirect('/contact')}
                           className='w-full cursor-pointer px-3 py-2 rounded-md hover:bg-accent text-sm'
                         >
                           Contact
-                        </Link>
+                        </div>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem asChild>
-                        <Link
-                          href='/workflow'
+                        <div
+                          onClick={() => redirect('/workflow')}
                           className='w-full cursor-pointer px-3 py-2 rounded-md hover:bg-accent text-sm'
                         >
                           Workflow
-                        </Link>
+                        </div>
                       </DropdownMenuItem>
 
                       <DropdownMenuSeparator />
@@ -187,9 +187,9 @@ export function Navbar() {
             {!authUser && (
               <div className='hidden md:flex items-center space-x-6'>
                 {authItems.map((item) => (
-                  <Link
+                  <div
                     key={item.name}
-                    href={item.href}
+                    onClick={() => redirect(item.href)}
                     className={cn(
                       'relative px-3 py-2 text-sm font-medium transition-all duration-300',
                       'hover:text-primary',
@@ -208,24 +208,24 @@ export function Navbar() {
                         transition={{ duration: 0.3 }}
                       />
                     )}
-                  </Link>
+                  </div>
                 ))}
 
-                <Link
-                  href='/login'
+                <div
+                  onClick={() => redirect('/login')}
                   className='px-4 py-2 text-sm font-semibold rounded-xl border border-primary 
                              text-primary hover:bg-primary hover:text-background 
                              transition-colors duration-300 shadow-sm'
                 >
                   Login
-                </Link>
-                <Link
-                  href='/signup'
+                </div>
+                <div
+                  onClick={() => redirect('/signup')}
                   className='px-4 py-2 text-sm font-semibold rounded-xl bg-primary text-background 
                              hover:bg-primary/90 transition-colors duration-300 shadow-md'
                 >
                   Signup
-                </Link>
+                </div>
               </div>
             )}
 
@@ -275,8 +275,11 @@ export function Navbar() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.2, delay: index * 0.05 }}
                   >
-                    <Link
-                      href={item.href}
+                    <div
+                      onClick={() => {
+                        redirect(item.href)
+                        setMobileMenuOpen(false)
+                      }}
                       className={cn(
                         'block px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
                         'hover:bg-primary/10 hover:text-primary',
@@ -284,29 +287,32 @@ export function Navbar() {
                           ? 'text-primary bg-primary/5 border-l-2 border-primary'
                           : 'text-muted-foreground'
                       )}
-                      onClick={() => setMobileMenuOpen(false)}
                     >
                       {item.name}
-                    </Link>
+                    </div>
                   </motion.div>
                 ))}
 
                 {!authUser ? (
                   <div className='flex flex-col space-y-2 mt-4'>
-                    <Link
-                      href='/login'
+                    <div
+                      onClick={() => {
+                        redirect('/login')
+                        setMobileMenuOpen(false)
+                      }}
                       className='block px-4 py-3 text-sm font-semibold rounded-lg border border-primary text-primary hover:bg-primary hover:text-background transition-colors duration-200'
-                      onClick={() => setMobileMenuOpen(false)}
                     >
                       Login
-                    </Link>
-                    <Link
-                      href='/signup'
+                    </div>
+                    <div
+                      onClick={() => {
+                        setMobileMenuOpen(false)
+                        redirect('/signup')
+                      }}
                       className='block px-4 py-3 text-sm font-semibold rounded-lg bg-primary text-background hover:bg-primary/90 transition-colors duration-200'
-                      onClick={() => setMobileMenuOpen(false)}
                     >
                       Signup
-                    </Link>
+                    </div>
                   </div>
                 ) : (
                   <div className='flex flex-col space-y-2 mt-4'>
@@ -375,9 +381,8 @@ export function Navbar() {
                   disabled={loading}
                   className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg 
                              bg-destructive text-destructive-foreground 
-                             hover:bg-destructive/90 transition-colors duration-200 ${
-                               loading ? 'opacity-70 cursor-not-allowed' : ''
-                             }`}
+                             hover:bg-destructive/90 transition-colors duration-200 ${loading ? 'opacity-70 cursor-not-allowed' : ''
+                    }`}
                 >
                   {loading ? (
                     <>

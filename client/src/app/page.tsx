@@ -329,16 +329,15 @@ export default function HomePage() {
                 Join thousands of businesses already using NightShift to
                 streamline their operations and boost efficiency.
               </p>
-              <Link href={'/login'}>
-                <motion.button
-                  className='inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg professional-hover shadow-lg hover:cursor-pointer'
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Start Free Trial
-                  <ArrowRight className='w-5 h-5' />
-                </motion.button>
-              </Link>
+              <motion.button
+                className='inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg professional-hover shadow-lg hover:cursor-pointer'
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => redirect('/login')}
+              >
+                Start Free Trial
+                <ArrowRight className='w-5 h-5' />
+              </motion.button>
             </motion.div>
           </div>
         </section>

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 export default function SmartItemManagementPage() {
   return (
@@ -15,12 +16,12 @@ export default function SmartItemManagementPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Link
-              href='/features'
+            <div
+              onClick={() => redirect('/features')}
               className='text-primary hover:text-primary/80 transition-colors'
             >
               ← Back to Features
-            </Link>
+            </div>
           </motion.nav>
 
           {/* Header */}

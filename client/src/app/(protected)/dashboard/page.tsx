@@ -30,6 +30,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { NewVendorModal } from '@/components/NewVendorModal';
 import { NewOrderModal } from '@/components/NewOrderModal';
 import { NewItemModal } from '@/components/NewItemModal';
+import UpdateItemModal from '@/components/UpdateItemModal';
+import QuantityUpdateModal from '@/components/UpdateItemModal';
 
 const InventoryDashboard = () => {
   // Sample data - matches your existing structure
@@ -598,9 +600,15 @@ const InventoryDashboard = () => {
     loading: itemLoading,
     createItem,
     items,
+    updateItemQuantity,
   } = useItemStore();
 
   const [showNewItemModal, setShowNewItemModal] = useState(false);
+  const [showUpdateItemModal, setShowUpdateItemModal] = useState<{
+    show: boolean;
+    item: any;
+    type: 'REPLENISHMENT' | 'ORDER' | 'ORDERREVERT';
+  }>({ show: false, item: null, type: 'REPLENISHMENT' });
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [showNewVendorModal, setShowNewVendorModal] = useState(false);
 
@@ -609,10 +617,10 @@ const InventoryDashboard = () => {
 
   // Get alerts
   const lowStockItems = dashboardData.items.filter(
-    (item) => item.quantity <= item.threshold
+    (item) => item.quantity <= item.threshold,
   );
   const outOfStockItems = dashboardData.items.filter(
-    (item) => item.quantity === 0
+    (item) => item.quantity === 0,
   );
 
   const findAverage = (arr: Array<any>) => {
@@ -627,7 +635,7 @@ const InventoryDashboard = () => {
   const totalSpent = (customer: Customer) => {
     return customer.orders.reduce(
       (sum: number, order: any) => sum + order.totalAmount,
-      0
+      0,
     );
   };
 
@@ -638,7 +646,7 @@ const InventoryDashboard = () => {
   const pendingOrders =
     dashboardData.orders &&
     dashboardData.orders.filter(
-      (order) => order.status === 'Pending'.toUpperCase()
+      (order) => order.status === 'Pending'.toUpperCase(),
     ).length;
   const totalItems =
     dashboardData.items &&
@@ -646,7 +654,7 @@ const InventoryDashboard = () => {
   const activeEmployees =
     dashboardData.employees &&
     dashboardData.employees.filter(
-      (emp) => emp.status === 'active'.toUpperCase()
+      (emp) => emp.status === 'active'.toUpperCase(),
     ).length;
 
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
@@ -656,9 +664,9 @@ const InventoryDashboard = () => {
   };
 
   const visibleLowStockItems = lowStockItems.filter(
-    (item) => !dismissedAlerts.has(item.id)
+    (item) => !dismissedAlerts.has(item.id),
   );
-  
+
   useEffect(() => {
     const findFn = async () => {
       await findOrders();
@@ -774,6 +782,13 @@ const InventoryDashboard = () => {
                               className='px-3 py-1 bg-primary/20 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-primary-foreground transition-all duration-300'
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
+                              onClick={() =>
+                                setShowUpdateItemModal({
+                                  show: true,
+                                  item: item,
+                                  type: 'REPLENISHMENT',
+                                })
+                              }
                             >
                               Restock
                             </motion.button>
@@ -958,7 +973,7 @@ const InventoryDashboard = () => {
                               style={{
                                 width: `${Math.max(
                                   (item.quantity / item.threshold) * 100,
-                                  5
+                                  5,
                                 )}%`,
                               }}
                             />
@@ -1030,7 +1045,7 @@ const InventoryDashboard = () => {
                 <div className='space-y-4'>
                   {dashboardData.vendors
                     .sort(
-                      (a, b) => findAverage(b.rating) - findAverage(a.rating)
+                      (a, b) => findAverage(b.rating) - findAverage(a.rating),
                     )
                     .slice(0, 3)
                     .map((vendor, index) => (
@@ -1141,6 +1156,43 @@ const InventoryDashboard = () => {
               }
             }}
             vendors={vendors}
+            loading={itemLoading}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showUpdateItemModal.show && (
+          <QuantityUpdateModal
+            item={showUpdateItemModal.item}
+            type={showUpdateItemModal.type}
+            vendors={vendors}
+            onClose={() =>
+              setShowUpdateItemModal({
+                show: false,
+                item: null,
+                type: 'REPLENISHMENT',
+              })
+            }
+            onSubmit={async (data) => {
+              const result = await updateItemQuantity(
+                showUpdateItemModal.item.id,
+                {
+                  vendorName: data.vendorName,
+                  vendorId: data.vendorId,
+                  cost: data.cost,
+                  quantityUpdated: data.quantityChange,
+                  updateType: 'REPLENISHMENT',
+                },
+              );
+              if (result?.success) {
+                setShowUpdateItemModal({
+                  show: false,
+                  item: null,
+                  type: 'REPLENISHMENT',
+                });
+              }
+            }}
             loading={itemLoading}
           />
         )}

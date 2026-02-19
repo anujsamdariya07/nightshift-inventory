@@ -68,7 +68,7 @@ public class OrderService {
 
         // deduct items
         if (savedOrder.getItems() != null && !savedOrder.getItems().isEmpty()) {
-            itemService.deductByOrder(savedOrder.getItems(), savedOrder.getOrgId());
+            itemService.deductByOrder(savedOrder.getOrderId(), savedOrder.getItems(), savedOrder.getOrgId());
         }
 
         CustomerOrder order = CustomerOrder.builder()
@@ -99,7 +99,7 @@ public class OrderService {
                 System.out.println(existingOrder.getItems() != null);
                 itemService.revertByOrder(existingOrder.getItems(), existingOrder.getOrgId());
 
-                itemService.deductByOrder(orderRequest.getItems(), existingOrder.getOrgId());
+                itemService.deductByOrder(orderRequest.getOrderId(), orderRequest.getItems(), existingOrder.getOrgId());
             }
         }
 

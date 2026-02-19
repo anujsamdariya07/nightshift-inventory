@@ -6,11 +6,12 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navbar } from '@/components/navbar';
 import useAuthStore from '@/store/useAuthStore';
-import useItemStore from '@/store/useItemStore';
+import useItemStore, { Item, UpdateHistory } from '@/store/useItemStore';
 import { useRouter } from 'next/navigation';
 import { Loader, Trash2, Eye } from 'lucide-react';
 import useVendorStore, { Vendor } from '@/store/useVendorStore';
 import { NewItemModal } from '@/components/NewItemModal';
+import QuantityUpdateModal from '@/components/UpdateItemModal';
 
 const stockStatusColors = {
   'in-stock': 'accent',
@@ -78,13 +79,13 @@ export default function ItemsPage() {
 
     if (activeFilter !== 'all') {
       filtered = filtered.filter(
-        (item) => getStockStatus(item) === activeFilter
+        (item) => getStockStatus(item) === activeFilter,
       );
     }
 
     if (searchTerm) {
       filtered = filtered.filter((item) =>
-        (item.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+        (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -308,7 +309,7 @@ export default function ItemsPage() {
                   cost: data.cost,
                   quantityUpdated: data.quantityChange,
                   updateType: 'REPLENISHMENT',
-                }
+                },
               );
               if (result?.success) {
                 setShowQuantityModal({
@@ -374,14 +375,14 @@ function ItemCard({
     (item?.quantity || 0) === 0
       ? 'out-of-stock'
       : (item?.quantity || 0) <= (item?.threshold || 0)
-      ? 'low-stock'
-      : 'in-stock';
+        ? 'low-stock'
+        : 'in-stock';
 
   // Calculate total cost from update history with proper null checks
   const totalCost = (item?.updateHistory || []).reduce(
     (sum: number, update: any) =>
       sum + (update?.quantityUpdated || 0) * (update?.cost || 0),
-    0
+    0,
   );
 
   // Calculate last replenishment with proper null checks
@@ -389,7 +390,7 @@ function ItemCard({
     .filter((update: any) => update?.updateType === 'REPLENISHMENT')
     .sort(
       (a: any, b: any) =>
-        new Date(b?.date || 0).getTime() - new Date(a?.date || 0).getTime()
+        new Date(b?.date || 0).getTime() - new Date(a?.date || 0).getTime(),
     )[0];
 
   return (
@@ -449,8 +450,8 @@ function ItemCard({
                 stockStatus === 'out-of-stock'
                   ? 'text-destructive'
                   : stockStatus === 'low-stock'
-                  ? 'text-chart-2'
-                  : 'text-accent'
+                    ? 'text-chart-2'
+                    : 'text-accent'
               }`}
             >
               {item?.quantity || 0}
@@ -472,7 +473,7 @@ function ItemCard({
               {Math.round(
                 ((item?.quantity || 0) /
                   Math.max(item?.quantity || 0, (item?.threshold || 1) * 2)) *
-                  100
+                  100,
               )}
               %
             </span>
@@ -483,8 +484,8 @@ function ItemCard({
                 stockStatus === 'out-of-stock'
                   ? 'bg-destructive'
                   : stockStatus === 'low-stock'
-                  ? 'bg-chart-2'
-                  : 'bg-accent'
+                    ? 'bg-chart-2'
+                    : 'bg-accent'
               }`}
               initial={{ width: 0 }}
               animate={{
@@ -492,7 +493,7 @@ function ItemCard({
                   ((item?.quantity || 0) /
                     Math.max(item?.quantity || 0, (item?.threshold || 1) * 2)) *
                     100,
-                  100
+                  100,
                 )}%`,
               }}
               transition={{ duration: 1, delay: index * 0.1 }}
@@ -535,7 +536,7 @@ function ItemCard({
                       .sort(
                         (a: any, b: any) =>
                           new Date(b?.date || 0).getTime() -
-                          new Date(a?.date || 0).getTime()
+                          new Date(a?.date || 0).getTime(),
                       )
                       .slice(0, 3)
                       .map((update: any, idx: number) => (
@@ -667,19 +668,19 @@ function InventoryStats({ items }: { items: any[] }) {
   const stats = {
     total: items.length,
     inStock: items.filter(
-      (item) => (item?.quantity || 0) > (item?.threshold || 0)
+      (item) => (item?.quantity || 0) > (item?.threshold || 0),
     ).length,
     lowStock: items.filter(
       (item) =>
         (item?.quantity || 0) <= (item?.threshold || 0) &&
-        (item?.quantity || 0) > 0
+        (item?.quantity || 0) > 0,
     ).length,
     outOfStock: items.filter((item) => (item?.quantity || 0) === 0).length,
     totalValue: items.reduce((sum, item) => {
       const itemValue = (item?.updateHistory || []).reduce(
         (histSum: number, update: any) =>
           histSum + (update?.quantityUpdated || 0) * (update?.cost || 0),
-        0
+        0,
       );
       return sum + itemValue;
     }, 0),
@@ -748,256 +749,6 @@ function StatCard({
         {value}
       </motion.div>
       <div className='text-xs text-muted-foreground'>{label}</div>
-    </motion.div>
-  );
-}
-
-function QuantityUpdateModal({
-  item,
-  type,
-  onClose,
-  onSubmit,
-  vendors,
-  loading,
-}: {
-  item: any;
-  type: 'REPLENISHMENT' | 'ORDER' | 'ORDERREVERT';
-  vendors: Vendor[];
-  onClose: () => void;
-  onSubmit: (data: {
-    vendorId: string;
-    vendorName: string;
-    quantityChange: number;
-    cost: number;
-  }) => void;
-  loading: boolean;
-}) {
-  const [formData, setFormData] = useState({
-    vendorId: '',
-    quantityChange: 0,
-    vendorName: '',
-    cost: 0,
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const quantityChange =
-      type === 'REPLENISHMENT'
-        ? formData.quantityChange || 0
-        : -(formData.quantityChange || 0);
-    onSubmit({
-      ...formData,
-      quantityChange,
-    });
-  };
-
-  useEffect(() => {
-    const handlePress: any = (event: React.KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-
-    document.addEventListener('keydown', handlePress);
-
-    return () => {
-      document.removeEventListener('keydown', handlePress);
-    };
-  }, [onClose]);
-
-  return (
-    <motion.div
-      className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50'
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-    >
-      <motion.div
-        className='bg-card border border-border rounded-2xl p-8 w-full max-w-md'
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className='flex justify-between items-center mb-6'>
-          <h2 className='text-2xl font-bold text-primary'>
-            {type === 'REPLENISHMENT' ? 'Restock Item' : 'Order Out Item'}
-          </h2>
-          <button
-            onClick={onClose}
-            className='text-muted-foreground hover:text-foreground transition-colors flex items-center space-x-2'
-          >
-            <span className='keyboard-key'>Esc</span>
-            <span>✕</span>
-          </button>
-        </div>
-
-        <div className='mb-6 p-4 bg-background/50 rounded-lg'>
-          <h3 className='font-semibold text-foreground'>
-            {item?.name || 'Unknown Item'}
-          </h3>
-          <p className='text-sm text-muted-foreground'>
-            Current Stock: {item?.quantity || 0}
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className='space-y-6'>
-          <div>
-            <label className='block text-sm font-medium text-foreground mb-2'>
-              {type === 'REPLENISHMENT'
-                ? 'Vendor/Supplier *'
-                : 'Customer/Order Reference *'}
-            </label>
-            {type === 'REPLENISHMENT' ? (
-              <select
-                required
-                value={formData.vendorId}
-                onChange={(e) => {
-                  const selectedVendor = vendors.find(
-                    (v) => v.vendorId === e.target.value
-                  );
-                  setFormData((prev) => ({
-                    ...prev,
-                    vendorId: selectedVendor?.vendorId || '',
-                    vendorName: selectedVendor?.name || '',
-                  }));
-                }}
-                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
-              >
-                <option value=''>Select Vendor</option>
-                {vendors.map((vendor) => (
-                  <option key={vendor.vendorId} value={vendor.vendorId}>
-                    {vendor.vendorId} - {vendor.name}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type='text'
-                required
-                value={formData.vendorName}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    vendorName: e.target.value,
-                  }))
-                }
-                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
-                placeholder='Enter customer/order reference'
-              />
-            )}
-          </div>
-
-          <div className='grid grid-cols-2 gap-4'>
-            <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Quantity *
-              </label>
-              <input
-                type='number'
-                required
-                min='1'
-                max={type === 'ORDER' ? item?.quantity || 0 : undefined}
-                value={formData.quantityChange}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    quantityChange: parseInt(e.target.value) || 0,
-                  }))
-                }
-                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
-                placeholder='0'
-              />
-            </div>
-
-            <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Cost per Unit (₹) *
-              </label>
-              <input
-                type='number'
-                required
-                min='0'
-                step='0.01'
-                value={formData.cost}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    cost: parseFloat(e.target.value) || 0,
-                  }))
-                }
-                className='w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300'
-                placeholder='0.00'
-              />
-            </div>
-          </div>
-
-          {type === 'ORDER' &&
-            formData.quantityChange > (item?.quantity || 0) && (
-              <div className='text-sm text-destructive'>
-                Cannot order more than available stock ({item?.quantity || 0})
-              </div>
-            )}
-
-          <div className='bg-background/50 rounded-lg p-4'>
-            <div className='flex justify-between text-sm'>
-              <span>Total Cost:</span>
-              <span className='font-semibold'>
-                ₹
-                {(
-                  (formData.quantityChange || 0) * (formData.cost || 0)
-                ).toFixed(2)}
-              </span>
-            </div>
-            <div className='flex justify-between text-sm mt-1'>
-              <span>New Stock Level:</span>
-              <span className='font-semibold'>
-                {type === 'REPLENISHMENT'
-                  ? (item?.quantity || 0) + (formData.quantityChange || 0)
-                  : (item?.quantity || 0) - (formData.quantityChange || 0)}
-              </span>
-            </div>
-          </div>
-
-          <div className='flex gap-4 pt-4'>
-            <motion.button
-              type='button'
-              onClick={onClose}
-              className='flex-1 py-3 px-6 border border-border text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground transition-all duration-300'
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={loading}
-            >
-              Cancel
-            </motion.button>
-            <motion.button
-              type='submit'
-              className={`flex-1 py-3 px-6 rounded-lg hover:neon-glow transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
-                type === 'REPLENISHMENT'
-                  ? 'bg-green-500 text-white hover:bg-green-600'
-                  : 'bg-blue-500 text-white hover:bg-blue-600'
-              }`}
-              whileHover={{ scale: loading ? 1 : 1.02 }}
-              whileTap={{ scale: loading ? 1 : 0.98 }}
-              disabled={
-                loading ||
-                (type === 'ORDER' &&
-                  formData.quantityChange > (item?.quantity || 0))
-              }
-            >
-              {loading ? (
-                <div className='flex items-center justify-center gap-2'>
-                  <Loader className='animate-spin h-4 w-4 text-white' />
-                  Processing...
-                </div>
-              ) : type === 'REPLENISHMENT' ? (
-                'Restock'
-              ) : (
-                'Order Out'
-              )}
-            </motion.button>
-          </div>
-        </form>
-      </motion.div>
     </motion.div>
   );
 }
@@ -1099,28 +850,28 @@ function ViewDetailsModal({
   item,
   onClose,
 }: {
-  item: any;
+  item: Item;
   onClose: () => void;
 }) {
   const stockStatus =
     (item?.quantity || 0) === 0
       ? 'out-of-stock'
       : (item?.quantity || 0) <= (item?.threshold || 0)
-      ? 'low-stock'
-      : 'in-stock';
+        ? 'low-stock'
+        : 'in-stock';
 
   const totalCost = (item?.updateHistory || []).reduce(
     (sum: number, update: any) =>
       sum + (update?.quantityUpdated || 0) * (update?.cost || 0),
-    0
+    0,
   );
 
   const totalReplenishments = (item?.updateHistory || []).filter(
-    (update: any) => update?.updateType === 'REPLENISHMENT'
+    (update: any) => update?.updateType === 'REPLENISHMENT',
   ).length;
 
   const totalOrders = (item?.updateHistory || []).filter(
-    (update: any) => update?.updateType === 'ORDER'
+    (update: any) => update?.updateType === 'ORDER',
   ).length;
 
   useEffect(() => {
@@ -1134,6 +885,10 @@ function ViewDetailsModal({
       document.removeEventListener('keydown', handlePress);
     };
   }, [onClose]);
+
+  useEffect(() => {
+    console.log(item);
+  }, [item]);
 
   return (
     <motion.div
@@ -1248,9 +1003,9 @@ function ViewDetailsModal({
                     ((item?.quantity || 0) /
                       Math.max(
                         item?.quantity || 0,
-                        (item?.threshold || 1) * 2
+                        (item?.threshold || 1) * 2,
                       )) *
-                      100
+                      100,
                   )}
                   %
                 </div>
@@ -1272,9 +1027,9 @@ function ViewDetailsModal({
                 .sort(
                   (a: any, b: any) =>
                     new Date(b?.date || 0).getTime() -
-                    new Date(a?.date || 0).getTime()
+                    new Date(a?.date || 0).getTime(),
                 )
-                .map((update: any, idx: number) => (
+                .map((update: UpdateHistory, idx: number) => (
                   <motion.div
                     key={idx}
                     className='flex justify-between items-center p-4 bg-card/50 rounded-lg border border-border hover:border-primary/30 transition-all duration-300'
@@ -1293,8 +1048,17 @@ function ViewDetailsModal({
                       <div>
                         <div className='flex items-center gap-2 mb-1'>
                           <span className='font-medium text-foreground'>
-                            {update?.vendorId || 'N/A'}:{' '}
-                            {update?.vendorName || 'Unknown'}
+                            {update?.updateType === 'REPLENISHMENT' ? (
+                              <>
+                                {update?.vendorId || 'N/A'}:{' '}
+                                {update?.vendorName || 'Unknown'}
+                              </>
+                            ) : (
+                              <>
+                                {update?.orderId || 'N/A'} -{' '}
+                                {update?.orderName || 'Unknown'}
+                              </>
+                            )}
                           </span>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${

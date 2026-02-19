@@ -159,6 +159,31 @@ public class EmployeeService {
             existingEmployee.setPassword(passwordEncoder.encode(updateEmployeeData.getPassword()));
         }
 
+        // Update performance reviews if provided
+        if (updateEmployeeData.getPerformance() != null) {
+            existingEmployee.setPerformance(updateEmployeeData.getPerformance());
+        }
+
+        // Update other fields if provided
+        if (updateEmployeeData.getDepartment() != null) {
+            existingEmployee.setDepartment(updateEmployeeData.getDepartment());
+        }
+        if (updateEmployeeData.getExperience() != null) {
+            existingEmployee.setExperience(updateEmployeeData.getExperience());
+        }
+        if (updateEmployeeData.getSalary() != null) {
+            existingEmployee.setSalary(updateEmployeeData.getSalary());
+        }
+        if (updateEmployeeData.getManager() != null) {
+            existingEmployee.setManager(updateEmployeeData.getManager());
+        }
+        if (updateEmployeeData.getManagerId() != null) {
+            existingEmployee.setManagerId(updateEmployeeData.getManagerId());
+        }
+        if (updateEmployeeData.getSkills() != null) {
+            existingEmployee.setSkills(updateEmployeeData.getSkills());
+        }
+
         System.out.println("All clear!");
 
         return employeeRepository.save(existingEmployee);

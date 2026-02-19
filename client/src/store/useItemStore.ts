@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface UpdateHistory {
+export interface UpdateHistory {
   vendorName?: string;
   vendorId?: string;
   orderName?: string;

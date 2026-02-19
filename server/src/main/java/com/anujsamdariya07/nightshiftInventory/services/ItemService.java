@@ -154,17 +154,23 @@ public class ItemService {
         itemRepository.deleteById(id);
     }
 
-    public void deductByOrder(ArrayList<OrderItem> items, ObjectId orgId) {
+    public void deductByOrder(String orderId, ArrayList<OrderItem> items, ObjectId orgId) {
         for (OrderItem item : items) {
             Item extractedItem = itemRepository.findByOrgIdAndName(orgId, item.getItemName());
 
             System.out.println("extractedItem.getName()" + extractedItem.getName());
 
+            if (item.getQuantity() > extractedItem.getQuantity()) {
+                throw new RuntimeException("Desired quantity unavailable!");
+            }
+
             int deducted = Math.min(item.getQuantity(), extractedItem.getQuantity());
             int remainingQuantity = extractedItem.getQuantity() - deducted;
 
             UpdateHistory updateHistory = UpdateHistory.builder()
-                    .vendorName("Order")
+                    .vendorName("")
+                    .orderName("Order")
+                    .orderId(orderId)
                     .quantityUpdated(deducted)
                     .cost(item.getPriceAtOrder())
                     .updateType(UpdateHistory.UpdateTypes.ORDER)
