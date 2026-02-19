@@ -1078,7 +1078,7 @@ const InventoryDashboard = () => {
                             ))}
                           </div>
                           <p className='text-xs text-muted-foreground mt-1'>
-                            {findAverage(vendor.rating)}
+                            {findAverage(vendor.rating).toFixed(1)}
                           </p>
                         </div>
                       </motion.div>
